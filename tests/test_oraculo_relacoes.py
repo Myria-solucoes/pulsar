@@ -65,7 +65,9 @@ def test_nw_somada_na_jusante(pacote):
     if not nws:
         pytest.skip("configuração sem usina NW")
     for u in nws:
-        jus = por_num[u.jusante]
         assert not g.usina(u.nint).any()
+        if u.jusante not in por_num:  # JURUENA (2025): NW sem jusante
+            continue
+        jus = por_num[u.jusante]
         soma = c.serie(u.nint).media_gerada[mes - 1] + c.serie(jus.nint).media_gerada[mes - 1]
         assert abs(soma - p @ g.usina(jus.nint)) <= 1e-9 * soma, (u.nome, jus.nome)

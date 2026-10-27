@@ -45,9 +45,10 @@ def test_todos_os_registros_iguais_ao_vazdcp(pacote):
     assert (MESES.index(mes) + 1, int(ano)) == (c.mes_inicial, c.ano_inicial)
     assert int(re.search(r"NPOSTOS:\s+(\d+)", r3)[1]) == c.n_postos
     assert int(re.search(r"NSEM OBS:\s+(\d+)", r3)[1]) == c.semanas_observadas
-    # F2-VZ-04c: o 9_L grava 80106 e imprime só "9"
+    # F2-VZ-04c: o 9_L grava 80106 e imprime só "9"; o 11 grava 110000 e
+    # imprime "11"
     impressa = re.search(r"VERSAO GEVAZP:\s+(\S+)", r3)[1]
-    assert impressa == c.versao or (c.versao_codigo, impressa) == (80106, "9")
+    assert impressa == c.versao or (c.versao_codigo, impressa) in {(80106, "9"), (110000, "11")}
 
     # F2-VZ-05: ceil(NNOS/NPOS) registros de probabilidades (2 com 513
     # aberturas, 202206 e 202207)

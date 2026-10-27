@@ -111,7 +111,9 @@ def test_media_divide_pelos_dias(nome):
         iguais_div += TD.media_ponderada(pr.semanas, pesos) == alvo
         iguais_inv += sum(w * x for w, x in zip(pesos, pr.semanas)) * (1.0 / dm) == alvo
     assert iguais_div == len(d.prevs)
-    assert iguais_inv < len(d.prevs)
+    # o inverso dos dias erra em 202609/202610; em alguns meses (fev/2025)
+    # coincide com a divisão em todos os postos
+    assert iguais_inv < len(d.prevs) or nome not in ORIGINAIS
 
 
 @pytest.mark.parametrize("nome", DECKS)
