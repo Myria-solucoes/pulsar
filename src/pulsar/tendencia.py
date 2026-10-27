@@ -69,18 +69,29 @@ class OpcoesTendencia:
     # variante do bloco 2 do REGRAS.DAT nas semanas e em todos os meses
     # passados, inclusive os do ano anterior ao inicial.
     ano_estudo_regras: int = 1
+    # P-TEND-02 (INFERIDO, lacuna L5): dias de fevereiro na média do mês
+    # inicial; 28 também nos anos bissextos. None = calendário gregoriano.
+    dias_fevereiro: int | None = 28
 
 
 # ------------------------------------------------------------- calendário
 
+# P-TEND-02: fevereiro com 28 dias na média ponderada do mês inicial, mesmo
+# em ano bissexto (INFERIDO nas quatro revisões de fev/2024).
+DIAS_FEVEREIRO = 28
 
-def dias_no_mes(ano: int, mes: int) -> int:
-    """P-TEND-02 (ESCOLHA, lacuna L5): calendário gregoriano, com 29 dias em
-    fevereiro dos anos bissextos."""
+
+def dias_no_mes(ano: int, mes: int, dias_fevereiro: int | None = DIAS_FEVEREIRO) -> int:
+    """P-TEND-02: calendário gregoriano, exceto fevereiro, que tem
+    ``dias_fevereiro`` dias (28, INFERIDO no QPAST de fev/2024); com None,
+    29 nos anos bissextos."""
+    if mes == 2 and dias_fevereiro is not None:
+        return dias_fevereiro
     return calendar.monthrange(ano, mes)[1]
 
 
-def pesos_semanais(ano: int, mes: int, n_semanas: int, dias_excluidos: int) -> list[int]:
+def pesos_semanais(ano: int, mes: int, n_semanas: int, dias_excluidos: int,
+                   dias_fevereiro: int | None = DIAS_FEVEREIRO) -> list[int]:
     """Dias do mês inicial em cada semana (U19 §4.7: "é levado em conta o
     número de dias do mês em questão na primeira e na última semana").
 
@@ -89,7 +100,7 @@ def pesos_semanais(ano: int, mes: int, n_semanas: int, dias_excluidos: int) -> l
     última semana); a primeira com o que sobra do mês. Com uma semana só
     (mês cheio, U19 §4.7) o peso é o mês inteiro.
     """
-    dm = dias_no_mes(ano, mes)
+    dm = dias_no_mes(ano, mes, dias_fevereiro)
     if n_semanas < 1:
         raise ErroLeitura(f"número de semanas inválido: {n_semanas}")
     if n_semanas == 1:
@@ -279,7 +290,7 @@ def periodo_mes_inicial(deck: Deck, cfg: Configuracao, op: OpcoesTendencia | Non
     v = _bloco(deck)
     ano = _ano_inicial(v)
     n = (v.semanas_nao_observadas or 0) + (v.semanas_observadas or 0)
-    pesos = pesos_semanais(ano, v.mes_inicial, n, v.dias_excluidos or 0)
+    pesos = pesos_semanais(ano, v.mes_inicial, n, v.dias_excluidos or 0, op.dias_fevereiro)
     f = np.zeros(deck.n_postos)
     for p, pr in deck.prevs.items():
         f[p - 1] = media_ponderada(pr.semanas, pesos)

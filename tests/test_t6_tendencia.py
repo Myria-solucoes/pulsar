@@ -14,7 +14,10 @@ from base import configuracao, deck
 from conftest import deck as pacote_deck
 from pulsar import tendencia as TD
 
-DECKS = ["202609", "202610"]
+import pacotes
+
+DECKS = pacotes.selecionados()
+ORIGINAIS = ("202609", "202610")
 
 
 @functools.lru_cache(maxsize=None)
@@ -46,17 +49,50 @@ def test_pesos_do_mes_inicial(nome):
     v = deck(nome).dadger.vazoes
     n = v.semanas_nao_observadas + v.semanas_observadas
     pesos = TD.pesos_semanais(v.ano_inicial, v.mes_inicial, n, v.dias_excluidos)
-    assert pesos == {"202609": [4, 7, 7, 7, 5], "202610": [2, 7, 7, 7, 7, 1]}[nome]
+    if nome in ORIGINAIS:
+        assert pesos == {"202609": [4, 7, 7, 7, 5], "202610": [2, 7, 7, 7, 7, 1]}[nome]
+    # controle pelo calendário da biblioteca padrão: as semanas operativas
+    # começam no sábado; a 1ª pega os dias do mês até a 1ª sexta, as do meio
+    # 7 e a última 7 menos os dias excluídos; a soma é o número de dias
+    # (fevereiro: 28 dias mesmo em ano bissexto, P-TEND-02)
+    import calendar
+    import datetime
+    dias = 28 if v.mes_inicial == 2 else calendar.monthrange(v.ano_inicial, v.mes_inicial)[1]
+    primeira = (4 - datetime.date(v.ano_inicial, v.mes_inicial, 1).weekday()) % 7 + 1  # dias até a sexta
+    bissexto = v.mes_inicial == 2 and calendar.isleap(v.ano_inicial)
+    assert pesos[0] == primeira - bissexto and pesos[-1] == 7 - v.dias_excluidos
+    assert all(p == 7 for p in pesos[1:-1]) and sum(pesos) == dias
 
 
 def test_pesos_calendario():
-    """P-TEND-02 (ESCOLHA): fevereiro bissexto tem 29 dias; combinações que
-    não cabem no mês são erro."""
-    assert TD.pesos_semanais(2028, 2, 5, 3) == [4, 7, 7, 7, 4]
+    """P-TEND-02: fevereiro tem 28 dias também em ano bissexto (padrão
+    INFERIDO); com ``dias_fevereiro=None``, 29. Combinações que não cabem no
+    mês são erro."""
+    assert TD.pesos_semanais(2028, 2, 5, 3) == [3, 7, 7, 7, 4]
+    assert TD.pesos_semanais(2028, 2, 5, 3, dias_fevereiro=None) == [4, 7, 7, 7, 4]
+    assert TD.pesos_semanais(2024, 2, 5, 1) == [1, 7, 7, 7, 6]
     assert TD.pesos_semanais(2027, 2, 4, 0) == [7, 7, 7, 7]
     assert TD.pesos_semanais(2026, 9, 1, 0) == [30]
     with pytest.raises(Exception):
         TD.pesos_semanais(2026, 9, 3, 2)
+
+
+@pytest.mark.parametrize("nome", DECKS)
+def test_fevereiro_bissexto_com_28_dias(nome):
+    """P-TEND-02 (lacuna L5): em fev/2024 (PMO e RV1–RV3) o mês inicial do
+    QPAST só fecha com fevereiro de 28 dias, pesos (1, 7, 7, 7, 6): a 1ª
+    semana (27/01 a 02/02) entra com 1 dia, não com os 2 do calendário. Com
+    29 dias quase nenhum posto com PREVS fecha (só os de semanas iguais)."""
+    import calendar
+    d = deck(nome)
+    v = d.dadger.vazoes
+    if not (v.mes_inicial == 2 and calendar.isleap(v.ano_inicial)):
+        pytest.skip("mês inicial não é fevereiro bissexto")
+    q = np.frombuffer(publico(nome), "<f8").reshape(24, -1)[12 + 1]
+    iguais = {dias: sum(calculada(nome, dias_fevereiro=dias).total[1][p - 1] == q[p - 1] for p in d.prevs)
+              for dias in (28, None)}
+    assert iguais[28] == len(d.prevs)
+    assert iguais[None] < 0.05 * len(d.prevs), iguais
 
 
 @pytest.mark.parametrize("nome", DECKS)
@@ -94,7 +130,7 @@ def test_regras_leem_precisao_simples(nome):
     mi = deck(nome).dadger.vazoes.mes_inicial
     passados = [m for m in range(12) if m != mi - 1]
     art = [p - 1 for p in TD.postos_artificiais(configuracao(nome))]
-    assert len(art) == 26
+    assert art and (nome not in ORIGINAIS or len(art) == 26)
     esperado = {
         ("202609", "dupla"): (38, 19), ("202610", "dupla"): (35, 18),
         ("202609", "simples"): (105, 12), ("202610", "simples"): (106, 12),
@@ -102,7 +138,10 @@ def test_regras_leem_precisao_simples(nome):
     for rotulo, kw in (("dupla", {"leitura_regras": float}), ("simples", {"operacoes_regras": TD.precisao_simples})):
         t = calculada(nome, **kw).total
         obtido = (int(np.count_nonzero(t[passados] != q[passados])), int(np.count_nonzero(t[mi - 1, art] != q[mi - 1, art])))
-        assert obtido == esperado[(nome, rotulo)], rotulo
+        if nome in ORIGINAIS:
+            assert obtido == esperado[(nome, rotulo)], rotulo
+        else:
+            assert sum(obtido) > 0, rotulo
     assert np.array_equal(calculada(nome).total, q)
 
 
@@ -113,7 +152,7 @@ def test_postos_com_regra_sem_nposnw_ficam_com_o_historico(nome):
     d, c = deck(nome), configuracao(nome)
     alvos = set(TD.postos_artificiais(c))
     outros = sorted(d.regras.postos() - alvos)
-    assert {116, 119, 298}.issubset(outros)
+    assert outros and (nome not in ORIGINAIS or {116, 119, 298}.issubset(outros))
     q = np.frombuffer(publico(nome), "<f8").reshape(24, -1)[12:]
     v = d.dadger.vazoes
     difere = 0
@@ -134,7 +173,8 @@ def test_incremental_inclui_nw_a_montante(nome):
     por = c.por_numero()
     salto = next(u for u in c.usinas if u.posto == 294)
     nw = [por[n] for n in c.montante(salto.numero) if por[n].status == "NW"]
-    assert nw
+    if not nw:
+        pytest.skip("SALTO sem usina NW a montante nesta configuração")
     q = np.frombuffer(publico(nome), "<f8").reshape(24, -1)
     sem_nw = t.total[:, 293] - sum(t.total[:, por[n].posto - 1] for n in c.montante(salto.numero) if por[n].status != "NW")
     assert not np.array_equal(sem_nw, q[:12, 293])
@@ -176,6 +216,7 @@ def test_postos_citados_nas_regras_publicas():
     from pulsar.entradas.regras import ler_regras, postos_referenciados
 
     arquivos = [deck(n).diretorio / "REGRAS.DAT" for n in DECKS]
+    n_pacotes = len(arquivos)
     if colecao_ons.disponivel():
         arquivos += [c.regras for c in colecao_ons.casos_gevazp() if c.regras is not None]
     maior, lidos = 0, 0
@@ -189,4 +230,4 @@ def test_postos_citados_nas_regras_publicas():
             maior = max(maior, g.posto, *postos_referenciados(g.expressao), 0)
     assert maior == 318
     if colecao_ons.disponivel():
-        assert lidos == 506
+        assert lidos - n_pacotes == 504  # REGRAS.DAT da coleção de decks do ONS
