@@ -341,6 +341,20 @@ matriz histórica é a mesma). O teste de núcleo da P-ESP-07/09 é
 independente nos dois decks, porque o mês estocástico e os cenários
 diferem (outubro em 202609, novembro em 202610).
 
+## Alcance das evidências da F10
+
+Com os 59 pacotes do SINtegre, T2–T4 deixam de repousar numa amostra única:
+há cinco históricos distintos (janelas 1931–2020 a 1931–2024), o ramo PAR(p)
+(12 pacotes de 2022) e o PAR(p)-A (49 de 2023–2026), em quatro versões do
+GEVAZP (9_L, 10.0.0, 11, 11.0.2). Dentro de um mesmo ano o histórico, o
+ajuste e o vordem.out são os mesmos; a confirmação independente é entre
+anos. As linhas P-HIST, P-EST, P-ANU, P-FACP-01, P-LIN-01, P-YW, P-ORD, P-NEG,
+P-RES e P-VORD-01..03 passam a valer nos quatro históricos do PAR(p)-A; as
+linhas novas do ramo PAR(p) (P-FACP-02, P-LIN-03, P-ORD-04) valem num
+histórico só (1931–2020). O T6 cobre os doze meses, fevereiro bissexto
+(quatro revisões) e 0 a 3 semanas observadas. Resultado por degrau:
+docs/revalidacao-2022-2026.md.
+
 ## Ocorrências
 
 Registro de qualquer contato acidental com material proibido (00-regras §2):
