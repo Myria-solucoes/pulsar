@@ -136,8 +136,8 @@ def argumentos(argv=None):
     ap.add_argument("--intermediarios", help="diretório para GEVAZP.OUT, VAZTOTGD.DAT, vazoesta.out e vazoesia.out")
     ap.add_argument("--simetria", choices=SIMETRIAS, default="nenhuma", help="P-RUI-04, lacuna L6")
     ap.add_argument("--desvio-fc", choices=DESVIOS, default="ponderado", help="σ_i do fator de compensação, P-AGR-04, lacuna L7")
-    ap.add_argument("--rota-limite", choices=ROTAS, default="zero", help="limite inferior da lognormal, P-LN3-03, lacuna L8")
-    ap.add_argument("--momentos", choices=MOMENTOS, default="teoricos", help="momentos do ruído, P-LN3-04")
+    ap.add_argument("--rota-limite", choices=ROTAS, default="inferida", help="limite inferior da lognormal, P-LN3-03/09, lacuna L8")
+    ap.add_argument("--momentos", choices=MOMENTOS, default="historicos", help="momentos do ruído, P-LN3-04")
     return ap.parse_args(argv)
 
 

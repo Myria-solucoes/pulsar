@@ -88,3 +88,42 @@ def test_condicional_do_lateral():
     w1 = w2 @ g + e * rng.standard_normal(200_000)
     assert abs(w1.std() - 1) < 0.01
     assert np.allclose([np.corrcoef(w1, w2[:, j])[0, 1] for j in range(2)], s12, atol=0.01)
+
+
+def _momentos(x):
+    x = np.asarray(x, float)
+    n, mu, sd = x.size, x.mean(), x.std()
+    return mu, sd, n / ((n - 1) * (n - 2)) * (((x - mu) / sd) ** 3).sum()
+
+
+def test_limite_inferido_ramos():
+    """P-LN3-09..13: fração do menor valor não negativo por faixa de
+    assimetria, cúbica no lugar da base com 2 ≤ γ < 4, piso μ - 3σ e
+    μ - 3σ direto com mais de 15% de negativos."""
+    r = L.RegraLimite()
+    assert [r.fracao(g) for g in (-0.5, 0.999, 1.0, 1.999, 2.0, 3.999, 4.0, 9.0)] == \
+        [0.15, 0.15, 0.35, 0.35, 0.5, 0.5, 0.6, 0.6]
+    assert L.RegraLimite(limiar_inclusivo=False).fracao(1.0) == 0.15
+    # fração do mínimo (piso bem abaixo)
+    assert L.limite_inferido(np.array([10.0, 30.0]), 50.0, 30.0, 0.5) == pytest.approx(1.5)
+    assert L.limite_inferido(np.array([10.0, 30.0]), 50.0, 30.0, 1.5) == pytest.approx(3.5)
+    assert L.limite_inferido(np.array([10.0, 30.0]), 50.0, 30.0, 5.0) == pytest.approx(6.0)
+    # menor valor não negativo
+    assert L.limite_inferido(np.array([-5.0, 0.5, 8.0] + [9.0] * 20), 50.0, 30.0, 0.5) == pytest.approx(0.075)
+    # piso μ - 3σ
+    assert L.limite_inferido(np.array([10.0, 30.0]), 50.0, 5.0, 0.5) == pytest.approx(35.0)
+    # cúbica τ = μ - σ/η(γ) em (0, mínimo) com 2 ≤ γ < 4: base = τ
+    g = 2.5
+    tau = 50.0 - 30.0 / L.eta_da_assimetria(g)
+    assert 0 < tau < 40.0
+    assert L.limite_inferido(np.array([40.0, 90.0]), 50.0, 30.0, g) == pytest.approx(0.5 * tau)
+    assert L.limite_inferido(np.array([5.0, 90.0]), 50.0, 30.0, g) == pytest.approx(2.5)  # τ > mínimo
+    # mais de 15% de negativos: μ - 3σ direto, mesmo abaixo da fração
+    x = np.array([-1.0] * 16 + [3.0] * 84)
+    mu, sd, gm = _momentos(x)
+    assert L.limite_inferido(x, mu, sd, gm) == pytest.approx(mu - 3 * sd)
+    x = np.array([-1.0] * 15 + [3.0] * 85)
+    mu, sd, gm = _momentos(x)
+    assert L.limite_inferido(x, mu, sd, gm) == pytest.approx(max(L.RegraLimite().fracao(gm) * 3.0, mu - 3 * sd))
+    # sem valor não negativo: base 0 (P-LN3-13, ESCOLHA)
+    assert L.limite_inferido(np.array([-1.0, -2.0]), -1.5, 0.5, 0.0, L.RegraLimite(limiar_negativos=1.0)) == 0.0

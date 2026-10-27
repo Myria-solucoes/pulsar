@@ -31,7 +31,7 @@ from ..empacotamento.probvaz import gravar_probvaz, probabilidades_de_contagens
 from ..tendencia import tendencia
 from ..totalizacao import SeriesTotalizadas, calcular_series, dados_defasagem, gravar_series, mes_e_ano_estocastico
 from .agregacao import Agregacao, OpcoesAgregacao, agregar, compensar
-from .lognormal import MOMENTOS, ROTAS, ParametrosLN3, limite_por_quantis, parametros
+from .lognormal import MOMENTOS, ROTAS, ParametrosLN3, RegraLimite, limite_inferido, limite_por_quantis, parametros
 
 MESES = 12
 # P-GER-01 (ESCOLHA, lacuna L6): semente padrão (configurável).
@@ -47,10 +47,13 @@ class ErroGeracao(ValueError):
 class OpcoesGeracao:
     semente: int = SEMENTE_PADRAO
     agregacao: OpcoesAgregacao = field(default_factory=OpcoesAgregacao)
-    # P-LN3-03 (lacuna L8): rota do limite inferior da lognormal.
-    rota_limite: str = "zero"
-    # P-LN3-04: momentos do ruído (teóricos: μ_a = 0, σ_a² = 1 - Σφρ - ψρ_A).
-    momentos: str = "teoricos"
+    # P-LN3-03/09 (lacuna L8): rota do limite inferior da lognormal.
+    rota_limite: str = "inferida"
+    # P-LN3-09..13: parâmetros da rota "inferida".
+    regra_limite: RegraLimite = field(default_factory=RegraLimite)
+    # P-LN3-04: momentos do ruído (históricos: média e desvio dos resíduos
+    # do mês, P-RES-02; teóricos: μ_a = 0, σ_a² = 1 - Σφρ - ψρ_A).
+    momentos: str = "historicos"
     # P-LN3-06: μ_a - Δ ≤ 0.
     sem_lognormal: str = "quadrado"
     # P-LAT-02 (DOC M18 eq. 4.19: correlações anuais; variante "mensal").
@@ -123,6 +126,14 @@ def termo_condicional(aj: parp.AjustePAR, m: int, zpass, a_ant: float) -> float:
     if aj.anual is not None and md.ordem:
         c += md.psi * (a_ant - aj.anual.media[m]) / aj.anual.desvio[m]
     return c
+
+
+def limite_do_mes(aj: parp.AjustePAR, m: int, regra: RegraLimite | None = None) -> float:
+    """P-LN3-09: M_t da série no mês m (0..11) pelas vazões históricas do
+    mês e pelas estatísticas da F3 (média, desvio e assimetria, P-EST-01..03)."""
+    est = aj.est
+    return limite_inferido(aj.serie.valores[:, m], float(est.media[m]), float(est.desvio[m]),
+                           float(est.assimetria[m]), regra)
 
 
 def momentos_do_ruido(aj: parp.AjustePAR, m: int, momentos: str, res: parp.Residuos | None = None) -> tuple[float, float]:
@@ -273,6 +284,8 @@ def gerar(deck, cfg: Configuracao | None = None, opcoes: OpcoesGeracao | None = 
             gama = float(aj.est.assimetria[m])
         elif op.rota_limite == "quantis":
             lim = limite_por_quantis(s.valores[:, m])
+        elif op.rota_limite == "inferida":
+            lim = limite_do_mes(aj, m, op.regra_limite)
         sig = float(aj.est.desvio[m])
         ln3 = parametros(c, sig, mu_a, sd_a, op.rota_limite, gama, lim, op.sem_lognormal)
         a_t = ln3.ruido(w[id(s)])

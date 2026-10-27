@@ -2,8 +2,9 @@
 
 - TCOND.REL: média e desvio teóricos condicionados (P-GER-04, P-LN3-04);
 - TESTES.REL: tamanho da amostra (P-RUI-02);
-- GEVAZP.OUT: rota do limite inferior da lognormal pelo teste de núcleo da
-  F4 (P-LN3-03) e correlação do posto lateral (P-LAT-02);
+- GEVAZP.OUT: rotas alternativas do limite inferior contra a regra da F11
+  pelo teste de núcleo (P-LN3-03; a regra e o lateral estão em
+  test_oraculo_limite_inferior.py e test_oraculo_laterais.py);
 - QUANTIL.CSV: definição dos quartis ponderados (P-ACE-03).
 """
 
@@ -11,19 +12,15 @@ import functools
 import re
 
 import numpy as np
-import pytest
 
 import apoio
 import base
 from apoio_f8 import ajustes
-from pulsar import espacial as E
-from pulsar import historico
 from pulsar.estocastico import aceitacao as A
 from pulsar.estocastico.geracao import momentos_do_ruido, passado_da_serie, termo_condicional
-from pulsar.estocastico.lognormal import eta_da_assimetria, limite_por_quantis, parametros
+from pulsar.estocastico.lognormal import limite_por_quantis, parametros
 from pulsar.oraculos import ler_totais_gerados
 from pulsar.tendencia import tendencia
-from pulsar.totalizacao import incrementais_de_totais
 
 
 @functools.lru_cache(maxsize=None)
@@ -105,35 +102,7 @@ def test_t_valores_do_tcond(pacote):
 
 
 # --------------------------------------------------------------------------
-# Teste de núcleo (P-ESP-09) com a lognormal: rota de M_t (lacuna L8)
-
-
-@functools.lru_cache(maxsize=None)
-def nucleo(nome):
-    """Base do núcleo da matriz do mês estocástico sem peso nas colunas que
-    não são a incremental gerada da própria série (P-ESP-10)."""
-    ss = historico.series_incrementais(base.deck(nome).historico, base.configuracao(nome))
-    c = E.correlacao_espacial(E.series_da_carga(ss))
-    u = c.mes(apoio.mes_estocastico(nome))
-    fora = ("FOZ DO PRATA", "ESTRELA", "MONTE CLARO", "SALTO", "SOBRADINHO")
-    ei = [k for k, n in enumerate(c.nomes) if n in fora]
-    ui = [k for k, n in enumerate(c.nomes) if n not in fora]
-    lam, a = np.linalg.eigh(u)
-    nuc = a[:, lam < 1e-10]
-    _, _, vt = np.linalg.svd(nuc[ei])
-    return [c.nomes[k] for k in ui], (nuc @ vt[len(ei):].T)[ui]
-
-
-def residuo_nucleo(nome, x):
-    """Menor valor singular de q -> X diag(q) K com as colunas de X
-    centradas e normalizadas pelas probabilidades (P-ESP-10)."""
-    _, k = nucleo(nome)
-    w = A.pesos(apoio.probvaz(nome))
-    w = w / w.sum()
-    x = (x - w @ x) * np.sqrt(w)[:, None]
-    x = x / np.sqrt((x ** 2).sum(0))
-    g = np.einsum("ki,ij->kji", x, k).reshape(-1, x.shape[1])
-    return np.linalg.svd(g, compute_uv=False)[-1]
+# Limite inferior (lacuna L8): rotas alternativas contra a regra da F11
 
 
 def _z_oficial(nome, nomes):
@@ -142,37 +111,33 @@ def _z_oficial(nome, nomes):
     return np.stack([g[:, nint[n] - 1] for n in nomes], 1)
 
 
-def test_limite_inferior_zero(pacote):
-    """P-LN3-03 (INFERIDO, lacuna L8): no GEVAZP.OUT, W_i é afim em ln(Z_i - M_i)
-    (passado único no período). Com M = 0 o resíduo do teste de núcleo é o
-    menor entre as rotas (0,0237 e 0,0194): as cúbicas da eq. 25 (assimetria
-    dos resíduos ou das vazões) põem o limite acima de cenários publicados
-    em 7 a 34 séries, e o estimador por quantis em 1; nas séries em que os
-    limites são válidos, o resíduo dessas rotas fica ≥ 0,061; a vazão sem
-    logaritmo (ruído normal) dá resíduo cinco vezes maior."""
-    nomes, _ = nucleo(pacote.nome)
-    mod = modelo(pacote.nome)
-    mes = apoio.mes_estocastico(pacote.nome) - 1
-    z = _z_oficial(pacote.nome, nomes)
-    r0 = residuo_nucleo(pacote.nome, np.log(z))
-    assert r0 < 0.03
-    assert residuo_nucleo(pacote.nome, z) > 5 * r0
-    for rota in ("cubica_residuos", "cubica_vazoes", "quantis"):
+def test_rotas_alternativas_do_limite(pacote):
+    """P-LN3-03 (lacuna L8): no teste de núcleo da F11 (apoio_f11), a regra
+    P-LN3-09 deixa os W reconstruídos do GEVAZP.OUT na imagem da matriz do
+    mês a ~1e-8; as rotas da primeira versão da F8, M_t = 0 e as cúbicas da
+    eq. 25 (assimetria dos resíduos ou das vazões, Δ = μ_a - σ_a/η) e o
+    estimador por quantis (Stedinger, 1980), põem o limite acima de algum
+    cenário publicado ou deixam resíduo mais de cem vezes maior. Todas com
+    os momentos históricos (P-LN3-04)."""
+    import apoio_f11 as F
+    from pulsar import parp
+
+    nome = pacote.nome
+    mes = apoio.mes_estocastico(nome) - 1
+    r = F.residuo(nome, F.ruidos(nome))
+    assert r < 1e-7
+    for rota in ("zero", "cubica_residuos", "cubica_vazoes", "quantis"):
         lim = []
-        for n in nomes:
-            aj, c, s, (mu_a, sa) = mod[n]
+        for _, aj, c, s, _ in F.series(nome):
+            mu, sd = momentos_do_ruido(aj, mes, "historicos")
             if rota == "quantis":
-                p = parametros(c, s, mu_a, sa, rota, limite_vazao=limite_por_quantis(aj.serie.valores[:, mes]))
+                p = parametros(c, s, mu, sd, rota, limite_vazao=limite_por_quantis(aj.serie.valores[:, mes]))
             else:
-                g = aj.est.assimetria[mes] if rota == "cubica_vazoes" else __import__("pulsar.parp", fromlist=["x"]).residuos(aj).assimetria[mes]
-                p = parametros(c, s, mu_a, sa, rota, gama=g)
+                g = aj.est.assimetria[mes] if rota == "cubica_vazoes" else parp.residuos(aj).assimetria[mes]
+                p = parametros(c, s, mu, sd, rota, gama=g)
             lim.append(s * (c + p.delta))  # limite de Z: σ_m (c + Δ)
-        lim = np.array(lim)
-        abaixo = (z <= lim).any(0)
-        assert abaixo.sum() >= (1 if rota == "quantis" else 5), (rota, abaixo.sum())
-        x = np.log(np.where(z - lim > 0, z - lim, np.nan))
-        ok = ~np.isnan(x).any(0)
-        assert residuo_nucleo(pacote.nome, np.where(ok, x, np.log(z))) > 2.5 * r0
+        rr = F.residuo(nome, F.ruidos(nome, np.array(lim)))
+        assert rr > 100 * r, (rota, rr, r)
 
 
 def test_lateral_condicionado_com_correlacao_anual(pacote):
@@ -181,6 +146,10 @@ def test_lateral_condicionado_com_correlacao_anual(pacote):
     SOBRADINHO reconstruído pelas outras 153 séries (W = A √V y), tem
     inclinação perto da correlação anual (|Δ| < 0,005) e não da mensal, e
     desvio residual mais perto de √(1-ρ²_anual) que de √(1-ρ²_mensal)."""
+    from pulsar import espacial as E
+    from pulsar import historico
+    from pulsar.totalizacao import incrementais_de_totais
+
     nome = pacote.nome
     d, cfg = base.deck(nome), base.configuracao(nome)
     mes = apoio.mes_estocastico(nome)
