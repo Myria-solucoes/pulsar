@@ -80,6 +80,8 @@ def pytest_generate_tests(metafunc):
     # Parametriza depois do pytest_configure, para respeitar --decks.
     if "pacote" in metafunc.fixturenames:
         nomes = _decks()
+        if metafunc.module.__name__.startswith(("test_t11", "test_t12")):
+            nomes = pacotes.originais(nomes)
         metafunc.parametrize("pacote", nomes or [pytest.param(None, marks=pytest.mark.skip("sem decks"))],
                              indirect=True)
 

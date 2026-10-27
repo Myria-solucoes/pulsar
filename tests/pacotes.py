@@ -70,6 +70,12 @@ class PastaPacote(PosixPath):
         return p
 
 
+def originais(nomes) -> list[str]:
+    """Os de ``decks/ons-pacote-gevazp/`` entre ``nomes``. T11 e T12 (parte
+    estocástica, F8/F9) ficam nesses: a F10 revalida só T0–T10."""
+    return [n for n in nomes if todos().get(n) is not None and todos()[n].parent == ORIGINAIS]
+
+
 def pasta(nome: str) -> Path:
     try:
         return PastaPacote(todos()[nome])

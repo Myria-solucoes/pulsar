@@ -21,6 +21,8 @@ DECKS = pacotes.DECKS
 # CASO.DAT -> ARQUIVOS.DAT -> lista do DECOMP, que é a execução cujas saídas
 # estão no pacote (202609: RV1).
 COMPLETOS = [(nome, None) for nome in pacotes.selecionados()]
+# T11/T12 (parte estocástica): só os pacotes originais selecionados.
+ESTOCASTICOS = [(n, d) for n, d in COMPLETOS if n in pacotes.originais([n])]
 # Outras revisões do mesmo pacote, só para leitura (T0).
 SO_LEITURA = [("202609", "DADGER.RV0")] if "202609" in pacotes.selecionados() else []
 

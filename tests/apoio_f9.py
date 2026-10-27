@@ -28,7 +28,7 @@ NPOS = 320
 def revisoes() -> list[tuple[str, str]]:
     """(deck, RVn) de cada VAZOES.RVx publicado nos pacotes completos."""
     out = []
-    for nome, _ in base.COMPLETOS:
+    for nome, _ in base.ESTOCASTICOS:
         for p in sorted((base.DECKS / nome).glob("VAZOES.RV*")):
             out.append((nome, p.suffix.lstrip(".").upper()))
     return out
