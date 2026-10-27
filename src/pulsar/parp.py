@@ -71,6 +71,12 @@ class OpcoesPAR:
     # P-LIN-02 (ESCOLHA, lacuna L19): pivô nulo no Gauss-Jordan sem pivô:
     # "erro" ou "lapack" (inversa com pivoteamento parcial do NumPy).
     pivo_nulo: str = "erro"
+    # P-LIN-03: solver do Yule-Walker no ramo PAR(p), "cholesky" (INFERIDO
+    # nos pacotes de 2022) ou "gauss_jordan" (o do PAR(p)-A, P-LIN-01).
+    solver_parp: str = "cholesky"
+    # P-ORD-04: a busca da ordem para antes da primeira defasagem com
+    # |φ_kk| > 1 ("corta", INFERIDO nos pacotes de 2022) ou não ("ignora").
+    facp_maior_que_1: str = "corta"
     # P-RES-04 (ESCOLHA não discriminável): ordem das somas nos momentos e no
     # correlograma dos resíduos, "direta" ou "reversa".
     soma_residuos: str = "direta"
@@ -80,7 +86,9 @@ class OpcoesPAR:
             raise ValueError(self.facp_parp)
         for nome, ok in (("soma_assimetria", ("direta", "reversa")), ("cubo_assimetria", ("potencia", "produto")),
                          ("desvio_nulo", ("erro", "ordem_zero")), ("pivo_nulo", ("erro", "lapack")),
-                         ("soma_residuos", ("direta", "reversa"))):
+                         ("soma_residuos", ("direta", "reversa")),
+                         ("solver_parp", ("cholesky", "gauss_jordan")),
+                         ("facp_maior_que_1", ("corta", "ignora"))):
             if getattr(self, nome) not in ok:
                 raise ValueError(f"{nome}={getattr(self, nome)!r}")
         if not 0 <= self.ordem_maxima <= self.defasagens:
@@ -267,6 +275,40 @@ def inversa(a: list[list[float]], pivo_nulo: str = "erro") -> list[list[float]]:
     return a
 
 
+def cholesky(a: list[list[float]], b: list[float]) -> list[float]:
+    """P-LIN-03: solução de a x = b por Cholesky, a = L L': L por linhas
+    (L_ij = (a_ij - Σ_{k<j} L_ik L_jk) / L_jj, L_ii = sqrt(a_ii - Σ L_ik²)),
+    substituição direta L y = b e retroativa L' x = y, somas sequenciais em
+    k crescente (M18 §4.2.2 e L-PAR: "resolvido por Cholesky"). INFERIDO:
+    bits de φ no correli.out dos pacotes de 2022 (ramo PAR(p))."""
+    n = len(b)
+    lo = [[0.0] * n for _ in range(n)]
+    for i in range(n):
+        for j in range(i + 1):
+            s = a[i][j]
+            for k in range(j):
+                s -= lo[i][k] * lo[j][k]
+            if i == j:
+                if s <= 0.0:
+                    raise ErroAjuste("matriz não positiva definida no Cholesky")
+                lo[i][i] = math.sqrt(s)
+            else:
+                lo[i][j] = s / lo[j][j]
+    y = [0.0] * n
+    for i in range(n):
+        s = b[i]
+        for k in range(i):
+            s -= lo[i][k] * y[k]
+        y[i] = s / lo[i][i]
+    x = [0.0] * n
+    for i in range(n - 1, -1, -1):
+        s = y[i]
+        for k in range(i + 1, n):
+            s -= lo[k][i] * x[k]
+        x[i] = s / lo[i][i]
+    return x
+
+
 def _produto(a: list[list[float]], b: list[list[float]]) -> list[list[float]]:
     return [[soma(a[i][l] * b[l][j] for l in range(len(b))) for j in range(len(b[0]))] for i in range(len(a))]
 
@@ -289,7 +331,7 @@ def _matriz(est: Estatisticas, anual: ComponenteAnual | None, m: int, k: int) ->
 
 
 def facp(est: Estatisticas, anual: ComponenteAnual | None, defasagens: int = DEFASAGENS,
-         forma_parp: str = "yw", pivo_nulo: str = "erro") -> np.ndarray:
+         forma_parp: str = "yw", pivo_nulo: str = "erro", solver_parp: str = "cholesky") -> np.ndarray:
     """FACP [k-1, m-1], k = 1..defasagens.
 
     P-FACP-01 (PAR(p)-A): correlação parcial entre Z_t e Z_{t-k} condicionada
@@ -305,7 +347,7 @@ def facp(est: Estatisticas, anual: ComponenteAnual | None, defasagens: int = DEF
     for k in range(1, defasagens + 1):
         for m in range(MESES):
             if anual is None and forma_parp == "yw":
-                out[k - 1, m] = yule_walker(est, None, m, k, pivo_nulo)[0][-1]
+                out[k - 1, m] = yule_walker(est, None, m, k, pivo_nulo, solver_parp)[0][-1]
                 continue
             s = _matriz(est, anual, m, k)
             o1 = [0, k]
@@ -321,17 +363,22 @@ def facp(est: Estatisticas, anual: ComponenteAnual | None, defasagens: int = DEF
 
 
 def yule_walker(est: Estatisticas, anual: ComponenteAnual | None, m: int, p: int,
-                pivo_nulo: str = "erro") -> tuple[tuple[float, ...], float | None]:
+                pivo_nulo: str = "erro", solver_parp: str = "cholesky") -> tuple[tuple[float, ...], float | None]:
     """P-YW-01: coeficientes φ_1..φ_p (e ψ no PAR(p)-A) do mês m (0..11) pelo
     sistema de Yule-Walker (L-PAR eq. 16; PAR(p)-A: R1416 eq. 16, L-PARA
     eq. 37), resolvido como x = M⁻¹ b com a inversa da P-LIN-01 e o produto
-    em soma sequencial. INFERIDO: bits de φ no correli.out."""
+    em soma sequencial. INFERIDO: bits de φ no correli.out.
+
+    P-LIN-03: no ramo PAR(p) (sem componente anual) o sistema é resolvido por
+    Cholesky (``solver_parp="cholesky"``, INFERIDO nos pacotes de 2022)."""
     if p == 0:
         return (), (0.0 if anual is not None else None)
     s = _matriz(est, anual, m, p)
     o = list(range(1, len(s)))
     mat = [[s[i][j] for j in o] for i in o]
     b = [s[i][0] for i in o]
+    if anual is None and solver_parp == "cholesky":
+        return tuple(cholesky(mat, b)), None
     inv = inversa(mat, pivo_nulo)
     x = [soma(inv[i][j] * b[j] for j in range(len(b))) for i in range(len(b))]
     if anual is None:
@@ -390,9 +437,24 @@ def limiar_significancia(n_anos: int, z: float = Z_95) -> float:
     return z / math.sqrt(n_anos)
 
 
-def identificar(facp_m, limite: int, limiar: float, minimo: int = 1) -> int:
+def limite_valido(facp_m, limite: int) -> int:
+    """P-ORD-04: a busca não passa da defasagem anterior à primeira com
+    |φ_kk| > 1. No ramo PAR(p) o último coeficiente do Yule-Walker de ordem k
+    (P-FACP-02) não é uma correlação e pode passar de 1; o vordem.out de 2022
+    mostra que a ordem identificada é sempre menor que essa defasagem.
+    INFERIDO: test_t4_parp.py::test_ordem_para_antes_da_facp_maior_que_1."""
+    for k in range(1, limite + 1):
+        if abs(facp_m[k - 1]) > 1.0:
+            return k - 1
+    return limite
+
+
+def identificar(facp_m, limite: int, limiar: float, minimo: int = 1, corta_maior_que_1: bool = False) -> int:
     """P-ORD-03: maior k ≤ limite com |φ_kk| > limiar (M18 §4.2.1); sem
-    nenhum, ``minimo`` (1, INFERIDO no vordem.out; R27063). Limite 0 dá 0."""
+    nenhum, ``minimo`` (1, INFERIDO no vordem.out; R27063). Limite 0 dá 0.
+    Com ``corta_maior_que_1`` o limite é antes reduzido pela P-ORD-04."""
+    if corta_maior_que_1:
+        limite = limite_valido(facp_m, limite)
     for k in range(limite, 0, -1):
         if abs(facp_m[k - 1]) > limiar:
             return k
@@ -457,17 +519,18 @@ def ajustar(serie: SerieIncremental, opcoes: OpcoesPAR | None = None) -> AjusteP
         # P-EST-06 (ESCOLHA, lacuna L19): não aparece nos pacotes públicos.
         raise ErroAjuste(f"{serie.nome}: desvio mensal nulo")
     anual = componente_anual(z, est, op.defasagens, op) if op.anual else None
-    fp = facp(est, anual, op.defasagens, op.facp_parp, op.pivo_nulo)
+    fp = facp(est, anual, op.defasagens, op.facp_parp, op.pivo_nulo, op.solver_parp)
     lim_sig = limiar_significancia(est.n_anos, op.z)
     aj = AjustePAR(serie, op, est, anual, fp, lim_sig)
 
     limites = [op.ordem_maxima] * MESES
-    ident = [identificar(fp[:, m], limites[m], lim_sig, op.ordem_minima) for m in range(MESES)]
+    corta = op.facp_maior_que_1 == "corta"
+    ident = [identificar(fp[:, m], limites[m], lim_sig, op.ordem_minima, corta) for m in range(MESES)]
     while True:
         modelos, fis, psif = [], [], []
         for m in range(MESES):
             p = 0 if est.desvio[m] == 0.0 else ident[m]  # P-EST-06, "ordem_zero"
-            md = ModeloMes(p, *yule_walker(est, anual, m, p, op.pivo_nulo))
+            md = ModeloMes(p, *yule_walker(est, anual, m, p, op.pivo_nulo, op.solver_parp))
             phi_f, psi_f = _fisicos(est, anual, m, md)
             # P-NEG-03: ordem 1 com coeficiente combinado de ordem 1 negativo
             # vira ordem 0, sem termo anual (INFERIDO no vordem.out, "AR( 0)"
@@ -493,7 +556,7 @@ def ajustar(serie: SerieIncremental, opcoes: OpcoesPAR | None = None) -> AjusteP
         # §6.3); os demais mantêm a ordem. INFERIDO no vordem.out.
         for m in neg:
             limites[m] = ident[m] - 1
-            ident[m] = identificar(fp[:, m], limites[m], lim_sig, op.ordem_minima)
+            ident[m] = identificar(fp[:, m], limites[m], lim_sig, op.ordem_minima, corta)
 
 
 # --------------------------------------------------------------------------

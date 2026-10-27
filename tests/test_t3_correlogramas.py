@@ -34,6 +34,9 @@ def test_correlacao_com_a_componente_anual_igual_ao_rel(pacote):
     rel = apoio.series_rel(pacote.nome)
     for nome, aj in ajustes(pacote.nome).items():
         ref = rel[nome].fac_componente_anual
+        if aj.anual is None:  # ramo PAR(p): o REL não traz a tabela
+            assert ref is None, nome
+            continue
         assert ref.shape == aj.anual.correlacao.shape, nome
         assert np.all(np.abs(aj.anual.correlacao - ref) <= TOL5), nome
 

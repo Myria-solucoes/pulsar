@@ -41,23 +41,28 @@ def test_coeficientes_e_psi_iguais_ao_rel(pacote):
         r = rel[nome]
         for m, md in enumerate(aj.modelos):
             assert confere_3_algarismos(md.phi, r.coeficientes[m]).all(), (nome, m + 1)
+            if not aj.opcoes.anual:  # ramo PAR(p): sem ψ no modelo nem no REL
+                assert md.psi is None and r.psi is None, nome
+                continue
             assert confere_3_algarismos(md.psi, r.psi[m]), (nome, m + 1)
             if md.ordem == 0:
                 assert md.psi == 0.0 and r.psi[m] == 0.0
 
 
 def test_modelo_par_a_e_ordem_maxima_do_deck(pacote):
-    """P-PAR-01, P-ORD-01: os pacotes trazem MODELO PAR-A = 1, e o REL
-    imprime "AJUSTA MODELO ESTOCASTICO PAR-A SIM"; a ordem máxima é 11 no
-    DADGER (reg. 11), no GEVAZP.DAT (reg. 15) e no REL."""
+    """P-PAR-01, P-ORD-01: com MODELO PAR-A = 1 o REL imprime "AJUSTA MODELO
+    ESTOCASTICO PAR-A SIM"; sem o registro (DADGER de 2022), "NAO" e o ramo
+    PAR(p). A ordem máxima é 11 no DADGER (reg. 11), no GEVAZP.DAT (reg. 15)
+    e no REL em todos os pacotes."""
     d = base.deck(pacote.nome)
-    assert d.dadger.vazoes.modelo_par_a == 1
+    flag = d.dadger.vazoes.modelo_par_a
+    assert flag in (None, 1)
     assert d.dadger.vazoes.ordem_maxima == 11 and d.gevazp.ordem_maxima == 11
     gerais = rel_texto.dados_gerais(rel_texto.linhas_rel(pacote.arq("GEVAZP.REL")))
-    assert gerais["AJUSTA MODELO ESTOCASTICO PAR-A"] == "SIM"
+    assert gerais["AJUSTA MODELO ESTOCASTICO PAR-A"] == ("SIM" if flag == 1 else "NAO")
     assert gerais["ORDEM MAXIMA DO MODELO AUTOREGRESSIVO"] == "11"
     aj = next(iter(ajustes(pacote.nome).values()))
-    assert aj.opcoes.anual and aj.opcoes.ordem_maxima == 11
+    assert aj.opcoes.anual == (flag == 1) and aj.opcoes.ordem_maxima == 11
 
 
 def test_rastro_igual_ao_vordem(pacote):
@@ -77,8 +82,13 @@ def test_rastro_igual_ao_vordem(pacote):
                 assert rm.mes == m + 1
                 assert nossa.modelos[m].ordem == rm.ordem, c
                 assert len(rm.coefs) == rm.ordem, c
-                assert np.all(np.abs(np.array(nossa.fisicos[m]) - rm.coefs) <= TOL5), c
-                assert abs(nossa.psi_fisico[m] - rm.psi) <= TOL5, c
+                # P-VORD-04: campo estourado (********) vem NaN e não é comparado
+                ok = ~np.isnan(rm.coefs)
+                assert np.all(np.abs(np.array(nossa.fisicos[m])[ok] - np.array(rm.coefs)[ok]) <= TOL5), c
+                if rm.psi is None:  # ramo PAR(p): o vordem.out não traz PSI
+                    assert not aj.opcoes.anual and nossa.psi_fisico[m] == 0.0, c
+                else:
+                    assert abs(nossa.psi_fisico[m] - rm.psi) <= TOL5, c
                 # FUNC: meses m-1, m-2, ... até a primeira negativa
                 f = nossa.contribuicoes[m]
                 corte = next((j + 1 for j, v in enumerate(f) if v < 0), len(f))
@@ -114,3 +124,61 @@ def test_ordem_zero_so_por_coeficiente_combinado_negativo(pacote):
                     assert it.identificadas[m] == 1, (nome, m + 1)
                     n += 1
     assert n > 0
+
+
+def test_solver_do_ramo_parp(pacote):
+    """P-LIN-03: no ramo PAR(p) os φ do correli.out são os do Cholesky; o
+    Gauss-Jordan da P-LIN-01 (o do PAR(p)-A) erra o último bit em boa parte
+    dos meses. No PAR(p)-A a opção não muda nada."""
+    import dataclasses
+
+    from pulsar import parp
+
+    iguais = {"cholesky": 0, "gauss_jordan": 0}
+    total = 0
+    for nome, aj in ajustes(pacote.nome).items():
+        s = correli_da_serie(pacote.nome, nome)
+        for m, md in enumerate(aj.modelos):
+            if md.ordem == 0:
+                continue
+            total += 1
+            for solver in iguais:
+                op = dataclasses.replace(aj.opcoes, solver_parp=solver)
+                phi, _ = parp.yule_walker(aj.est, aj.anual, m, md.ordem, op.pivo_nulo, op.solver_parp)
+                iguais[solver] += np.array_equal(np.array(phi), s.coeficientes[m])
+    if aj.opcoes.anual:
+        assert iguais["cholesky"] == iguais["gauss_jordan"] == total
+    else:
+        assert iguais["cholesky"] == total
+        assert iguais["gauss_jordan"] < 0.7 * total, iguais
+
+
+def test_ordem_para_antes_da_facp_maior_que_1(pacote):
+    """P-ORD-04: a ordem identificada na 1ª iteração (vordem.out) nunca
+    alcança a primeira defasagem com |φ_kk| > 1; sem o corte ("ignora") a
+    identificação muda nos meses em que essa defasagem existe. No PAR(p)-A
+    a FACP é uma correlação parcial e não passa de 1 nos pacotes."""
+    import dataclasses
+
+    from pulsar import parp
+
+    vo = vordem(pacote.nome)
+    cortados = 0
+    for nome, aj in ajustes(pacote.nome).items():
+        ref = vo[nome][0].identificadas
+        assert aj.iteracoes[0].identificadas == ref, nome
+        for m in range(12):
+            lim = parp.limite_valido(aj.facp[:, m], aj.opcoes.ordem_maxima)
+            assert ref[m] <= max(lim, 1), (nome, m + 1)
+            if lim < aj.opcoes.ordem_maxima:
+                cortados += 1
+                sem = parp.identificar(aj.facp[:, m], aj.opcoes.ordem_maxima, aj.limiar, aj.opcoes.ordem_minima)
+                assert sem != ref[m] or sem <= lim, (nome, m + 1)
+    if aj.opcoes.anual:
+        assert cortados == 0
+    else:
+        assert cortados > 0
+        ign = dataclasses.replace(aj.opcoes, facp_maior_que_1="ignora")
+        difere = sum(parp.ajustar(a.serie, ign).iteracoes[0].identificadas != vo[n][0].identificadas
+                     for n, a in ajustes(pacote.nome).items())
+        assert difere > 0

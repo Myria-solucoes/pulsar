@@ -57,7 +57,7 @@ class TestDecksCompletos(unittest.TestCase):
                     self.assertEqual(g[k], val, k)
                 self.assertEqual(SIM_NAO[g["ADOCAO DA ORDENACAO AUTOMATICA"]], v.ordenacao_automatica)
                 self.assertEqual(SIM_NAO[g["AJUSTA MODELO ESTOCASTICO A TODAS AS USINA"]], v.ajuste_todas)
-                self.assertEqual(SIM_NAO[g["AJUSTA MODELO ESTOCASTICO PAR-A"]], v.modelo_par_a)
+                self.assertEqual(SIM_NAO[g["AJUSTA MODELO ESTOCASTICO PAR-A"]], v.modelo_par_a or 0)  # P-PAR-01: ausente = NAO
                 self.assertEqual(SIM_NAO[g["CONSIDERACAO DO FENOMENO ENOS NO AJUSTE DOS PARAMETROS"]], v.ms_par)
                 self.assertEqual(g["ADOCAO DA MATRIZ DE CORRELACAO CRUZADA"], "MENSAL" if v.matriz_mensal == 1 else "ANUAL")
                 self.assertEqual(g["REPRESENTANTE NO PROCESSO DE AGREGACAO"], "CENTROIDE" if v.representante == 1 else "MAIS PROXIMO")
@@ -69,6 +69,8 @@ class TestDecksCompletos(unittest.TestCase):
                 d = deck(nome, dadger)
                 cfg = configuracao(nome, dadger)
                 tabela = rel.previsoes_semanais(rel.linhas_rel(DECKS / nome / "GEVAZP.REL"))
+                # Na versão 9_L o REL lista também o posto lateral (status PL).
+                tabela = [r for r in tabela if r[3] != "PL"]
                 self.assertEqual(len(tabela), len(cfg.usinas))
                 n = 0
                 for u, (_, posto, nome_rel, status, nums) in zip(cfg.usinas, tabela):
@@ -77,7 +79,7 @@ class TestDecksCompletos(unittest.TestCase):
                         sem = d.prevs[u.posto].semanas
                         self.assertEqual(nums[:6], sem + [0] * (6 - len(sem)), u.numero)
                         n += 1
-                self.assertGreater(n, 150)
+                self.assertGreater(n, 0.85 * len(cfg.usinas))
 
     def test_vazoes_dat_igual_a_serie_do_rel(self):
         """Usinas de cabeceira: série incremental do REL = VAZOES.DAT do posto."""

@@ -10,6 +10,10 @@ P-VORD-01..03):
   ``PSI:`` com ψ' = ψ σ_m/σ^A_m e as linhas ``FUNC. DE <mês> :`` com as
   contribuições dos meses anteriores, até a primeira negativa;
 * um bloco ``USINA:`` por iteração; o último é o modelo final.
+
+P-VORD-04: nos pacotes da versão 9_L (2022–2024) os ``COEFS:`` saem em
+campos de 8 colunas e o valor que não cabe é impresso como ``********``;
+o leitor devolve NaN nesse campo.
 """
 
 from __future__ import annotations
@@ -42,6 +46,11 @@ _MES = re.compile(r"MES: (\w{3}) -> AR\(\s*(\d+)\)")
 _FUNC = re.compile(r"\s+FUNC\. DE (\w{3}) :\s*(\S+)")
 
 
+def _numero(campo: str) -> float:
+    """Campo numérico; ``****`` (estouro do formato, P-VORD-04) vira NaN."""
+    return float("nan") if set(campo) == {"*"} else float(campo)
+
+
 def ler_vordem(caminho) -> dict[str, list[IteracaoVordem]]:
     """{nome da usina: iterações na ordem do arquivo}."""
     out: dict[str, list[IteracaoVordem]] = {}
@@ -70,7 +79,7 @@ def ler_vordem(caminho) -> dict[str, list[IteracaoVordem]]:
             if mes is None:
                 continue
             if linha.startswith("COEFS:"):
-                mes.coefs = [float(x) for x in linha[6:].split()]
+                mes.coefs = [_numero(x) for x in linha[6:].split()]
             elif linha.startswith("PSI:"):
                 mes.psi = float(linha[4:])
             else:

@@ -62,8 +62,11 @@ def test_componente_anual_igual_ao_rel(pacote):
     a média de JAN de CAMARGOS seria 126.26, não 127.62."""
     rel = apoio.series_rel(pacote.nome)
     for nome, aj in ajustes(pacote.nome).items():
-        assert aj.anual is not None
         r = rel[nome]
+        if not aj.opcoes.anual:  # ramo PAR(p) (P-PAR-01): sem componente anual
+            assert aj.anual is None and not r.serie_anual and r.media_anual is None, nome
+            continue
+        assert aj.anual is not None
         ref = np.array([r.serie_anual[a] for a in aj.serie.anos])
         assert np.all(np.abs(aj.anual.serie - ref) <= TOL2), nome
         assert np.all(np.abs(aj.anual.media - r.media_anual) <= TOL2), nome
