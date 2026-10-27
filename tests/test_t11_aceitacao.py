@@ -25,8 +25,9 @@ deck      versão  média  desvio  assim  Q1     Q2     Q3     correl  árvore
 A "árvore" é uma coluna só (a soma) com seis estatísticas: uma fora já dá
 0,833 (como na variante "sem_lateral_na_agregacao" do 202609, com o Q3 da
 soma 0,4% abaixo da faixa). Diferenças de até ~0,05 entre variantes são o
-ruído de duas frações em ~154 postos (2σ). Com P5–P95 (o exemplo de 03 §5) as frações caem para 0,72–0,86, o mesmo
-nível da referência (0,82): o critério de 90% não é atingível com 20
+ruído de duas frações em ~154 postos (2σ). Com P5–P95 (o exemplo de 03
+§5) as frações caem para abaixo de 0,90 (0,69–0,84 na primeira versão), o
+mesmo nível da referência (0,82): o critério de 90% não é atingível com 20
 sementes por essa faixa.
 """
 

@@ -131,13 +131,46 @@ oficial **byte a byte** (antes, 90,0% das palavras geradas).
     correlação com `W_P`, um normal padrão independente.
 
   O padrão do Pulsar segue a versão atual (`ruido_lateral="nenhum"`); a
-  forma do M18 fica como `"proprio"`. Se `b1` é componente do vetor
-  agregado pelo K-means ou um normal à parte não se separa nos dados
-  (P-AGR-07).
+  forma do M18 fica como `"proprio"`. Se o lateral é componente do vetor
+  agregado pelo K-means não se separa nos dados: o Pulsar o mantém no
+  vetor (`lateral_na_agregacao`, ESCOLHA P-AGR-07, pelo R3383 eq. 2.2 com
+  as 155 usinas do TESTES.REL), mesmo sem usá-lo no W na versão 11; o T10
+  (tamanhos de grupo) e o T11 não separam as duas formas.
 
 ## 6. Aceitação estatística (03 §5) antes e depois
 
-RESULTADO_T11
+`tests/test_t11_aceitacao.py`, 20 sementes, fração dos postos com a
+estatística do `GEVAZP.OUT` oficial na faixa [mín, máx] das sementes
+(P-ACE-06; referência de um gerador idêntico 0,90). "F8" é a primeira
+versão (variante `"f8"`: M_t = 0, momentos teóricos, lateral com a
+correlação anual e ruído próprio); "F11" é o padrão novo.
+
+| deck | versão | média | desvio | assim. | Q1 | Q2 | Q3 | correl. | árvore |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 202609 | F8 | 0,922 | 0,909 | 0,857 | 0,890 | 0,870 | 0,909 | 0,908 | 1,000 |
+| 202609 | F11 | 0,929 | 0,929 | 0,851 | 0,916 | 0,903 | 0,935 | 0,915 | 1,000 |
+| 202610 | F8 | 0,909 | 0,851 | 0,805 | 0,883 | 0,890 | 0,792 | 0,893 | 1,000 |
+| 202610 | F11 | 0,916 | 0,877 | 0,844 | 0,890 | 0,896 | 0,870 | 0,896 | 1,000 |
+
+- Por posto, a F11 não perde mais de 0,01 em nenhuma estatística; no
+  202610 a forma da distribuição, que era a pendência da L7, melhora:
+  desvio +0,026, assimetria +0,039, Q3 +0,078. Diferenças de até ~0,05
+  entre variantes são o ruído de duas frações em ~154 postos (2σ): o ganho
+  no Q3 passa dele, o da assimetria fica no limite.
+- O ganho vem do M_t: só M_t = 0 com o resto da F11 deixa a assimetria e o
+  Q3 do 202610 em 0,805 e 0,799. Momentos teóricos, correlação anual, ruído
+  próprio do lateral e o vetor agregado sem o lateral, cada um sozinho,
+  ficam a ±0,05 da F11: o T11 não os separa (a separação dos três
+  primeiros vem dos testes de núcleo exatos).
+- A "árvore" é uma coluna só com seis estatísticas: uma fora já dá 0,833
+  (o Q3 da soma do 202609 fica 0,4% abaixo da faixa com o vetor agregado
+  sem o lateral). Na referência (cada semente contra as outras 19) as seis
+  ficam dentro em só 9 a 13 das 20 sementes; o teste passa a exigir 5 de 6.
+- Testes do M18 cap. 6 (fração das séries rejeitadas a 5%): o oficial fica
+  dentro da faixa das sementes nos quatro testes nos dois decks (na
+  primeira versão, até 2 séries acima em KS e CvM).
+- Com P5–P95 as frações ficam abaixo de 0,90 nas duas versões, no nível
+  da referência para essa faixa (0,82; na primeira versão, 0,69–0,84).
 
 ## 7. Em aberto
 

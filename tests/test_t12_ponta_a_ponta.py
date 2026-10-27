@@ -255,11 +255,15 @@ def test_transplante_entre_revisoes(tmp_path):
 def test_aceitacao_no_vazoes_rvx(nome, rev):
     """P-INT-03 (03 §5 itens 2–4) sobre o bloco 6 (incrementais geradas
     inteiras) do VAZOES.RVx, com as probabilidades do registro 4 e os
-    mesmos limiares do T11 (tests/test_t11_aceitacao.py::
-    test_aceitacao_da_geracao_padrao): média, Q2, correlação e a árvore como
-    um todo na faixa [mín, máx] das 20 sementes (P-ACE-06) em ≥ 0,87 das
-    colunas, nenhuma estatística abaixo de 0,78 e média das frações
-    ≥ 0,87. Inclui o 202609 RV0, uma execução oficial sem GEVAZP.OUT no
+    limiares do T11 (tests/test_t11_aceitacao.py::
+    test_aceitacao_da_geracao_padrao): média, Q2 e correlação na faixa
+    [mín, máx] das 20 sementes (P-ACE-06) em ≥ 0,87 das colunas, a árvore
+    como um todo em ≥ 5 das 6 estatísticas (uma coluna só; na referência
+    as seis ficam dentro em só metade das sementes), nenhuma estatística
+    abaixo de 0,78 e média das frações ≥ 0,87. Com a F11: 202609 RV0 e RV1
+    e 202610 RV0 com média 0,935 / 0,948 / 0,908, correlação 0,917 / 0,917 /
+    0,899 e a árvore com as seis estatísticas na faixa (na F9: média 0,908 /
+    0,941 / 0,908 e correlação 0,909 / 0,912 / 0,894). Inclui o 202609 RV0, uma execução oficial sem GEVAZP.OUT no
     pacote, que o T11 não cobre.
 
     Controle da referência (cada semente contra as outras 19): 0,90 ± 0,01
@@ -274,7 +278,8 @@ def test_aceitacao_no_vazoes_rvx(nome, rev):
         assert abs(ref[k] - 0.9) < 0.01, k
     for k in ("q25", "q50", "q75"):
         assert 0.9 <= ref[k] <= 0.97, k
-    for k in ("media", "q50", "correlacao", "arvore"):
+    for k in ("media", "q50", "correlacao"):
         assert f[k] >= 0.87, k
+    assert f["arvore"] >= 5 / 6 - 1e-9
     assert min(f.values()) >= 0.78
     assert np.mean(list(f.values())) >= 0.87
