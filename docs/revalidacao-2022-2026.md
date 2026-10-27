@@ -19,7 +19,11 @@ A amostra (`tests/pacotes.py::AMOSTRA`) tem os dois pacotes originais e
 quatro do SINtegre: `202201_pmo` (ramo PAR(p), versão 9_L), `202402_rev2`
 (fevereiro bissexto, revisão com 2 semanas observadas), `202507_pmo` (versão
 10.0.0, com usina NW sem jusante) e `202605_pmo` (versão 11). O T10 usa as
-agregações em `cache/f8/` (`ferramentas/sementes_f8.py`).
+agregações em `cache/f8/` (`ferramentas/sementes_f8.py`); no modo amostra os
+pacotes novos usam só o cache (o teste de distribuição é pulado sem as 20
+sementes), e T11/T12 rodam só nos originais. Modo rápido sem T11/T12, no fim
+da frente: 816 passam, 32 pulados, 6 falham (os testes de núcleo do T5 em
+202201, 202507 e 202605; seção 3), em 10 min.
 
 ## 2. O que muda ao longo de 2022–2026
 
