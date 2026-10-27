@@ -65,7 +65,8 @@ def _casos(nome: str):
         return None
     out = []
     for tc in ET.parse(f).iter("testcase"):
-        arq = (tc.get("classname") or "").split(".")[0] + ".py"
+        partes = (tc.get("classname") or "").split(".")
+        arq = next((x for x in partes if x.startswith("test_")), partes[0]) + ".py"
         falha = None
         for tag in ("failure", "error"):
             e = tc.find(tag)

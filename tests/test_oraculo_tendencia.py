@@ -132,5 +132,7 @@ def test_qpast_anos_dos_meses_pelo_historico(pacote):
         outro = ano - 1 if m < mi else ano
         x = q.total[m - 1, [p - 1 for p in postos]]
         np.testing.assert_array_equal(x, h[a - a0, m - 1, [p - 1 for p in postos]], err_msg=f"mês {m}")
-        # e o ano alternativo não serve
-        assert not np.array_equal(x, h[outro - a0, m - 1, [p - 1 for p in postos]]), m
+        # e o ano alternativo não serve (quando o VAZOES.DAT o tem: nos PMOs
+        # de janeiro de 2025 e 2026 o histórico acaba no ano anterior)
+        if outro - a0 < h.shape[0]:
+            assert not np.array_equal(x, h[outro - a0, m - 1, [p - 1 for p in postos]]), m

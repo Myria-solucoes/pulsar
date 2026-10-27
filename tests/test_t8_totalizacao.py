@@ -283,7 +283,8 @@ def _transplante(nome):
             for m in cfg.montante(u.numero):
                 r = r - tot[:, idx[m]]
             inc[:, i] = r
-            inc[:, idx[u.jusante]] -= r
+            if u.jusante in idx:  # JURUENA (NW de 2025) não tem jusante
+                inc[:, idx[u.jusante]] -= r
     return inc
 
 

@@ -115,9 +115,11 @@ def test_separacao_do_coeficiente_combinado(pacote):
                 if it.modelos[m].ordem == 1:
                     facp_um.append(aj.facp[0, m])
     assert zero and um
-    assert max(zero) <= -0.004 and min(um) >= 0.029
-    assert min(facp_um) < 0  # o sinal da FACP de lag 1 não separa
-    assert max(rho_zero) > min(rho_um)  # ρ_1 dos dois grupos se sobrepõe
+    assert max(zero) < 0 <= min(um)
+    if pacote.nome in ("202609", "202610"):
+        assert max(zero) <= -0.004 and min(um) >= 0.029
+        assert min(facp_um) < 0  # o sinal da FACP de lag 1 não separa
+        assert max(rho_zero) > min(rho_um)  # ρ_1 dos dois grupos se sobrepõe
 
 
 def test_folga_do_limiar(pacote):

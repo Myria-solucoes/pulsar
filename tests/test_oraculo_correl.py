@@ -8,6 +8,7 @@ import math
 import numpy as np
 import pytest
 
+import apoio
 from apoio import correli, correlt, correlacoes_rel, estat_geradas_rel, mes_estocastico, nint_por_nome, series_rel
 
 TOL5 = 0.5e-5 + 1e-12  # 5 casas
@@ -162,7 +163,12 @@ def test_correlt_correlacoes(pacote):
     c = correlt(pacote.nome)
     for tabela, obter in [("hist_todos", c.correlacao_historica), ("sint_todos", c.correlacao_sintetica)]:
         rel = correlacoes_rel(pacote.nome, tabela)
-        assert len(rel) == len(c.indice) * (len(c.indice) - 1) // 2
+        # o REL da versão 10.0.0 lista só 153 das 170 séries do correlt (sem
+        # JIRAU, BELO MONTE, ...); os pares entre as listadas estão todos lá
+        listadas = {n for par in rel for n in par}
+        assert listadas <= {u.nome for u in apoio.config(pacote.nome) if u.nint in c.indice}
+        assert len(rel) == len(listadas) * (len(listadas) - 1) // 2
+        assert len(listadas) == len(c.indice) or len(listadas) >= 0.85 * len(c.indice)
         for (ni, nj), r in rel.items():
             b = obter(_nint(pacote.nome, ni), _nint(pacote.nome, nj))
             assert np.all(np.abs(b - r) <= TOL5), (tabela, ni, nj)
