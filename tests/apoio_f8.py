@@ -61,6 +61,11 @@ def _arq(*partes) -> Path:
 def agregacao(nome: str, semente: int, simetria: str = "nenhuma") -> Agregacao:
     """Agregação da geração de ``nome`` com a semente; calculada uma vez."""
     f = _arq("agr", nome, semente, simetria)
+    if not f.exists() and os.environ.get("PULSAR_SO_CACHE"):
+        # varredura dos 61 pacotes (ferramentas/revalidacao.py --so-cache):
+        # não recalcula agregações; o teste é pulado e aparece no resumo
+        import pytest
+        pytest.skip(f"agregação {nome}/semente {semente} fora do cache (PULSAR_SO_CACHE)")
     if f.exists():
         z = np.load(f)
         return Agregacao(tuple(int(p) for p in z["postos"]), z["centroides"], z["contagens"], int(z["n"]),
