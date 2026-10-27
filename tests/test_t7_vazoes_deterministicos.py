@@ -43,7 +43,7 @@ def entrada(nome, rv):
 @functools.lru_cache(maxsize=None)
 def montado(nome, rv, opcoes=None):
     d, c = entrada(nome, rv)
-    # P-VZD-09: versão gravada = a do pacote (apoio.versao_emulada)
+    # P-VZD-10: versão gravada = a do pacote (apoio.versao_emulada)
     return VD.montar_registros(d, c, opcoes or apoio.opcoes_vazoes(nome, rv))
 
 

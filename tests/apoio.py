@@ -88,7 +88,7 @@ def versao_emulada(nome, rev=None) -> str:
     "10.0.0", "11.0.0", "11.0.2"), decodificada do registro 3 oficial pela
     F2-VZ-04b. A versão gravada é parâmetro do Pulsar (P-VZD-04, F7-VZ-03):
     é a identidade do programa, não sai das entradas; os testes byte a byte
-    emulam a do pacote (P-VZD-09)."""
+    emulam a do pacote (P-VZD-10)."""
     d = deck(nome)
     v = O.ler_vazoes_decomp(d.vazoes if rev is None else d.arq(f"VAZOES.{rev}"))
     c = v.calendario.versao_codigo
