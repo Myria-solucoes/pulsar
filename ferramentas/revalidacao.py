@@ -45,7 +45,7 @@ DEGRAUS = {
     "T9": ["test_t9_empacotamento.py"],
     "T10": ["test_t10_probabilidades.py"],
 }
-# Testes da coleção do NAS não dependem do pacote: ficam fora da varredura.
+# Testes das coleções de decks do ONS (03 §1.2) não dependem do pacote: ficam fora da varredura.
 FILTRO = "not Colecao and not colecao"
 
 

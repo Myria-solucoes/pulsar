@@ -43,7 +43,7 @@ Aberturas do mês estocástico de 116 a 513; 0 a 3 semanas observadas.
 
 ## 3. Resultado por degrau
 
-Varredura final (`./ambiente/py ferramentas/revalidacao.py -j 10 --so-cache`, código da ponta desta branch), um pytest por pacote. "Fecham" = nenhum teste do degrau falhou no pacote; a coluna da direita traz o primeiro teste que falhou e a primeira linha da mensagem. Os testes da coleção do NAS (TestColecaoNAS, test_t1_ac_datado.py, test_t7_colecao_nas.py) não dependem do pacote e rodaram uma vez: 7 testes e 1 467 subtestes, todos passam.
+Varredura final (`./ambiente/py ferramentas/revalidacao.py -j 10 --so-cache`, código da ponta desta branch), um pytest por pacote. "Fecham" = nenhum teste do degrau falhou no pacote; a coluna da direita traz o primeiro teste que falhou e a primeira linha da mensagem. Os testes das coleções de decks do ONS (03 §1.2: TestColecaoONS, test_t1_ac_datado.py, test_t7_colecao_ons.py) não dependem do pacote e rodaram uma vez: 7 testes e 1 467 subtestes, todos passam.
 
 | Degrau | Fecham | Testes por pacote | Não fecham: primeira divergência |
 | --- | --- | --- | --- |
