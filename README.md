@@ -1,17 +1,57 @@
-# Pulsar
+<h1 align="center">Pulsar</h1>
 
-O Pulsar é uma reconstrução aberta do GEVAZP, o gerador de cenários de
-afluências do CEPEL, no caminho que alimenta o DECOMP (arquivo `VAZOES.RVx`).
-Ele usa **somente informação pública ou inferida de dados públicos**:
-relatórios do CEPEL, a documentação LIBS, literatura científica e os pacotes
-que o ONS publica.
+<p align="center">
+  Reconstrução aberta do GEVAZP, o gerador de cenários de afluências do CEPEL,<br>
+  feita só com fontes públicas.
+</p>
 
-Página do projeto: <https://pulsar.myria.energy>
+<p align="center">
+  <a href="LICENSE"><img alt="Licença Apache 2.0" src="https://img.shields.io/badge/licen%C3%A7a-Apache%202.0-8aadf4?style=flat-square"></a>
+  <img alt="Python 3.12" src="https://img.shields.io/badge/python-3.12-3f6e8a?style=flat-square&logo=python&logoColor=white">
+  <img alt="NumPy" src="https://img.shields.io/badge/NumPy-float64-3f6e8a?style=flat-square&logo=numpy&logoColor=white">
+  <a href="PROVENIENCIA.md"><img alt="276 decisões com proveniência" src="https://img.shields.io/badge/proveni%C3%AAncia-276%20decis%C3%B5es-5fae6e?style=flat-square"></a>
+  <a href="00-regras.md"><img alt="Só fontes públicas" src="https://img.shields.io/badge/fontes-s%C3%B3%20p%C3%BAblicas-5fae6e?style=flat-square"></a>
+  <a href="00-regras.md"><img alt="Sem engenharia reversa" src="https://img.shields.io/badge/engenharia%20reversa-nenhuma-5fae6e?style=flat-square"></a>
+  <a href="docs/relatorio-final.md"><img alt="Determinísticos byte a byte" src="https://img.shields.io/badge/determin%C3%ADsticos-byte%20a%20byte-8aadf4?style=flat-square"></a>
+  <a href="https://github.com/Myria-solucoes/pulsar/actions/workflows/pages.yml"><img alt="Página" src="https://img.shields.io/github/actions/workflow/status/Myria-solucoes/pulsar/pages.yml?branch=master&label=p%C3%A1gina&style=flat-square"></a>
+  <a href="CONTRIBUTING.md"><img alt="Contribuições bem-vindas" src="https://img.shields.io/badge/PRs-bem--vindos-ff9f43?style=flat-square"></a>
+</p>
 
-O objetivo é chegar o mais perto possível do arquivo oficial. Nas partes
-determinísticas, a meta é igualdade byte a byte. Nas partes que a
-documentação pública deixa em aberto, a meta é equivalência estatística
-demonstrada.
+<p align="center">
+  <a href="https://pulsar.myria.energy"><b>pulsar.myria.energy</b></a> ·
+  <a href="docs/relatorio-final.md">Relatório final</a> ·
+  <a href="PROVENIENCIA.md">Proveniência</a> ·
+  <a href="CONTRIBUTING.md">Como participar</a>
+</p>
+
+---
+
+O Pulsar gera o `VAZOES.RVx` que o DECOMP lê, a partir do mesmo deck que o
+ONS publica. Ele usa **somente informação pública ou inferida de dados
+públicos**: relatórios do CEPEL, a documentação LIBS, literatura científica
+e os pacotes que o ONS publica. Nas partes determinísticas, a meta é
+igualdade byte a byte com o arquivo oficial. Nas partes que a documentação
+pública deixa em aberto, a meta é equivalência estatística demonstrada.
+
+| | 202609 RV0 | 202609 RV1 | 202610 RV0 |
+| --- | :---: | :---: | :---: |
+| Blocos determinísticos do `VAZOES.RVx` iguais ao oficial | 100% | 100% | 100% |
+| Média dos cenários na faixa das 20 sementes (referência 0,90) | 0,908 | 0,941 | 0,908 |
+| Correlação espacial na faixa das 20 sementes (referência 0,90) | 0,909 | 0,912 | 0,894 |
+
+Detalhes, limites e o que ainda está em aberto: [docs/relatorio-final.md](docs/relatorio-final.md).
+
+### Como funciona
+
+```text
+deck do ONS ─▶ 1 leitura e configuração ─▶ 2 vazões incrementais ─▶ 3 PAR(p)-A
+           ─▶ 4 correlação espacial ─▶ 5 tendência hidrológica
+           ─▶ 6 ruídos + K-means ─▶ 7 lognormal e recorrência
+           ─▶ 8 totalização e artificiais ─▶ 9 VAZOES.RVx + PROBVAZ.DAT
+```
+
+A página do projeto mostra cada etapa com o que ela faz, o resultado contra
+o oficial e a fonte pública de cada decisão.
 
 ## Leia nesta ordem
 
