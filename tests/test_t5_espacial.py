@@ -226,9 +226,10 @@ def _residuos_por_matriz(nome):
 
 
 def test_matriz_do_mes_estocastico_e_a_mais_proxima(pacote):
-    """P-ESP-09 nos 61 pacotes: entre as 12 matrizes mensais e a anual, a do
-    mês estocástico é a que deixa os cenários do GEVAZP.OUT mais perto da
-    imagem (resíduo de núcleo com ln Z) em todos. A distância absoluta e a
+    """P-ESP-09: entre as 12 matrizes mensais e a anual, a do mês estocástico
+    é a que deixa os cenários do GEVAZP.OUT mais perto da imagem (resíduo de
+    núcleo com ln Z) em 59 dos 61 pacotes; em 202411 e 202511 TRES IRMAOS
+    tem cenários negativos e ln Z não existe (o SVD falha; lacuna L8). A distância absoluta e a
     folga relativa variam com o pacote (razão até ~0,34), porque dependem da
     lognormal (L8); test_cenarios_publicados_no_subespaco_do_mes_estocastico
     mantém os limiares do 2026."""
