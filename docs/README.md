@@ -37,3 +37,5 @@ Gravadores (frente F7): `pulsar.empacotamento` grava `VAZOES.RVx` e
 Integração (frente F9): `src/pulsar/cli.py` grava `VAZOES.RVx` e
 `PROBVAZ.DAT` a partir de um deck; resultados por deck e escolhas em
 [relatorio-final.md](relatorio-final.md) (T12).
+
+Revalidação de T0–T10 nos 61 pacotes de 2022–2026 (frente F10): [revalidacao-2022-2026.md](revalidacao-2022-2026.md).

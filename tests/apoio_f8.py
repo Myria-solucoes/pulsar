@@ -58,9 +58,23 @@ def _arq(*partes) -> Path:
     return CACHE / ("_".join(str(p) for p in partes) + ".npz")
 
 
+def _so_cache(nome: str) -> bool:
+    """Não recalcular agregações: na varredura (``PULSAR_SO_CACHE``) e, no
+    modo rápido (amostra padrão), nos pacotes que não são os originais,
+    onde 20 sementes levariam horas."""
+    import pacotes
+    sel = os.environ.get("PULSAR_DECKS", "amostra").strip() or "amostra"
+    return bool(os.environ.get("PULSAR_SO_CACHE")) or (sel == "amostra" and not pacotes.originais([nome]))
+
+
 def agregacao(nome: str, semente: int, simetria: str = "nenhuma") -> Agregacao:
     """Agregação da geração de ``nome`` com a semente; calculada uma vez."""
     f = _arq("agr", nome, semente, simetria)
+    if not f.exists() and _so_cache(nome):
+        # varredura dos 61 pacotes (ferramentas/revalidacao.py --so-cache):
+        # não recalcula agregações; o teste é pulado e aparece no resumo
+        import pytest
+        pytest.skip(f"agregação {nome}/semente {semente} fora do cache (PULSAR_SO_CACHE ou amostra)")
     if f.exists():
         z = np.load(f)
         return Agregacao(tuple(int(p) for p in z["postos"]), z["centroides"], z["contagens"], int(z["n"]),

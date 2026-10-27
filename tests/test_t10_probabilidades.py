@@ -61,7 +61,7 @@ def test_vazoes_rvx_ponta_a_ponta(pacote):
     nome = pacote.nome
     d, cfg = base.deck(nome), base.configuracao(nome)
     _, _, r = apoio_f8.arvore(nome, 1)
-    a = montar_vazoes(d, cfg, r, 320)
+    a = montar_vazoes(d, cfg, r, 320, apoio.opcoes_empacotamento(pacote.nome))
     gerado = serializar_vazoes_rvx(a)
     oficial = pacote.vazoes.read_bytes()
     assert len(gerado) == len(oficial)

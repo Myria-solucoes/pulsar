@@ -230,3 +230,45 @@ def test_historico_curto_e_erro():
     """P-EST-07."""
     with pytest.raises(parp.ErroAjuste):
         parp.estatisticas(np.ones((2, 12)))
+
+
+def _est_nao_positiva():
+    """Estatísticas com ρ_1 = 1,5 em todos os meses: o sistema de ordem 2 do
+    ramo PAR(p), [[1, ρ_1], [ρ_1, 1]], não é positivo definido."""
+    fac = np.zeros((12, 12))
+    fac[0] = 1.0
+    fac[1] = 1.5
+    fac[2] = 0.1
+    z = np.zeros(12)
+    return parp.Estatisticas(10, z, np.ones(12), z, fac)
+
+
+def test_cholesky_nao_positiva_erro_ou_gauss_jordan():
+    """P-LIN-03: matriz não positiva definida no Cholesky do ramo PAR(p) é
+    erro com ``solver_parp="cholesky"`` (padrão); com
+    ``"cholesky_ou_gauss_jordan"`` a solução cai no Gauss-Jordan da
+    P-LIN-01 e é a mesma de ``"gauss_jordan"``."""
+    est = _est_nao_positiva()
+    with pytest.raises(parp.ErroAjuste):
+        parp.cholesky([[1.0, 1.5], [1.5, 1.0]], [1.5, 0.1])
+    with pytest.raises(parp.ErroAjuste):
+        parp.yule_walker(est, None, 5, 2)
+    queda = parp.yule_walker(est, None, 5, 2, solver_parp="cholesky_ou_gauss_jordan")
+    gj = parp.yule_walker(est, None, 5, 2, solver_parp="gauss_jordan")
+    assert queda == gj and all(np.isfinite(queda[0]))
+    with pytest.raises(ValueError):
+        parp.OpcoesPAR(anual=False, solver_parp="outro")
+
+
+def test_facp_igual_a_1_so_corta_com_corta_igual():
+    """P-ORD-04: |φ_kk| = 1 exato não corta com "corta" (> 1, padrão) e
+    corta com "corta_igual" (≥ 1); "ignora" não corta nunca. Nenhum φ_kk
+    público é ±1, então o padrão é ESCOLHA nesse ponto."""
+    facp = np.array([0.5, 0.4, 1.0, 0.1, -0.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+    lim = 0.2
+    assert parp.identificar(facp, 11, lim, 1, "corta") == 5
+    assert parp.identificar(facp, 11, lim, 1, "corta_igual") == 2
+    assert parp.identificar(facp, 11, lim, 1, "ignora") == 5
+    facp[2] = 1.0000001
+    assert parp.identificar(facp, 11, lim, 1, "corta") == 2
+    assert parp.OpcoesPAR(facp_maior_que_1="corta_igual").facp_maior_que_1 == "corta_igual"

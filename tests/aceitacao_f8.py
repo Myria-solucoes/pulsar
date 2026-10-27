@@ -87,7 +87,7 @@ def fracoes_referencia(nome, variante="base", faixa="minmax") -> dict[str, float
 
 
 def relatorio(decks=None, variantes=None):
-    for nome in decks or [n for n, _ in base.COMPLETOS]:
+    for nome in decks or [n for n, _ in base.ESTOCASTICOS]:
         for v in variantes or apoio_f8.VARIANTES:
             for faixa in ("minmax", "p5p95"):
                 for rot, f in (("oficial", fracoes(nome, v, faixa)), ("ref", fracoes_referencia(nome, v, faixa))):

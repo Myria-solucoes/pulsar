@@ -6,6 +6,7 @@ Proveniência: F2-ARV-01..05 (PROVENIENCIA.md).
 import numpy as np
 import pytest
 
+import apoio
 from apoio import config, estat_geradas_rel, mes_estocastico, probvaz, vazoes
 from pulsar import oraculos as O
 from pulsar.oraculos import texto as T
@@ -54,7 +55,7 @@ def test_amostra_contra_rel_media_gerada_totais(pacote):
         media = float(p @ s.usina(u.nint))
         assert abs(media - rel[u.nome]["media_ger"][mes - 1]) <= 0.05 + 1e-9, u.nome
         n += 1
-    assert n >= 150
+    assert n >= 140
 
 
 def test_nomes_dos_arquivos_artificiais_em_minusculas(pacote):
@@ -63,3 +64,36 @@ def test_nomes_dos_arquivos_artificiais_em_minusculas(pacote):
     nomes = {p.name for p in pacote.dir.iterdir()}
     assert {"vazoesta.out", "vazoesia.out"} <= nomes
     assert not {"VAZOESTA.OUT", "VAZOESIA.OUT"} & nomes
+
+
+# P-LN3-03 (lacuna L8): incrementais negativas nos cenários publicados.
+NEGATIVAS = {"202312_pmo": {"SOBRADINHO"}, "202411_pmo": {"TRES IRMAOS"},
+             "202511_pmo": {"TRES IRMAOS"}, "202512_pmo": {"SOBRADINHO"}}
+
+
+def test_incrementais_negativas_no_gevazp_out(pacote):
+    """P-LN3-03: nos 61 pacotes só quatro têm incremental gerada negativa
+    no GEVAZP.OUT. SOBRADINHO (202312, 202512) é a usina da defasagem linear
+    (P-ESP-10, combinação do lateral com os totais de montante), sem
+    lognormal própria. TRES IRMAOS (202411 e 202511, mês estocástico
+    dezembro) é série com modelo PAR(p)-A (índice do correli.out), tem
+    cenários até -27 m³/s e o negativo já está nos totais: total menos o
+    total de NAVANHANDAVA no VAZTOTGD.DAT dá a incremental em todos os bits,
+    então não vem do recálculo da F6-INC-01. Com M_t = 0 a lognormal só
+    gera Z > 0: ao menos ali o limite inferior oficial é negativo."""
+    import base
+    from test_t8_totalizacao import _oficiais
+
+    cfg = base.configuracao(pacote.nome)
+    of = _oficiais(pacote.nome)
+    inc, tot = of["incrementais"], of["totais"]
+    idx = {u.numero: i for i, u in enumerate(cfg.completa)}
+    neg = {u.nome_str for i, u in enumerate(cfg.completa) if inc[:, i].min() < -1e-6}
+    assert neg == NEGATIVAS.get(pacote.nome, set())
+    if "TRES IRMAOS" in neg:
+        u = next(u for u in cfg.completa if u.nome_str == "TRES IRMAOS")
+        i = idx[u.numero]
+        assert apoio.nint_por_nome(pacote.nome)[u.nome_str] in apoio.correli(pacote.nome).indice
+        recalc = tot[:, i] - sum(tot[:, idx[m]] for m in cfg.montante(u.numero))
+        assert np.array_equal(recalc, inc[:, i])
+        assert inc[:, i].min() < -20 and (inc[:, i] < 0).sum() >= 20

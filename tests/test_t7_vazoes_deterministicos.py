@@ -14,6 +14,7 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
+import apoio
 from base import DECKS
 from pulsar import tendencia as TD
 from pulsar import vazoes_deterministicos as VD
@@ -25,7 +26,7 @@ from pulsar.oraculos import ler_vazoes_decomp
 def _revisoes():
     out = []
     for d in sorted(DECKS.iterdir()) if DECKS.is_dir() else []:
-        for v in sorted(d.glob("VAZOES.RV*")):
+        for v in sorted(p for p in d.iterdir() if p.name.upper().startswith("VAZOES.RV")):
             out.append((d.name, v.suffix[1:].upper()))
     return out
 
@@ -42,7 +43,8 @@ def entrada(nome, rv):
 @functools.lru_cache(maxsize=None)
 def montado(nome, rv, opcoes=None):
     d, c = entrada(nome, rv)
-    return VD.montar_registros(d, c, opcoes)
+    # P-VZD-10: versão gravada = a do pacote (apoio.versao_emulada)
+    return VD.montar_registros(d, c, opcoes or apoio.opcoes_vazoes(nome, rv))
 
 
 @functools.lru_cache(maxsize=None)
@@ -101,7 +103,12 @@ def test_bloco_byte_a_byte(nome, rv, bloco):
 
 
 def test_cobre_todas_as_revisoes():
-    assert ("202609", "RV0") in REVISOES and ("202609", "RV1") in REVISOES and ("202610", "RV0") in REVISOES
+    """Toda pasta selecionada tem ao menos uma revisão; o 202609 tem duas."""
+    import pacotes
+    sel = pacotes.selecionados()
+    assert {n for n, _ in REVISOES} == set(sel)
+    if "202609" in sel:
+        assert ("202609", "RV0") in REVISOES and ("202609", "RV1") in REVISOES
 
 
 @pytest.mark.parametrize("nome,rv", REVISOES)
@@ -122,21 +129,31 @@ def test_sem_arredondar_totais_falha(nome, rv):
     fim), SLT.SANTIAGO (coluna 77, a jusante do artificial 75 com total de
     fração .5) fica com x,5 e sobe uma unidade: uma palavra errada por
     semana (blocos 7 e 10) e em 3 meses observados (bloco 9). No bloco
-    natural (5) a variante não muda nada (o PREVS é inteiro)."""
+    natural (5) a variante não muda nada (o PREVS é inteiro). Nos outros
+    pacotes a quantidade depende das frações dos artificiais; a variante só
+    pode errar colunas ENA de usinas com um posto artificial a montante."""
     d, c = entrada(nome, rv)
     sem_arred = lambda x: x
     n = d.n_postos
     _, vz = publico(nome, rv)
+    por = c.por_numero()
+    afetaveis = {TD.coluna_ena(u) - 1 for u in c.usinas
+                 if any(por[m].posto_artificial for m in c.montante(u.numero))}
+    originais = nome in ("202609", "202610")
     sem = TD.periodos_semanais(d, c)
     ena = np.array([[TD.nint(x) for x in TD.incrementais_ena(p, c, n, sem_arred)] for p in sem])
     pub = np.concatenate([vz.observada_semanal, vz.prevista_semanal_ena])
     dif = np.argwhere(ena != pub)
-    assert [int(k) for k in dif[:, 1]] == [76] * len(sem) and len({int(k) for k in dif[:, 0]}) == len(sem)
+    assert {int(k) for k in dif[:, 1]} <= afetaveis
+    if originais:
+        assert [int(k) for k in dif[:, 1]] == [76] * len(sem) and len({int(k) for k in dif[:, 0]}) == len(sem)
     r = montado(nome, rv)
     meses = [TD.periodo_historico(d, c, a, m) for a, m in r.meses_observados]
     obs = np.array([[TD.nint(x) for x in TD.incrementais_ena(p, c, n, sem_arred)] for p in meses])
     dif = np.argwhere(obs != vz.observada_mensal)
-    assert len(dif) == 3 and set(int(k) for k in dif[:, 1]) == {76}
+    assert {int(k) for k in dif[:, 1]} <= afetaveis
+    if originais:
+        assert len(dif) == 3 and set(int(k) for k in dif[:, 1]) == {76}
     nobs = vz.observada_semanal.shape[0]
     nat = np.array([[TD.nint(x) for x in TD.incrementais_naturais(p, c, n, sem_arred)] for p in sem[nobs:]])
     assert np.array_equal(nat, vz.prevista_semanal)
@@ -214,7 +231,7 @@ def test_integracao_com_o_gravador_da_f7(nome, rv):
         O.ler_incrementais_geradas(pasta / "GEVAZP.OUT").valores,
         O.ler_incrementais_artificiais(pasta / "vazoesia.out").valores,
         O.ler_probvaz(pasta / "PROBVAZ.DAT"),
-        r, d.n_postos,
+        r, d.n_postos, apoio.opcoes_empacotamento(nome, rv),
     )
     gravado = serializar_vazoes_rvx(a)
     dados, _ = publico(nome, rv)

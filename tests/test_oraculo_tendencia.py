@@ -14,7 +14,7 @@ def test_qpast_incremental_igual_ao_rel(pacote):
     """Registros 1-12 = 'VAZOES INCREMENTAIS PARA A TENDENCIA ... POSTOS PRINCIPAIS'."""
     q = qpast(pacote.nome)
     tab = tendencia_rel(pacote.nome)["incrementais_principais"]
-    assert len(tab) > 150
+    assert len(tab) > 140
     for posto, (nome, v) in tab.items():
         np.testing.assert_array_equal(np.round(q.incrementais_do_posto(posto), 2), v, err_msg=nome)
 
@@ -46,9 +46,23 @@ def test_qpast_exemplo_camargos_202609(pacote):
     assert q.incremental_mensal(6, 1) == 659.0 and q.total_mensal(6, 1) == 908.0
 
 
+def _par_a(pacote) -> bool:
+    import base
+    return base.deck(pacote.nome).dadger.vazoes.modelo_par_a == 1
+
+
+def test_vazaoanual_nulo_no_ramo_parp(pacote):
+    """F2-VA-04: sem MODELO PAR-A (2022) o vazaoanual.out existe, com o mesmo
+    layout, e é todo zero; com PAR(p)-A tem valores."""
+    a = O.ler_media_anual_anterior(pacote.arq("vazaoanual.out"))
+    assert (np.count_nonzero(a.valores) == 0) == (not _par_a(pacote))
+
+
 def test_vazaoanual_e_media_dos_12_meses_da_tendencia(pacote):
     """vazaoanual.out = média das 12 incrementais da tabela de tendência do REL
     (2 casas), igual em todos os cenários; zero nas usinas PN."""
+    if not _par_a(pacote):
+        pytest.skip("ramo PAR(p): vazaoanual.out nulo (F2-VA-04)")
     a = O.ler_media_anual_anterior(pacote.arq("vazaoanual.out"))
     tab = tendencia_rel(pacote.nome)["incrementais_principais"]
     n = 0
@@ -60,24 +74,45 @@ def test_vazaoanual_e_media_dos_12_meses_da_tendencia(pacote):
         elif u.posto in tab:
             assert abs(col[0] - tab[u.posto][1].mean()) <= 0.005 + 1e-9, u.nome
             n += 1
-    assert n > 150
+    assert n > 140
 
 
 def test_vazaoanual_bits_soma_em_ordem_de_calendario(pacote):
     """INFERIDO F2-VA-03: com os 12 meses indexados pelo calendário
-    (jan..dez) e divisão por 12, reproduz todos os bits. A ordem da soma
-    dentro do calendário NÃO é discriminada: a soma sequencial e a soma por
-    blocos da np.sum dão os mesmos bits nestes decks."""
+    (jan..dez), soma sequencial de janeiro a dezembro e divisão por 12,
+    reproduz todos os bits em todos os pacotes. Em 202303 e 202405 a soma por
+    blocos da np.sum erra 1 e 2 usinas, a ordem cronológica (do mês estocástico
+    do ano anterior ao inicial) e as reversas erram outras: a ordem fica
+    discriminada pelo conjunto dos pacotes."""
+    if not _par_a(pacote):
+        pytest.skip("ramo PAR(p): vazaoanual.out nulo (F2-VA-04)")
     a = O.ler_media_anual_anterior(pacote.arq("vazaoanual.out"))
     q = qpast(pacote.nome)
+    me = mes_estocastico(pacote.nome)
+
+    def seq(v):
+        s = 0.0
+        for y in v:
+            s += y
+        return s
+
+    erros = {"np_sum": 0, "cronologica": 0, "calendario_reversa": 0, "cronologica_reversa": 0}
     for u in config(pacote.nome):
         if u.status == "PN":
             continue
-        s = 0.0
-        for m in range(1, 13):
-            s += q.incremental_mensal(u.posto, m)
-        assert np.all(a.usina(u.nint) == s / 12), u.nome
-        assert np.all(a.usina(u.nint) == np.sum(q.incrementais_do_posto(u.posto)) / 12), u.nome
+        x = [q.incremental_mensal(u.posto, m) for m in range(1, 13)]
+        assert np.all(a.usina(u.nint) == seq(x) / 12), u.nome
+        cron = [x[(me - 1 + k) % 12] for k in range(12)]  # do mês estocástico (ano anterior) ao inicial
+        alvo = a.usina(u.nint)[0]
+        erros["np_sum"] += float(np.sum(np.array(x))) / 12 != alvo
+        erros["cronologica"] += seq(cron) / 12 != alvo
+        erros["calendario_reversa"] += seq(x[::-1]) / 12 != alvo
+        erros["cronologica_reversa"] += seq(cron[::-1]) / 12 != alvo
+    print(pacote.nome, erros)
+    esperado = {"202303_pmo": {"np_sum": 1, "cronologica": 9, "calendario_reversa": 5, "cronologica_reversa": 0},
+                "202405_pmo": {"np_sum": 2, "cronologica": 8, "calendario_reversa": 5, "cronologica_reversa": 2}}
+    if pacote.nome in esperado:
+        assert erros == esperado[pacote.nome]
 
 
 def _ano_inicial_historico(pacote) -> int:
@@ -108,7 +143,7 @@ def test_qpast_anos_dos_meses_pelo_historico(pacote):
     h = np.fromfile(pacote.arq("VAZOES.DAT"), "<i4").reshape(-1, 12, v.npos)
     q = qpast(pacote.nome)
     postos = sorted(tendencia_rel(pacote.nome)["fornecidas"])
-    assert len(postos) > 150
+    assert len(postos) > 140
     for m in range(1, 13):
         if m == mi:
             continue
@@ -116,5 +151,7 @@ def test_qpast_anos_dos_meses_pelo_historico(pacote):
         outro = ano - 1 if m < mi else ano
         x = q.total[m - 1, [p - 1 for p in postos]]
         np.testing.assert_array_equal(x, h[a - a0, m - 1, [p - 1 for p in postos]], err_msg=f"mês {m}")
-        # e o ano alternativo não serve
-        assert not np.array_equal(x, h[outro - a0, m - 1, [p - 1 for p in postos]]), m
+        # e o ano alternativo não serve (quando o VAZOES.DAT o tem: nos PMOs
+        # de janeiro de 2025 e 2026 o histórico acaba no ano anterior)
+        if outro - a0 < h.shape[0]:
+            assert not np.array_equal(x, h[outro - a0, m - 1, [p - 1 for p in postos]]), m

@@ -18,9 +18,13 @@ import re
 import subprocess
 import sys
 
+from dataclasses import replace
+from pathlib import Path
+
 import numpy as np
 import pytest
 
+import apoio
 import colecao_ons
 from base import COMPLETOS, DECKS, RAIZ, configuracao, deck
 from pulsar import oraculos as O
@@ -50,6 +54,8 @@ _FAMILIAS = [
 
 def deterministicos_do_vazdcp(caminho) -> RegistrosDeterministicos:
     """Transplante dos blocos determinísticos a partir do VAZDCP.REL."""
+    if not Path(caminho).is_file():  # nenhum dos 61 pacotes está sem ele
+        pytest.skip(f"{caminho}: pacote sem VAZDCP.REL")
     blocos: dict[str, list[list[float]]] = {nome: [] for _, nome in _FAMILIAS}
     for r in T.ler_vazdcp(caminho):
         for prefixo, nome in _FAMILIAS:
@@ -72,7 +78,9 @@ def _revisao(nome, dadger):
 
 
 def arvore_do_pacote(nome, dadger=None, opcoes=None):
-    d, v, _ = _revisao(nome, dadger)
+    d, v, rev = _revisao(nome, dadger)
+    if opcoes is None:
+        opcoes = apoio.opcoes_empacotamento(nome, rev)
     pasta = DECKS / nome
     return montar_arvore(
         configuracao(nome, dadger),
@@ -153,6 +161,7 @@ def test_registros_1_a_3_de_todas_as_revisoes(nome, dadger):
         configuracao(nome, dadger), v, d.n_postos,
         np.zeros((ncen, NPOS)), np.zeros((ncen, NPOS)), np.full(ncen, 1 / ncen, np.float32),
         RegistrosDeterministicos(z(nprev), z(nprev), z(11), z(nobs)), NPOS,
+        apoio.opcoes_empacotamento(nome, rev),
     )
     oficial = (DECKS / nome / f"VAZOES.{rev}").read_bytes()
     assert serializar_vazoes_rvx(a)[: 3 * RECL] == oficial[: 3 * RECL]
@@ -300,7 +309,7 @@ def test_colisao_de_colunas():
     zero e as duas opções dão o mesmo arquivo."""
     nome, dadger = COMPLETOS[0]
     a1 = serializar_vazoes_rvx(arvore_do_pacote(nome, dadger))
-    a2 = serializar_vazoes_rvx(arvore_do_pacote(nome, dadger, OpcoesEmpacotamento(colisao="erro")))
+    a2 = serializar_vazoes_rvx(arvore_do_pacote(nome, dadger, replace(apoio.opcoes_empacotamento(nome), colisao="erro")))
     assert a1 == a2
     d, v, _ = _revisao(nome, dadger)
     c = configuracao(nome, dadger)

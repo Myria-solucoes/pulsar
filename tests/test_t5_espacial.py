@@ -7,6 +7,7 @@ Proveniência: P-ESP-01..10.
 import functools
 
 import numpy as np
+import pytest
 
 import apoio
 import base
@@ -57,7 +58,10 @@ def test_correlacao_bit_a_bit_com_o_correli(pacote):
                 continue
             total += 1
             iguais += np.array_equal(c.matriz[:, a, b], ref)
-    assert perdidos == 2 * len(num) - 4  # pares com as 2 últimas de H, fora da diagonal delas
+    # pares com as k = NH - N últimas de H (sobrescritas, F2-CI-07), fora da
+    # diagonal delas: k·NH - k² (2026: k = 2; 2022: k = 1)
+    k = len(num) - len(ci.indice)
+    assert perdidos == k * len(num) - k * k
     assert iguais == total
 
 
@@ -78,7 +82,7 @@ def test_diagonal_simetria_e_series_nulas(pacote):
     série de incremental nula (ITUTINGA, PARANAPANEMA) valem 0."""
     c = correlacao(pacote.nome)
     nulas = [k for k, s in enumerate(series(pacote.nome)) if s.nula]
-    assert len(nulas) == 2
+    assert nulas  # 2026: ITUTINGA e PARANAPANEMA; 2022: só ITUTINGA
     for m in range(13):
         u = c.matriz[m]
         assert np.array_equal(np.diag(u), np.ones(len(u)))
@@ -173,6 +177,19 @@ def test_dd_reproduz_u_nas_direcoes_positivas(pacote):
 # Evidência nos cenários publicados (GEVAZP.OUT)
 
 
+def _fora_do_nucleo(nome) -> set[str]:
+    """Colunas do GEVAZP.OUT que não são a incremental gerada da própria
+    série: as usinas NW, as jusantes que recebem a NW e as usinas com posto
+    lateral (2026: FOZ DO PRATA, ESTRELA, MONTE CLARO, SALTO, SOBRADINHO)."""
+    cfg = base.configuracao(nome)
+    por = cfg.por_numero()
+    nw = [u for u in cfg.usinas if u.status == "NW"]
+    out = {u.nome_str for u in nw}
+    out |= {por[u.jusante].nome_str for u in nw if u.jusante in por}
+    out |= {u.nome_str for u in cfg.usinas if u.posto_lateral}
+    return out
+
+
 def _residuo_no_nucleo(nome, u, nomes, valores=None, transf=np.log):
     """Menor valor singular do operador q -> L diag(q) K, com L = transf(Z)
     dos cenários (por padrão os do GEVAZP.OUT), centrado e normalizado com as
@@ -182,7 +199,7 @@ def _residuo_no_nucleo(nome, u, nomes, valores=None, transf=np.log):
     cada coluna W_i = (L_i - c_i)/s_i e cada W_k está na imagem de U."""
     nint = apoio.nint_por_nome(nome)
     num = [nint[n] for n in nomes]
-    fora = {nint[n] for n in ("FOZ DO PRATA", "ESTRELA", "MONTE CLARO", "SALTO", "SOBRADINHO")}
+    fora = {nint[n] for n in _fora_do_nucleo(nome) if n in nint}
     ei = [k for k, n in enumerate(num) if n in fora]
     ui = [k for k, n in enumerate(num) if n not in fora]
     lam, a = np.linalg.eigh(u)
@@ -192,6 +209,11 @@ def _residuo_no_nucleo(nome, u, nomes, valores=None, transf=np.log):
     if valores is None:
         valores = apoio.gevazp_out(nome).valores
     v = valores[:, [num[i] - 1 for i in ui]]
+    if transf is np.log and v.min() <= 0:
+        # 202411 e 202511: TRES IRMAOS com cenários negativos no GEVAZP.OUT
+        # (test_oraculo_series_arvore.py::test_incrementais_negativas_no_gevazp_out)
+        j = int(np.argmin(v.min(0)))
+        pytest.skip(f"{nomes[ui[j]]} com cenário {v.min():.3f} ≤ 0: ln Z não existe (P-LN3-03, lacuna L8)")
     p = np.asarray(apoio.probvaz(nome), float)
     w = p / p.sum()
     x = transf(v)
@@ -201,31 +223,58 @@ def _residuo_no_nucleo(nome, u, nomes, valores=None, transf=np.log):
     return np.linalg.svd(g, compute_uv=False)[-1]
 
 
+@functools.lru_cache(maxsize=None)
+def _residuos_por_matriz(nome):
+    """Resíduo de núcleo dos cenários publicados com cada uma das 13 matrizes
+    (12 meses e a anual)."""
+    c, _, _ = carga(nome)
+    return [_residuo_no_nucleo(nome, c.matriz[k], c.nomes) for k in range(13)]
+
+
+def test_matriz_do_mes_estocastico_e_a_mais_proxima(pacote):
+    """P-ESP-09: entre as 12 matrizes mensais e a anual, a do mês estocástico
+    é a que deixa os cenários do GEVAZP.OUT mais perto da imagem (resíduo de
+    núcleo com ln Z) em 59 dos 61 pacotes; em 202411 e 202511 TRES IRMAOS
+    tem cenários negativos, ln Z não existe e o teste é pulado (lacuna L8).
+    A distância absoluta e a folga relativa variam com o pacote (razão até
+    0,339), porque dependem da lognormal (L8)."""
+    m = apoio.mes_estocastico(pacote.nome)
+    r = _residuos_por_matriz(pacote.nome)
+    assert r[m - 1] < min(r[:m - 1] + r[m:]), r
+
+
 def test_cenarios_publicados_no_subespaco_do_mes_estocastico(pacote):
     """P-ESP-09 e P-ESP-07: com ln Z (M_t = 0, lacuna L8), os cenários do
     GEVAZP.OUT ficam muito mais perto da imagem da matriz do mês estocástico
-    (posto 93) do que da de qualquer outro mês ou da anual (resíduo ~0,02
-    contra ≥ 0,19). O resíduo não chega a 0: depende da lognormal (L8)."""
-    c, _, _ = carga(pacote.nome)
+    (posto 93) do que da de qualquer outro mês ou da anual. O resíduo não
+    chega a 0: depende da lognormal (L8). Nos 59 pacotes com cenários
+    positivos o resíduo vai de 0,017 a 0,062 e fica abaixo de metade do da
+    matriz seguinte (razão até 0,339); nos dois de 2026, onde os limiares
+    foram fixados, abaixo de 0,03 e de 0,2 vezes o seguinte (0,0237 contra
+    ≥ 0,19 em 202609; 0,0194 em 202610)."""
     m = apoio.mes_estocastico(pacote.nome)
-    r = [_residuo_no_nucleo(pacote.nome, c.matriz[k], c.nomes) for k in range(13)]
+    r = _residuos_por_matriz(pacote.nome)
     alvo = r[m - 1]
     outros = r[:m - 1] + r[m:]
-    assert alvo < 0.03
-    assert alvo < 0.2 * min(outros)
+    assert alvo < 0.07 and alvo < 0.5 * min(outros), (alvo, min(outros))
+    if pacote.nome in ("202609", "202610"):
+        assert alvo < 0.03 and alvo < 0.2 * min(outros)
 
 
 def test_piso_nos_autovalores_nulos_e_incompativel(pacote):
-    """P-ESP-07: um piso ε ≥ 3e-3 nos autovalores nulos (D de posto cheio),
-    sozinho e com ruídos normais independentes, já daria no mesmo teste
-    resíduo maior que o dos cenários publicados; ε = 0 dá resíduo nulo."""
+    """P-ESP-07: um piso ε nos autovalores nulos (D de posto cheio), sozinho
+    e com ruídos normais independentes, já daria no mesmo teste resíduo
+    maior que o dos cenários publicados; ε = 0 dá resíduo nulo. Com ε = 3e-2
+    vale nos 59 pacotes com cenários positivos (piso/observado ≥ 1,68); com
+    ε = 3e-3, nos dois de 2026 (e em 41 dos 59; 1e-2 em 57), por isso o
+    3e-3 só é afirmado neles."""
     c, u, _ = carga(pacote.nome)
     observado = _residuo_no_nucleo(pacote.nome, u, c.nomes)
     lam, a = np.linalg.eigh(u)
     nint = apoio.nint_por_nome(pacote.nome)
     forma = apoio.gevazp_out(pacote.nome).valores.shape
     b = np.random.default_rng(20261027).standard_normal((forma[0], len(u)))
-    for eps in (0.0, 3e-3):
+    for eps in (0.0, 3e-2) + ((3e-3,) if pacote.nome in ("202609", "202610") else ()):
         d = (a * np.sqrt(np.where(lam > 1e-10, lam, eps))) @ a.T
         w = b @ d.T
         cen = np.zeros(forma)
@@ -274,10 +323,10 @@ def test_variantes_da_correlacao(pacote):
     fora = ~np.eye(len(num), dtype=bool) & ~np.isnan(ref)
     taxa = {k: np.mean(v[fora] == ref[fora]) for k, v in variantes.items()}
     assert taxa["escolhida"] == 1.0
-    faixas = {"padronizadas": (0.15, 0.16), "n_sigma_sigma": (0.64, 0.66),
-              "sigma_i_depois_sigma_j": (0.64, 0.66), "reversa": (0.19, 0.20)}
-    for k, (lo, hi) in faixas.items():
-        assert lo <= taxa[k] <= hi, (k, taxa[k])
+    # 2026 (mês 10/11): 0,15, 0,65, 0,65 e 0,19; nos outros pacotes as taxas
+    # mudam com o mês e o histórico, mas nenhuma variante chega perto de 1.
+    for k in ("padronizadas", "n_sigma_sigma", "sigma_i_depois_sigma_j", "reversa"):
+        assert taxa[k] < 0.8, (k, taxa[k])
     k0 = [c.nomes.index(s.nome) for s in ss]
     assert np.array_equal(c.matriz[m][np.ix_(k0, k0)][fora], variantes["escolhida"][fora])
 
@@ -285,7 +334,9 @@ def test_variantes_da_correlacao(pacote):
 def test_vazoes_e_nao_residuos(pacote):
     """P-ESP-01 (M18 §4.3.2 contra L-CORR): a matriz que explica os cenários
     é a correlação das vazões; a correlação dos resíduos históricos do mesmo
-    mês (P-RES-01, só os anos com resíduo) fica no nível dos controles."""
+    mês (P-RES-01, só os anos com resíduo) fica no nível dos controles:
+    resíduo mais de 3 vezes o das vazões nos 59 pacotes com cenários
+    positivos (mín. 3,6; mais de 5 vezes em 53 e nos dois de 2026)."""
     from apoio_parp import residuos
 
     c, u, _ = carga(pacote.nome)
@@ -298,7 +349,9 @@ def test_vazoes_e_nao_residuos(pacote):
     np.fill_diagonal(ur, 1.0)
     r_vaz = _residuo_no_nucleo(pacote.nome, u, c.nomes)
     r_res = _residuo_no_nucleo(pacote.nome, ur, c.nomes)
-    assert r_res > 5 * r_vaz, (r_res, r_vaz)
+    assert r_res > 3 * r_vaz, (r_res, r_vaz)
+    if pacote.nome in ("202609", "202610"):
+        assert r_res > 5 * r_vaz
 
 
 def test_sobradinho_e_combinacao_do_lateral(pacote):

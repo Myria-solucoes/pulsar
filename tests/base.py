@@ -13,13 +13,18 @@ sys.path.insert(0, str(RAIZ / "tests"))
 from pulsar.configuracao import montar_configuracao  # noqa: E402
 from pulsar.entradas import ler_deck  # noqa: E402
 
-DECKS = RAIZ / "decks" / "ons-pacote-gevazp"
+import pacotes  # noqa: E402
 
-# Pacotes completos. ``None`` segue a cadeia CASO.DAT -> ARQUIVOS.DAT -> lista
-# do DECOMP, que é a execução cujas saídas estão no pacote (202609: RV1).
-COMPLETOS = [("202609", None), ("202610", None)]
+DECKS = pacotes.DECKS
+
+# Pacotes completos selecionados (tests/pacotes.py). ``None`` segue a cadeia
+# CASO.DAT -> ARQUIVOS.DAT -> lista do DECOMP, que é a execução cujas saídas
+# estão no pacote (202609: RV1).
+COMPLETOS = [(nome, None) for nome in pacotes.selecionados()]
+# T11/T12 (parte estocástica): só os pacotes originais selecionados.
+ESTOCASTICOS = [(n, d) for n, d in COMPLETOS if n in pacotes.originais([n])]
 # Outras revisões do mesmo pacote, só para leitura (T0).
-SO_LEITURA = [("202609", "DADGER.RV0")]
+SO_LEITURA = [("202609", "DADGER.RV0")] if "202609" in pacotes.selecionados() else []
 
 
 @lru_cache(maxsize=None)

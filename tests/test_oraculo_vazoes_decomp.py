@@ -33,7 +33,8 @@ def test_todos_os_registros_iguais_ao_vazdcp(pacote):
     ab = _ints(re.search(r"ABERTURAS:(.*)NPOS", r1)[1])
     assert tuple(ab[: v.n_estagios]) == v.aberturas and not any(ab[v.n_estagios:])
     assert int(re.search(r"NPOS:\s+(\d+)", r1)[1]) == v.npos
-    assert int(re.search(r"NUM USINAS NW:\s+(\d+)", r1)[1]) == v.n_usinas_nw
+    nw = re.search(r"NUM USINAS NW:\s+(\d+)", r1)  # o VAZDCP do 9_L não imprime
+    assert nw is None or int(nw[1]) == v.n_usinas_nw
 
     assert tuple(_ints(rel[1].titulo.split(":", 1)[1])) == v.codigos
 
@@ -44,10 +45,17 @@ def test_todos_os_registros_iguais_ao_vazdcp(pacote):
     assert (MESES.index(mes) + 1, int(ano)) == (c.mes_inicial, c.ano_inicial)
     assert int(re.search(r"NPOSTOS:\s+(\d+)", r3)[1]) == c.n_postos
     assert int(re.search(r"NSEM OBS:\s+(\d+)", r3)[1]) == c.semanas_observadas
-    assert re.search(r"VERSAO GEVAZP:\s+(\S+)", r3)[1] == c.versao
+    # F2-VZ-04c: o 9_L grava 80106 e imprime só "9"; o 11 grava 110000 e
+    # imprime "11"
+    impressa = re.search(r"VERSAO GEVAZP:\s+(\S+)", r3)[1]
+    assert impressa == c.versao or (c.versao_codigo, impressa) in {(80106, "9"), (110000, "11")}
 
-    assert rel[3].titulo == "PROBABILIDADE DOS NOS"
-    np.testing.assert_array_equal(np.round(v.probabilidades.astype(np.float64), 6), rel[3].valores)
+    # F2-VZ-05: ceil(NNOS/NPOS) registros de probabilidades (2 com 513
+    # aberturas, 202206 e 202207)
+    nprob = -(-len(v.probabilidades) // v.npos)
+    assert all(r.titulo == "PROBABILIDADE DOS NOS" for r in rel[3:3 + nprob])
+    impressas = np.concatenate([r.valores for r in rel[3:3 + nprob]])[: len(v.probabilidades)]
+    np.testing.assert_array_equal(np.round(v.probabilidades.astype(np.float64), 6), impressas)
 
     blocos = [
         ("VAZAO PREVISTA INCREMENTAL SEMANA", v.prevista_semanal),
@@ -57,7 +65,7 @@ def test_todos_os_registros_iguais_ao_vazdcp(pacote):
         ("VAZAO INCREMENTAL OBSERVADA MES", v.observada_mensal),
         ("VAZAO INCREMENTAL OBSERVADA SEMANA", v.observada_semanal),
     ]
-    k = 4
+    k = 3 + nprob
     for titulo, bloco in blocos:
         for linha in bloco:
             r = rel[k]
@@ -74,8 +82,9 @@ def test_estrutura_de_todas_as_revisoes(pacote):
     """Também as revisões sem saídas no pacote (202609 RV0) fecham o layout."""
     for arq in pacote.revisoes_vazoes():
         v = O.ler_vazoes_decomp(arq)
-        # F2-VZ-04a: só o par observado; a fórmula geral é ESCOLHA (F2-VZ-04b)
-        assert (v.calendario.versao_codigo, v.calendario.versao) == (110002, "11.0.2")
+        # F2-VZ-04a/04c: os quatro códigos observados (9_L, 10.0.0, 11, 11.0.2)
+        assert (v.calendario.versao_codigo, v.calendario.versao) in {
+            (80106, "8.1.6"), (100000, "10.0.0"), (110000, "11.0.0"), (110002, "11.0.2")}
         assert v.n_estagios - 1 == v.prevista_semanal.shape[0] == v.prevista_semanal_ena.shape[0]
         assert v.aberturas[:-1] == (1,) * (v.n_estagios - 1)
         assert v.n_cenarios == v.aberturas[-1] == v.gerada_mensal_ena.shape[0]
@@ -122,6 +131,8 @@ def test_semanas_iguais_a_tabela_de_previsoes_do_rel(pacote):
     nobs = v.calendario.semanas_observadas
     for p in previsoes_rel(pacote.nome):
         u = cfg[p.nint]
+        if p.posto != u.posto:  # linha PL do posto lateral (P-REL-03)
+            continue
         for w in range(v.prevista_semanal.shape[0]):
             assert v.prevista_semanal[w, u.posto - 1] == p.incremental[nobs + w], u.nome
             assert v.prevista_semanal_ena[w, u.coluna_ena - 1] == p.incremental_ena[nobs + w], u.nome
