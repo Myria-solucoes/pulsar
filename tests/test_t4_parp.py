@@ -7,6 +7,7 @@ P-VORD-01..03.
 """
 
 import numpy as np
+import pytest
 
 import apoio
 import base
@@ -182,3 +183,81 @@ def test_ordem_para_antes_da_facp_maior_que_1(pacote):
         difere = sum(parp.ajustar(a.serie, ign).iteracoes[0].identificadas != vo[n][0].identificadas
                      for n, a in ajustes(pacote.nome).items())
         assert difere > 0
+
+
+def _gauss_retro(a, b):
+    """Eliminação de Gauss sem pivô e retrossubstituição (variante)."""
+    n = len(b)
+    m = [r[:] + [b[i]] for i, r in enumerate(a)]
+    for i in range(n):
+        for r in range(i + 1, n):
+            f = m[r][i] / m[i][i]
+            for j in range(i, n + 1):
+                m[r][j] -= f * m[i][j]
+    x = [0.0] * n
+    for i in range(n - 1, -1, -1):
+        s = m[i][n]
+        for j in range(i + 1, n):
+            s -= m[i][j] * x[j]
+        x[i] = s / m[i][i]
+    return x
+
+
+def _contagens_do_solver(nome):
+    """Meses (série, mês com ordem ≥ 1) com φ igual em bits ao correli.out,
+    por variante de solução do Yule-Walker do ramo PAR(p)."""
+    from pulsar import parp
+    from test_t3_variantes import _cholesky_nr
+
+    def numpy_chol(a, b):
+        lo = np.linalg.cholesky(np.array(a))
+        return np.linalg.solve(lo.T, np.linalg.solve(lo, np.array(b))).tolist()
+
+    def gauss_jordan(a, b):
+        inv = parp.inversa(a)
+        return [parp.soma(inv[i][j] * b[j] for j in range(len(b))) for i in range(len(b))]
+
+    variantes = {
+        "cholesky": parp.cholesky,
+        "nr_k_crescente": lambda a, b: _cholesky_nr(a, b, False),
+        "nr_k_decrescente": lambda a, b: _cholesky_nr(a, b, True),
+        "numpy_cholesky": numpy_chol,
+        "lapack": lambda a, b: np.linalg.solve(np.array(a), np.array(b)).tolist(),
+        "gauss_retrossubstituicao": _gauss_retro,
+        "gauss_jordan": gauss_jordan,
+    }
+    ok = dict.fromkeys(variantes, 0)
+    total = 0
+    for nome_s, aj in ajustes(nome).items():
+        s = correli_da_serie(nome, nome_s)
+        for m, md in enumerate(aj.modelos):
+            if md.ordem == 0:
+                continue
+            total += 1
+            mat = parp._matriz(aj.est, None, m, md.ordem)
+            a = [r[1:] for r in mat[1:]]
+            b = [r[0] for r in mat[1:]]
+            for k, f in variantes.items():
+                ok[k] += np.array_equal(np.array(f(a, b)), s.coeficientes[m])
+    return total, ok
+
+
+def test_variantes_do_solver_no_ramo_parp(pacote):
+    """P-LIN-03: no ramo PAR(p) só o Cholesky da P-LIN-03 (somas em k
+    crescente na fatoração e nas duas substituições) acerta todos os bits
+    de φ; as variantes ficam abaixo. Contagens citadas na P-LIN-03: jan–jul
+    de 2022 (162 usinas, 1 758 meses) e ago–dez (163 usinas, 1 770 meses)."""
+    aj = next(iter(ajustes(pacote.nome).values()))
+    if aj.opcoes.anual:
+        pytest.skip("ramo PAR(p) só nos pacotes sem MODELO PAR-A (2022)")
+    total, ok = _contagens_do_solver(pacote.nome)
+    print(pacote.nome, total, ok)
+    assert ok["cholesky"] == total
+    assert all(v < total for k, v in ok.items() if k != "cholesky"), ok
+    esperado = {
+        1758: dict(nr_k_crescente=1333, nr_k_decrescente=1209, numpy_cholesky=1203, lapack=970,
+                   gauss_retrossubstituicao=982, gauss_jordan=832),
+        1770: dict(nr_k_crescente=1346, nr_k_decrescente=1222, numpy_cholesky=1214, lapack=978,
+                   gauss_retrossubstituicao=990, gauss_jordan=840),
+    }[total]
+    assert {k: v for k, v in ok.items() if k != "cholesky"} == esperado
