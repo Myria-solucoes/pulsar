@@ -185,7 +185,7 @@ def ler_series_incrementais(rel) -> dict[str, SerieRel]:
             fecha_tabela()
             nome = linha.split("POSTO", 1)[1].strip()
             s = series.setdefault(nome, SerieRel(nome))
-            # P-REL-01: na versão 9_L a série da componente anual sai com o
+            # P-REL-02: na versão 9_L a série da componente anual sai com o
             # mesmo título da série incremental, depois da média e do desvio
             # desta (nas versões 10 e 11, "SERIE DE MEDIA ULTIMOS 12 MESES").
             estado = "anual" if s.media is not None else "historico"
