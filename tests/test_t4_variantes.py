@@ -123,19 +123,24 @@ def test_separacao_do_coeficiente_combinado(pacote):
 
 
 def test_folga_do_limiar(pacote):
-    """P-ORD-02: a menor folga entre |FACP| e 1,96/√N fica entre 5e-6 e 1e-5,
-    e 1,96 e 1,959964 dão as mesmas ordens identificadas (os pacotes não
-    distinguem as duas constantes nem `>` de `≥`)."""
+    """P-ORD-02: a menor folga entre |FACP| e 1,96/√N é positiva (nenhum
+    empate, então `>` e `≥` não se distinguem); no 2026 fica entre 5e-6 e
+    1e-5. Com 1,959964 as ordens identificadas (que o rastro do vordem.out
+    confirma com 1,96) mudam só nos pacotes de 2024 (janela 1931–2022), em
+    uma série; nos demais as duas constantes dão as mesmas ordens."""
     folgas = []
+    muda = 0
     for aj in ajustes(pacote.nome).values():
         folgas.append(np.abs(np.abs(aj.facp) - aj.limiar).min())
         lim2 = parp.limiar_significancia(aj.est.n_anos, 1.959964)
         corta = aj.opcoes.facp_maior_que_1 == "corta"  # P-ORD-04
         for m in range(12):
             for it in aj.iteracoes:
-                assert parp.identificar(aj.facp[:, m], it.limites[m], lim2, aj.opcoes.ordem_minima, corta) \
-                    == it.identificadas[m]
+                muda += parp.identificar(aj.facp[:, m], it.limites[m], lim2, aj.opcoes.ordem_minima, corta) \
+                    != it.identificadas[m]
     assert min(folgas) > 0
+    janela = next(iter(ajustes(pacote.nome).values())).serie.anos
+    assert (muda > 0) == (janela[-1] == 2022), muda
     if pacote.nome in ("202609", "202610"):
         assert 5e-6 < min(folgas) < 1e-5
 

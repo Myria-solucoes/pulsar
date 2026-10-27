@@ -236,8 +236,10 @@ def test_defasagem_linear_de_sobradinho(nome):
     assert abs((1 - incl) - beta) < 1e-12
     anterior = (soma_janela(dk.prevs[156].semanas, 15) + soma_janela(dk.prevs[158].semanas, 15)) / 15
     assert abs(inter - beta * anterior) < 1e-9
-    # Controle: β com o mês inteiro (sem descontar os dias excluídos) não serve.
-    assert abs((1 - incl) - 15 / (ndmes + v.dias_excluidos)) > 1e-3
+    # Controle: β com o mês inteiro (sem descontar os dias excluídos) não
+    # serve; sem dias excluídos as duas formas coincidem.
+    if v.dias_excluidos:
+        assert abs((1 - incl) - 15 / (ndmes + v.dias_excluidos)) > 1e-3
 
 
 @pytest.mark.parametrize("nome", NOMES)

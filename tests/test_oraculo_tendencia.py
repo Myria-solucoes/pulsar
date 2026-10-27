@@ -79,9 +79,11 @@ def test_vazaoanual_e_media_dos_12_meses_da_tendencia(pacote):
 
 def test_vazaoanual_bits_soma_em_ordem_de_calendario(pacote):
     """INFERIDO F2-VA-03: com os 12 meses indexados pelo calendário
-    (jan..dez) e divisão por 12, reproduz todos os bits. A ordem da soma
-    dentro do calendário NÃO é discriminada: a soma sequencial e a soma por
-    blocos da np.sum dão os mesmos bits nestes decks."""
+    (jan..dez), soma sequencial de janeiro a dezembro e divisão por 12,
+    reproduz todos os bits em todos os pacotes. Em 202303 e 202405 a soma por
+    blocos da np.sum erra 1 e 2 usinas, a ordem cronológica (do mês estocástico
+    do ano anterior ao inicial) e as reversas erram outras: a ordem fica
+    discriminada pelo conjunto dos pacotes."""
     if not _par_a(pacote):
         pytest.skip("ramo PAR(p): vazaoanual.out nulo (F2-VA-04)")
     a = O.ler_media_anual_anterior(pacote.arq("vazaoanual.out"))
@@ -93,7 +95,6 @@ def test_vazaoanual_bits_soma_em_ordem_de_calendario(pacote):
         for m in range(1, 13):
             s += q.incremental_mensal(u.posto, m)
         assert np.all(a.usina(u.nint) == s / 12), u.nome
-        assert np.all(a.usina(u.nint) == np.sum(q.incrementais_do_posto(u.posto)) / 12), u.nome
 
 
 def _ano_inicial_historico(pacote) -> int:
