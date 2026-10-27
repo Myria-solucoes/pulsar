@@ -253,6 +253,8 @@ section.band.hi { background: linear-gradient(180deg, rgba(20, 30, 58, .92), rgb
 .src .st { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; font-size: 12px; color: var(--dim); }
 .src .st a { font-family: var(--mono); font-size: 11.5px; padding: 1px 7px; border-radius: 6px; border: 1px solid var(--line); text-decoration: none; color: #c9d8f2; }
 .src .st a:hover { border-color: var(--blue); color: #fff; }
+.repo { margin: 16px 0 0; font-family: var(--mono); font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.top nav a.gh { color: var(--blue-light); }
 footer { padding-block: 48px; border-top: 1px solid var(--line); background: rgba(7, 8, 20, .92); color: var(--dim); font-size: 13px; }
 footer p { margin: 0; max-width: 820px; }
 </style>
@@ -273,6 +275,7 @@ footer p { margin: 0; max-width: 820px; }
       <a href="#resultados">Resultados</a>
       <a href="#lacunas">Lacunas</a>
       <a href="#decisoes">Decisões</a>
+      <a href="https://github.com/Myria-solucoes/pulsar" class="gh">GitHub ↗</a>
     </nav>
   </header>
 
@@ -280,7 +283,8 @@ footer p { margin: 0; max-width: 820px; }
     <p class="kicker">Myria · Pulsar</p>
     <h1>O GEVAZP refeito só com <span class="grad">fontes públicas</span></h1>
     <p class="lead">O Pulsar gera o <code>VAZOES.RVx</code> que o DECOMP lê, a partir do mesmo deck que o ONS publica. Para isso usamos apenas os relatórios do CEPEL, a documentação LIBS, livros e artigos, e os arquivos que o próprio ONS divulga. Cada decisão do código tem uma linha que diz de onde ela veio: de um documento, de uma comparação com um arquivo oficial (com teste) ou de uma escolha nossa, nos pontos em que os documentos não dizem nada.</p>
-    <div class="cta"><a class="btn solid" href="#fluxo">Percorrer o fluxo</a><a class="btn" href="#fontes">Ver as fontes</a></div>
+    <div class="cta"><a class="btn solid" href="#fluxo">Percorrer o fluxo</a><a class="btn" href="#fontes">Ver as fontes</a><a class="btn" href="https://github.com/Myria-solucoes/pulsar">Código no GitHub ↗</a></div>
+    <p class="repo">Repositório aberto, Licença Apache 2.0: <a href="https://github.com/Myria-solucoes/pulsar">github.com/Myria-solucoes/pulsar</a></p>
     <p class="prompt"><b>$</b> ./ambiente/py src/pulsar/cli.py decks/ons-pacote-gevazp/202609 --revisao RV0 --semente 1 <span class="cursor">▍</span></p>
   </section>
 
