@@ -163,16 +163,20 @@ def test_agregacao_oficial_nao_depende_da_revisao():
     assert np.array_equal(r0.probabilidades, r1.probabilidades)
 
 
-def _condicionamento(pr, tend, s, m):
+def _condicionamento(pr, tend, s, m, f8=False):
+    """Lognormal do período: a da F11 (regra P-LN3-09 e momentos históricos,
+    P-LN3-04) ou, com ``f8``, a da primeira versão (M_t = 0, teóricos)."""
     aj = pr.ajustes[id(s)]
     zp, a = G.passado_da_serie(tend, s.posto, pr.mes)
     c = G.termo_condicional(aj, m, zp, a)
-    mu, sd = G.momentos_do_ruido(aj, m, "teoricos")
+    mu, sd = G.momentos_do_ruido(aj, m, "teoricos" if f8 else "historicos")
     sig = float(aj.est.desvio[m])
-    return aj, zp, a, c, sig, parametros(c, sig, mu, sd)
+    if f8:
+        return aj, zp, a, c, sig, parametros(c, sig, mu, sd)
+    return aj, zp, a, c, sig, parametros(c, sig, mu, sd, "inferida", limite_vazao=G.limite_do_mes(aj, m))
 
 
-def transplante_entre_revisoes(nome="202609", origem="RV1", destino="RV0"):
+def transplante_entre_revisoes(nome="202609", origem="RV1", destino="RV0", f8=False):
     """W oficial reconstruído do GEVAZP.OUT de ``origem`` (com a NW tirada do
     VAZTOTGD.DAT, F6-TOT-05) invertendo a lognormal e a recorrência do
     Pulsar com o condicionamento de ``origem``; reaplicado com o de
@@ -193,8 +197,8 @@ def transplante_entre_revisoes(nome="202609", origem="RV1", destino="RV0"):
         if s.nula:
             continue
         i = po.indice[id(s)]
-        ajo, zpo, ao, cco, sig, lo = _condicionamento(po, to, s, m)
-        ajd, zpd, ad, ccd, _, ld = _condicionamento(pd, td, por_d[(s.numero, s.status)], m)
+        ajo, zpo, ao, cco, sig, lo = _condicionamento(po, to, s, m, f8)
+        ajd, zpd, ad, ccd, _, ld = _condicionamento(pd, td, por_d[(s.numero, s.status)], m, f8)
         x = inc_o[:, i] / sig - cco - lo.delta
         # Todas as séries do 202609 RV1, SOBRADINHO inclusive, ficam acima do
         # limite da lognormal em todos os cenários; outro caso é erro.
@@ -212,57 +216,36 @@ def transplante_entre_revisoes(nome="202609", origem="RV1", destino="RV0"):
 
 
 def test_transplante_entre_revisoes(tmp_path):
-    """P-INT-02 (03 §3, transplante): com o W oficial do RV1 e o
+    """P-INT-02 (03 §3, transplante): com o W oficial do RV1 (lognormal da
+    F11: M_t da P-LN3-09 e momentos históricos, P-LN3-04) e o
     condicionamento do RV0 (PREVS.RV0, 5 semanas previstas), o VAZOES.RV0
-    do 202609 sai com:
+    do 202609 sai igual ao oficial byte a byte, inclusive as 82 880
+    palavras de cada bloco gerado (6 e 8). Controle: reaplicar o
+    condicionamento do próprio RV1 devolve o NINT do GEVAZP.OUT em 100%
+    dos valores.
 
-    - 100% das palavras dos registros 1–4 e dos blocos determinísticos;
-    - nas colunas com dispersão no oficial (153 no bloco 6, 154 no bloco 8),
-      ≥ 89% das palavras iguais (90,0% e 89,9% na execução da F9); nos
-      blocos inteiros, 95,2% e 95,1%;
-    - diferenças sem viés (média −0,002 m³/s), de ±1 em 85% das palavras
-      diferentes, no máximo 18 m³/s, com a pior coluna em JIRAU (posto
-      285, 11% de palavras iguais);
-    - erro que cresce com |W|: a fração de palavras diferentes no bloco 6
-      sobe de 6,3% (|W| < 0,5) a 21,9% (|W| ≥ 2) em faixas de 0,5, o que
-      aponta erro de escala, não de posição, nos parâmetros da lognormal.
-
-    Controle: reaplicar o condicionamento do próprio RV1 devolve o NINT do
-    GEVAZP.OUT em 100% dos valores. Isso sustenta, numa execução oficial
-    independente, o condicionamento (P-GER-03/04), a lognormal com M_t = 0
-    (P-LN3-03) e os momentos teóricos (P-LN3-04)."""
+    Com a lognormal da primeira versão da F8 (M_t = 0, momentos teóricos)
+    o mesmo transplante acertava 90,0% e 89,9% das palavras das colunas
+    com dispersão (153 e 154), com erro de ±1 em 85% das diferentes, até
+    18 m³/s, pior coluna JIRAU (11%), crescendo com |W|: era o erro de
+    escala nos parâmetros da lognormal que a F11 corrigiu."""
     a, b, inc_o, ident, ws = transplante_entre_revisoes()
     assert np.array_equal(nint(ident), nint(inc_o))
     o = F.oficial_bytes("202609", "RV0")
     c = palavras_por_bloco(b, o, a)
     print("transplante RV1 -> RV0:", {k: f"{i}/{t}" for k, (i, t) in c.items()})
-    for k in DETERMINISTICOS + ("probabilidades",):
-        assert c[k][0] == c[k][1], k
-    (tmp_path / "VAZOES.RV0").write_bytes(b)
+    assert b == o
+    # controle: lognormal da primeira versão da F8
+    a8, b8, *_ = transplante_entre_revisoes(f8=True)
+    (tmp_path / "VAZOES.RV0").write_bytes(b8)
     meu = O.ler_vazoes_decomp(tmp_path / "VAZOES.RV0")
     of = F.oficial("202609", "RV0")
     for bloco, n_cols in (("gerada_mensal", 153), ("gerada_mensal_ena", 154)):
         cols = F.colunas("202609", "RV0", bloco)
         assert len(cols) == n_cols, bloco
         d = (np.asarray(getattr(meu, bloco), float) - np.asarray(getattr(of, bloco), float))[:, cols]
-        iguais = (d == 0).mean(0)
-        print(bloco, "colunas com dispersão:", (d == 0).mean(), "média", d.mean(), "máx", np.abs(d).max(),
-              "±1", np.mean(np.abs(d[d != 0]) == 1), "pior", cols[int(np.argmin(iguais))] + 1, iguais.min())
-        assert (d == 0).mean() >= 0.89, bloco
-        assert abs(d.mean()) < 0.02, bloco
-        assert np.mean(np.abs(d[d != 0]) == 1) > 0.8, bloco
-        assert np.abs(d).max() <= 18, bloco
-        assert cols[int(np.argmin(iguais))] + 1 == 285 and iguais.min() < 0.2, bloco
-    # dependência com |W| no bloco 6 (colunas cuja série tem W reconstruído)
-    cols = [j for j in F.colunas("202609", "RV0") if j + 1 in ws]
-    g6m, g6o = np.asarray(meu.gerada_mensal, float), np.asarray(of.gerada_mensal, float)
-    w = np.concatenate([np.abs(ws[j + 1]) for j in cols])
-    dif = np.concatenate([g6m[:, j] != g6o[:, j] for j in cols])
-    faixas = [(0, 0.5), (0.5, 1), (1, 1.5), (1.5, 2), (2, np.inf)]
-    fr = [dif[(w >= lo) & (w < hi)].mean() for lo, hi in faixas]
-    print("fração diferente por faixa de |W|:", np.round(fr, 3))
-    assert all(x < y for x, y in zip(fr, fr[1:]))
-    assert fr[-1] >= 3 * fr[0]
+        print(bloco, "primeira versão, colunas com dispersão:", (d == 0).mean())
+        assert 0.89 <= (d == 0).mean() < 0.91, bloco
 
 
 # ------------------------------------------ estatísticas de 03 §5 no VAZOES
