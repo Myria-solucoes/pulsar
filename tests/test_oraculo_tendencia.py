@@ -88,13 +88,31 @@ def test_vazaoanual_bits_soma_em_ordem_de_calendario(pacote):
         pytest.skip("ramo PAR(p): vazaoanual.out nulo (F2-VA-04)")
     a = O.ler_media_anual_anterior(pacote.arq("vazaoanual.out"))
     q = qpast(pacote.nome)
+    me = mes_estocastico(pacote.nome)
+
+    def seq(v):
+        s = 0.0
+        for y in v:
+            s += y
+        return s
+
+    erros = {"np_sum": 0, "cronologica": 0, "calendario_reversa": 0, "cronologica_reversa": 0}
     for u in config(pacote.nome):
         if u.status == "PN":
             continue
-        s = 0.0
-        for m in range(1, 13):
-            s += q.incremental_mensal(u.posto, m)
-        assert np.all(a.usina(u.nint) == s / 12), u.nome
+        x = [q.incremental_mensal(u.posto, m) for m in range(1, 13)]
+        assert np.all(a.usina(u.nint) == seq(x) / 12), u.nome
+        cron = [x[(me - 1 + k) % 12] for k in range(12)]  # do mês estocástico (ano anterior) ao inicial
+        alvo = a.usina(u.nint)[0]
+        erros["np_sum"] += float(np.sum(np.array(x))) / 12 != alvo
+        erros["cronologica"] += seq(cron) / 12 != alvo
+        erros["calendario_reversa"] += seq(x[::-1]) / 12 != alvo
+        erros["cronologica_reversa"] += seq(cron[::-1]) / 12 != alvo
+    print(pacote.nome, erros)
+    esperado = {"202303_pmo": {"np_sum": 1, "cronologica": 9, "calendario_reversa": 5, "cronologica_reversa": 0},
+                "202405_pmo": {"np_sum": 2, "cronologica": 8, "calendario_reversa": 5, "cronologica_reversa": 2}}
+    if pacote.nome in esperado:
+        assert erros == esperado[pacote.nome]
 
 
 def _ano_inicial_historico(pacote) -> int:
