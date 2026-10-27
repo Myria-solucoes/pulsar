@@ -54,7 +54,7 @@ _FAMILIAS = [
 
 def deterministicos_do_vazdcp(caminho) -> RegistrosDeterministicos:
     """Transplante dos blocos determinísticos a partir do VAZDCP.REL."""
-    if not Path(caminho).is_file():  # 202301 e 202411 não trazem o VAZDCP.REL
+    if not Path(caminho).is_file():  # nenhum dos 61 pacotes está sem ele
         pytest.skip(f"{caminho}: pacote sem VAZDCP.REL")
     blocos: dict[str, list[list[float]]] = {nome: [] for _, nome in _FAMILIAS}
     for r in T.ler_vazdcp(caminho):

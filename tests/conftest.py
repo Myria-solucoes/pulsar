@@ -46,8 +46,8 @@ class Deck:
     def arq(self, nome: str) -> Path:
         p = self.dir / nome
         if not p.is_file():
-            # Como P-TXT-03: alguns pacotes gravam em minúsculas (202301:
-            # vazoes.rv0, VAZDCP.REL ausente ou vazdcp.rel).
+            # Como P-TXT-03: alguns pacotes gravam em minúsculas (202301 e
+            # 202411: vazoes.rv0, vazdcp.rel, probvaz.dat).
             p = next((q for q in self.dir.iterdir() if q.name.lower() == nome.lower()), None)
         if p is None or not p.is_file():
             pytest.skip(f"{self.nome}: {nome} ausente")
