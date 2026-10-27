@@ -217,14 +217,33 @@ def _residuo_no_nucleo(nome, u, nomes, valores=None, transf=np.log):
     return np.linalg.svd(g, compute_uv=False)[-1]
 
 
+@functools.lru_cache(maxsize=None)
+def _residuos_por_matriz(nome):
+    """Resíduo de núcleo dos cenários publicados com cada uma das 13 matrizes
+    (12 meses e a anual)."""
+    c, _, _ = carga(nome)
+    return [_residuo_no_nucleo(nome, c.matriz[k], c.nomes) for k in range(13)]
+
+
+def test_matriz_do_mes_estocastico_e_a_mais_proxima(pacote):
+    """P-ESP-09 nos 61 pacotes: entre as 12 matrizes mensais e a anual, a do
+    mês estocástico é a que deixa os cenários do GEVAZP.OUT mais perto da
+    imagem (resíduo de núcleo com ln Z) em todos. A distância absoluta e a
+    folga relativa variam com o pacote (razão até ~0,34), porque dependem da
+    lognormal (L8); test_cenarios_publicados_no_subespaco_do_mes_estocastico
+    mantém os limiares do 2026."""
+    m = apoio.mes_estocastico(pacote.nome)
+    r = _residuos_por_matriz(pacote.nome)
+    assert r[m - 1] < min(r[:m - 1] + r[m:]), r
+
+
 def test_cenarios_publicados_no_subespaco_do_mes_estocastico(pacote):
     """P-ESP-09 e P-ESP-07: com ln Z (M_t = 0, lacuna L8), os cenários do
     GEVAZP.OUT ficam muito mais perto da imagem da matriz do mês estocástico
     (posto 93) do que da de qualquer outro mês ou da anual (resíduo ~0,02
     contra ≥ 0,19). O resíduo não chega a 0: depende da lognormal (L8)."""
-    c, _, _ = carga(pacote.nome)
     m = apoio.mes_estocastico(pacote.nome)
-    r = [_residuo_no_nucleo(pacote.nome, c.matriz[k], c.nomes) for k in range(13)]
+    r = _residuos_por_matriz(pacote.nome)
     alvo = r[m - 1]
     outros = r[:m - 1] + r[m:]
     assert alvo < 0.03
