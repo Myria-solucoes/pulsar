@@ -1,0 +1,13 @@
+Fonte: https://see.cepel.br/manual/libs/latest/incerteza_hidrologica/geracao-cenarios-postos-artificiais.html (baixado em 26/10/2026)
+
+itemprop="articleBody">
+Geração das Séries Sintéticas para Postos Artificiais¶
+A geração de cenários sintéticos é realizada somente para usinas com postos de vazão natural. As vazões naturais históricas são obtidas retirando-se o efeito de ações antrópicas (usos consuntivos, bombeamento, etc.) e incorporando-se as vazões relativas à evaporação líquida dos reservatórios. Porém, em algumas representações se faz necessário o uso de registros de vazões artificiais. Postos artificiais correspondem à vazão natural, levando-se em conta o efeito de qualquer regra de operação no local, ou à montante do local considerado, que possa contribuir na alteração do regime natural. Em geral, os postos artificiais são dotados de uma regra particular para o cálculo de sua vazão.
+A partir destas regras e dos cenários de vazões naturais totais gerados pelo GEVAZP é possível calcular as vazões para os postos artificiais. O cálculo dos cenários de vazões para estes postos ocorre após a geração de cenários para postos principais e o cálculo de cenários de vazão total para os postos satélites. O fluxograma abaixo, descreve as etapas do processo de cálculo de vazão para os postos artificiais.
+Fig. 9 Fluxograma da geração de cenários de vazão para postos artificiais.¶
+        © Copyright 2026, Cepel - Centro de Pesquisas de Energia Elétrica
+.
+        Última actualização em 30 de setembro de 2026.
+    Built with Sphinx using a
+    theme
+    provided by Read the Docs. 

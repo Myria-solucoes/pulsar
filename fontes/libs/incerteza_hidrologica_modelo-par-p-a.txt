@@ -1,0 +1,51 @@
+Fonte: https://see.cepel.br/manual/libs/latest/incerteza_hidrologica/modelo-par-p-a.html (baixado em 26/10/2026)
+
+itemprop="articleBody">
+Modelo Autorregressivo Periódico Anual - Par(p)-A¶
+Em 2020, o CEPEL propôs uma extensão ao modelo estocástico PAR(p), utilizado na geração de cenários sintéticos de afluências para os modelos  Modelo NEWAVE e Modelo DECOMP, denominada PAR(p)-A, que consiste na inclusão de um novo termo na equação de autorregressão de cada período sazonal, referente à média das afluências dos últimos 12 meses. A metodologia de determinação dos parâmetros para este modelo foi inicialmente descrita no Relatório Técnico 1416/2020 do CEPEL 1.
+O modelo auto-regressivo periódico com componente anual, denominado de PAR(p)-A pode ser escrito como (31):
+(31)¶\[(\frac{{Z_t}-{\mu_m}}{\sigma_m})= \sum_{i=1}^{p_m} {\phi_i^m}.(\frac{{Z_{t-i}}-{\mu_{m-i}}}{\sigma_{m-i}})+{\psi_t}^m(\frac{{A_{t-1}}-{\mu_{m-1}^A}}{\sigma_{m-1}^A})+{a_t}\]
+Onde \(A_{t-1}\) representa a média das últimas 12 observações do processo estocástico \(Z_t\) com referência a \(t-1\), como mostra a (32).
+(32)¶\[ A_{t-1} = \sum_{\tau=1}^{12}\frac{{Z_{t-\tau}}}{12}\]
+Para obter a função de auto-correlação de \(Z_t\), (33), multiplica-se ambos os lados da equação (31) por \((\frac{{z_{i,{m-k}} - \mu_{m-k}}}{{\sigma_{m-k}}})\) e aplica-se o valor esperado em cada termo.
+(33)¶\[{\rho_k^m} = {\phi_1^m}{\rho_{k-1}^{m-1}} + {\phi_2^m}{\rho_{k-2}^{m-2}} + \dots + {\phi_{p_m}^m}{\rho_{p_{m-1}}^{m-1}} + {\psi^m}{\rho_{Z,A}^{m-1}}\]
+onde \({\rho_{Z,A}^{m-1}}\) é dado pela (34).
+(34)¶\[{\rho_{Z,A}^{m-1}}=E[(\frac{A_{t-1}-\mu_{m-1}^A}{\sigma_{m-1}^A})(\frac{Z_{t-k}-\mu_{m-k}}{\sigma_{m-k}})]\]
+Multiplicando-se ambos os lados da equação por \((\frac{A_{t-1}-\mu_{t-1}^A}{\sigma_{m-1}^A})\) e aplicando o valor esperado a cada termo, obtém-se (35).
+(35)¶\[{\rho_{Z,A,-1}^{m-1}} = {\phi_1^m}{\rho_{Z,A,0}^{m-1}} + {\phi_2^m}{\rho_{Z,A,1}^{m-1}} + \dots + {\phi_{p_m}^m}{\rho_{Z,A,p-1}^{m-1}} + {\psi^m}\]
+onde:
+(36)¶\[{\rho_{Z,A,-1}^{m-1}}=E[(\frac{A_{t-1}-\mu_{m-1}^A}{\sigma_{m-1}^A})(\frac{Z_{t}-\mu_{m}}{\sigma_{m}})]\]
+Assim como no modelo PAR(p), para cada período \(m\), variando-se \(k\) de 1 a \(p_m\) na função de autocorrelação, obtém-se um conjunto de equações. A fim de se obter tantas equações quantos forem o número de parâmetros, a equação (35) deve ser adicionada ao conjunto original de equações lineares, conforme exemplificado em (37).
+(37)¶\[\begin{split}\begin{bmatrix}
+1 & {\rho_{1}^{m-1}} & {\rho_2^{m-1}} & \dots & {\rho_{(p_m-1)}^{m-1}} & {\rho_{(Z,A,\theta)}^{m-1}}\\
+{\rho_1^{m-1}} & 1 & {\rho_1^{m-2}} & \dots & {\rho_{(p_m-2)}^{m-2}} & {\rho_{(Z,A,1)}^{m-1}} \\
+{\rho_2^{m-1}} & {\rho_1^{m-2}} & 1 & \dots & {\rho_{(p_m-3)}^{m-3}} & {\rho_{(Z,A,2)}^{m-1}}\\
+\vdots & \vdots & \vdots & \ddots & \vdots \\
+{\rho_{(p_{m}-1)}^{m-1}} & {\rho_{(p_{m}-2)}^{m-2}} & {\rho_{(p_{m}-3)}^{m-3}} & \dots & 1 & {\rho_{(Z,A,p-1)}^{m-1}} \\
+{\rho_{(p_{Z,A},\theta)}^{m-1}} & {\rho_{(Z,A,1)}^{m-1}} & {\rho_{(Z,A,2)}^{m-1}} & \dots & {\rho_{(Z,A,p-1)}^{m-1}} & 1 \\
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+\phi_{1}^{m} \\
+\phi_{2}^{m} \\
+\phi_{3}^{m} \\
+\vdots \\
+\phi_{(p_{m})}^{m} \\
+\psi^{m}
+\end{bmatrix}=
+\begin{bmatrix}
+\rho_{1}^{m} \\
+\rho_{2}^{m} \\
+\rho_{3}^{m} \\
+\vdots \\
+\rho_{(p_{m})}^{m} \\
+\rho_{Z,A,-1}^{m-1} \\
+\end{bmatrix}`\end{split}\]
+1
+F. Treistman, M. E. P. Maceira, J. M. Damázio, and C. B. Cruz. Proposta metodológica para o aprimoramento da memória de modelos auto-regressivos periódicos. Relatório Técnico 1416/2020, CEPEL - Centro de Pesquisas de Energia Elétrica, Fev. 2020.
+        © Copyright 2026, Cepel - Centro de Pesquisas de Energia Elétrica
+.
+        Última actualização em 30 de setembro de 2026.
+    Built with Sphinx using a
+    theme
+    provided by Read the Docs. 

@@ -1,0 +1,25 @@
+Fonte: https://see.cepel.br/manual/libs/latest/incerteza_hidrologica/geracao-series-sinteticas-vazao-total.html (baixado em 26/10/2026)
+
+itemprop="articleBody">
+Geração das Séries Sintéticas de Vazões Totais¶
+No programa GEVAZP, são disponibilizadas duas alternativas para obtenção dos cenários de vazões totais/incrementais para as usinas afetadas por propagação de vazão:
+Gerar cenários de vazão incremental e somá-los aos cenários de vazões totais das usinas a montante;
+Utilizar os cenários gerados de vazão lateral e somá-los aos cenários de vazões totais das usinas de montante defasadas considerando uma regra linear de defasagem. A alternativa a ser considerada é uma escolha do usuário e pode ser definida por usina.
+Na alternativa 1, os cenários gerados de vazão incremental são somados aos cenários de vazões totais das usinas de montante. A propagação das vazões dos postos de montante está representada de forma implícita, já que este fenômeno natural está refletido no histórico de vazões utilizado para ajustar o modelo.
+Na alternativa 2, os cenários gerados de vazão lateral são somados aos cenários de vazões totais das usinas de montante defasadas por uma regra de defasagem linear. Esta regra leva em consideração: (a) o tempo de viagem entre a usina e as usinas imediatamente a montante, (b) as vazões naturais totais geradas para as usinas de montante, e (c) a vazão lateral gerada para a usina em questão, conforme 4.3.3.1.
+(53)¶\[ZT(t) = \left[ \beta \sum_{i=1}^{nmont} ZT_{mont_i}(t-1) \right] + \left[ (1 - \beta) \sum_{i=1}^{nmont} ZT_{mont_i}(t) \right] + Z_{lat}(t)\]
+Onde:
+(54)¶\[ \beta = \frac{ndias}{ndmes};\]
+noindent ndias é o tempo de viagem em dias;\
+ndmes é o número de dias do mês;\
+$ZT_{mont_i}$ é a vazão total da usina de montante $i$.
+Nota
+Volte mais tarde ou consulte os relatórios técnicos do CEPEL que descrevem as funcionalidades e os manuais já existentes em pdf dos modelos, que estão disponíveis para download público no seguinte endereço:
+(https://www.cepel.br/produtos/documentacao-tecnica/)
+Dúvidas? Contacte as equipes dos modelos: newave@cepel.br; decomp@cepel.br; dessemp@cepel.br; gevazp@cepel.br; suishi@cepel.br;  previvaz@cepel.br
+        © Copyright 2026, Cepel - Centro de Pesquisas de Energia Elétrica
+.
+        Última actualização em 30 de setembro de 2026.
+    Built with Sphinx using a
+    theme
+    provided by Read the Docs. 

@@ -1,0 +1,37 @@
+Fonte: https://see.cepel.br/manual/libs/latest/incerteza_hidrologica/distribuicao-lognormal-3-parametros.html (baixado em 26/10/2026)
+
+itemprop="articleBody">
+Distribuição Lognormal 3 parâmetros¶
+Um problema comum com usinas hidrelétricas em cascata, onde vazões incrementais podem ser relativamente pequenas, é a geração de vazões negativas.  De forma a obter valores positivos de \(Z_t\) é necessário que:
+(18)¶\[Z_t = \mu_m + \sigma_m\sum_{i=1}^{p_m}{\phi_i^m}(\frac{Z_{t-i}-\mu_{m-i}}{\sigma_{m-i}}) + {\sigma_m}a_t \gt M_t\]
+onde \(M_t\) é um limite inferior da distribuição. Este valor pode ser igual a zero, ou pode ser um valor estimado com base na distribuição.
+Assim,
+(19)¶\[a_t \gt -\frac{M_m}{\sigma_m} - \frac{\mu_m}{\sigma_m} - \sum_{i=1}^{p_m}{\phi_i^m}(\frac{Z_{t-i}-\mu_{m-i}}{\sigma_{m-i}})\]
+Muitos pesquisadores assumem que os resíduos \(a_t\) apresentam distribuição Normal e uma possível não normalidade pode ser corrigida pela transformação Box-Cox 1. No entanto, sendo um dos objetivos do modelo GEVAZP a geração de cenários sintéticos mensais de ENA para o modelo NEWAVE, é necessário observar o requisito de linearidade dos dados de entrada para esse modelo. Dessa forma, a utilização da transformação (não-linear) Box-Cox da série temporal \(Z_t\) deve ser descartada.
+A solução adotada foi ajustar uma distribuição Lognormal com três parâmetros aos resíduos \(a_t\) 2, 3. Tal ajuste só é possível para distribuições que possuam assimetria positiva 3.
+Portanto, assume-se que \(a_t\) tem uma distribuição lognormal com três parâmetros, tal que pode-se definir um processo aleatório \(\xi_t\) com distribuição com média \(\mu_{\xi_m}\) e desvio padrão \(\sigma_{\xi_m}\) que está relacionado ao processo estocástico \(a_t\) pela equação (20).
+(20)¶\[\xi_t = \log(a_t+\Delta_t)\]
+A equação (19) estabelece uma nova condição para \(a_t\), sendo que o terceiro parâmetro \(\Delta_t\), denominado como deslocamento, é calculado de forma a se evitar a geração de cenários negativos, conforme (21).
+(21)¶\[a_t \gt -\frac{M_m}{\sigma_m} - \frac{\mu_m}{\sigma_m} - \sum_{i=1}^{p_m}{\phi_i^m}(\frac{Z_{t-i}-\mu_{m-i}}{\sigma_{m-i}}) = \Delta_t\]
+Os parâmetros da distribuição lognormal, \(\Delta_t\), \(\sigma_{\xi_m}^2\) e \(\mu_{\xi_m}\), são estimados de tal forma a preservar os momentos dos resíduos \(a_t\), \(\sigma_{a_m}\) e \(\mu_{a_m}\), por meio das seguintes relações:
+(22)¶\[\mu_{\xi_t} = \frac{1}{2}\log(\frac{\sigma_{a_m}^2}{\theta^2-\theta})\]
+(23)¶\[\sigma_{\xi_t}^2 = \log(\theta)\]
+em que
+(24)¶\[\theta = 1+\frac{\sigma_{a_m}^2}{(\mu_{a_m} - \Delta_t)^2}\]
+onde \(\mu_m\) e \(\sigma_m\) representam a média e o desvio padrão das vazões mensais e \(\theta\) é a solução real (única) da equação cúbica (25) em que \(\gamma\) é a assimetria das vazões .
+(25)¶\[\theta_m^3 + 3\theta_m^2 - (4+\gamma_m^2) = 0\]
+Obtém-se, por fim, que os ruídos \(a_t\) são dados por (26) onde \(\xi_t\) é dado por (27).
+(26)¶\[a_t = e^{\xi_t} + \Delta_t\]
+(27)¶\[\xi_t = \sigma_{\xi_t}b_t+\mu_{\xi_t}\]
+1
+G.E.P. Box and D.R. Cox. An analysis of transformations. Journal of the Royal Statistical Society, A127:211–252, 1964.
+2
+S. J. Burges, D. P. Lettenmaier, and C. L. Bates. Properties of the three-parameter log normal probability distribution. Water Resources Research, 11(2):229–235, 1975. doi:10.1029/WR011i002p00229.
+3(1,2)
+R. Charbeneau. Comparison of the two and three parameter lognormal distributions used in streamflow synthesis. Water Resources Research, 14(1):149–150, 1978.
+        © Copyright 2026, Cepel - Centro de Pesquisas de Energia Elétrica
+.
+        Última actualização em 30 de setembro de 2026.
+    Built with Sphinx using a
+    theme
+    provided by Read the Docs. 

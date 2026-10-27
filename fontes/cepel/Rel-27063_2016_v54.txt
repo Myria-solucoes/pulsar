@@ -1,0 +1,571 @@
+ÍNDICE
+
+1.          INTRODUÇÃO .................................................................................................................................. 3
+
+2.          ANÁLISE DA GERAÇÃO DE CENÁRIOS PARA O POSTO PIMENTAL ....................................................... 4
+
+3.          ANÁLISE DA GERAÇÃO DE CENÁRIOS CONSIDERANDO SALTO APIACÁS NA CONFIGURAÇÃO ............. 6
+
+4.          FORNECIMENTO DE TENDÊNCIA HIDROLÓGICA POR POSTO PARA DECOMP ..................................... 6
+
+5.          GERAÇÃO DE CENÁRIOS PARA SOBRADINHO CONSIDERANDO POSTOS LATERAIS ............................. 8
+     5.1.         Classificação como usina principal ..................................................................................................... 9
+     5.2.         Classificação como usina satélite ..................................................................................................... 10
+
+6.          GERAÇÃO DE CENÁRIOS PARA POSTOS ARTIFICIAIS ........................................................................ 10
+
+7.          CONSIDERAÇÕES FINAIS ................................................................................................................ 13
+
+
+
+
+__________________________________________________________________________________________________________________
+ F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 27063/ 2016
+
+    1. INTRODUÇÃO
+Este Relatório técnico tem como objetivo comparar os resultados obtidos pelo programa GEVAZP
+3.10, versão oficial, com os da versão 5.4, a fim de auxiliar na elaboração de testes a serem
+aplicados durante a validação do programa GEVAZP a ser conduzida por ONS e CCEE. Na versão 5.4
+estão implementados de forma operacional um conjunto reduzido de itens considerados mais
+significativos e oportunos para a realização da primeira etapa da validação do programa GEVAZP, a
+fim de se dispor no Programa Mensal de Operação de Janeiro de 2017 das vazões dos postos de
+Belo Monte e Pimental de forma que as energias naturais afluentes de acoplamento do modelo
+DECOMP com o modelo NEWAVE sejam providas adequadamente. Os itens operacionais na versão
+5.4 estão listados na Tabela 1.
+
+
+                              Tabela 1 – Itens operacionais na versão 5.4
+            Item      Descrição
+            1         Reprodutibilidade de resultados em micros com arquitetura diferente.
+                      Mudança na precisão numérica de variável na rotina de cálculo de
+                      distância para o processo de agregação. Esta alteração modifica os
+                      resultados na geração em formato árvore e foi realizada, pois rodadas
+                      em máquinas com configurações diferentes poderiam gerar resultados
+                      distintos o que impossibilita a reprodutibilidade dos resultados
+            2         Mudança de compilador (Watcom para Intel), o que ocasionou uma
+                      redução no tempo computacional do programa
+            3         Possibilidade de ajustar um modelo AR(0) quando for necessário
+            4         Geração de cenários de forma compatível para postos de vazão
+                      total/incremental e lateral para usinas afetadas pela defasagem oriunda
+                      do tempo de viagem. Esta implementação substitui as implementações
+                      anteriores relacionadas a tempo de viagem e postos incrementais
+            5         Geração de cenários para postos artificiais
+            6         Fornecimento da tendência hidrológica recente mensal e semanal por
+                      posto no arquivo de vazões gerado para o programa DECOMP
+            7         Geração para postos altamente correlacionados, em cascatas diferentes,
+                      porém localizadas na mesma região hidrográfica
+
+Ao longo deste relatório técnico serão analisados os itens 3 a 7 da Tabela 1.
+
+
+
+
+___________________________________________________________________________________________________
+                                                                                                3/14
+F-CO-005 REV. 2, 04/03/2013
+         Centro de Pesquisas de Energia Elétrica - CEPEL
+
+         Relatório Técnico – 27063/ 2016
+
+             2. ANÁLISE DA GERAÇÃO DE CENÁRIOS PARA O POSTO PIMENTAL
+
+
+         Desde a versão 3.10 é realizado um procedimento automático para verificar a ordem do modelo
+         PAR, a fim de detectar contribuições negativas de valores passados na vazão a ser gerada. Este
+         procedimento efetua uma avaliação recursiva dos coeficientes autorregressivos, e caso detecte
+         alguma contribuição negativa no coeficiente de ordem 1, a ordem do modelo é reduzida. Este
+         procedimento é aplicado até que não se verifique contribuições negativas.
+
+
+         O procedimento de verificação automático da ordem implementado na versão 3.10 não avaliava a
+         contribuição do coeficiente de ordem 1, pois considerava-se que a correlação temporal de ordem 1
+         sempre seria positiva para as usinas do SIN. Adicionalmente, como não existia na configuração do
+         SIN usinas com correlação temporal ordem 1 não significativa, caso a ordem encontrada fosse igual
+         a zero, o modelo interrompia a execução informando não ser possível ajustar um modelo AR(0).
+
+
+         Entretanto, foi verificado que o posto 288, associado à usina de Pimental (ou Belo Monte
+         Complementar), para o mês de abril possuía uma correlação lag 1 negativa.Desta forma, ao ajustar
+         o procedimento automático para considerar também o efeito do primeiro coeficiente do modelo AR,
+         foi encontrado um modelo com ordem zero. Desta forma a possibilitar a geração de cenários para o
+         posto 288, foi permitido considerar modelos com ordem zero, de acordo com o item 3 da Tabela 1.
+
+
+         A seguir são apresentados os resultados obtidos com a versão 3.10 e 5.4 para o posto 288.
+
+
+                            Versão 3.10                                            Versão 5.4
+
+
+
+
+         Mensagem de alerta emitida pela versão 5.4
+           *** ROTINA: ESTPAR ***
+          ALERTA: NAO FOI POSSIVEL AJUSTAR UM MODELO AR(1) PARA A USINA PIMENTAL, POIS O COEFICIENTE DE ORDEM 1 EH
+         NEGATIVO.
+                  SERA CONSIDERADO UM MODELO AR(0).
+                  MES: 4   COEFICIENTE ORDEM 1: -0.0703
+
+
+         Na Tabela 2 são apresentadas as médias e desvio-padrão históricos para UHE Pimental (posto 288)
+         obtidos pelas versões 3.10 e 5.4
+
+                                       Tabela 2 – Média e desvio histórico para o posto 288
+Versão     Jan        Fev          Mar        Abr       Mai        Jun       Jul       Ago       Set       Out       Nov       Dez
+3.10
+MÉDIA      8140.48    13429.37     18272.74   21469.5   15546.06   7400.02   2957.54   1597.18   1091.58   1116.99   1906.48   3882.3
+         ___________________________________________________________________________________________________
+                                                                                                                       4/14
+         F-CO-005 REV. 2, 04/03/2013
+         Centro de Pesquisas de Energia Elétrica - CEPEL
+
+         Relatório Técnico – 27063/ 2016
+
+DESVIO     3468.36    4193.69      5441.26         6504.2      5027.81      2945.31         720.94     348.18      241.93        341.96      619.63       1269.53
+Versão     Jan        Fev          Mar             Abr         Mai          Jun             Jul        Ago         Set           Out         Nov          Dez
+5.4
+MÉDIA      8140.48    13429.37     18272.74        21469.5     15546.06     7400.02         2957.54    1597.18     1091.58       1116.99     1906.48      3882.3
+DESVIO     3468.36    4193.69      5441.26         6504.2      5027.81      2945.31         720.94     348.18      241.93        341.96      619.63       1269.53
+
+
+
+         Na Tabela 3 é mostrada uma comparação entre os valores de média e desvio padrão histórico e
+         gerado (2000 cenários com tendência igual à MLT) para o posto 288. Como pode ser observado, os
+         resultados encontrados nas duas versões são idênticos tanto em média quanto em desvio padrão,
+         até o mês de março. No mês de abril, a versão 5.4 passa a ajustar um modelo AR (0) para esse
+         mês, conforme mostrado anteriormente, o que ocasiona uma diferença de resultados observada
+         neste mês. Para os meses após abril, os valores também apresentam uma ligeira diferença, mesmo
+         o modelo ajustando sendo o mesmo, pois são afetados pelos valores passados gerados a partir de
+         abril. Deve-se ressaltar que ambos resultados são próximos aos valores históricos.
+
+
+                           Tabela 3 – Média e desvio dos cenários gerados para o posto 288
+
+                                   JAN       FEV      MAR        ABR       MAI      JUN       JUL     AGO       SET      OUT      NOV      DEZ
+
+                          HIST    8140.5   13429.4   18272.7 21469.5 15546.1       7400      2957.5   1597.2   1091.6   1117     1906.5 3882.3
+
+                 MÉDIA     3.10   8264.2   13611.1   18499.5 21277.2 15449.6 7348.9 2962.6            1601.6   1095.6   1114.4   1893.2 3891.6
+
+                           5.4    8264.2   13611.1   18499.5 21286.6 15453.8 7351.5 2962.6            1601.6   1095.6   1114.4   1893.2 3891.7
+
+                          HIST    3468.4   4193.7     5441.3    6504.2    5027.8   2945.3    720.9    348.2     241.9    342     619.6    1269.5
+                 DESVIO
+                           3.10   2966.6   3871.4     5228.4    6385.1    4981.2   2943.6    727.2    348.2     246.1   360.4    614.4    1299.7
+                 PADRÃO
+                           5.4    2966.6   3871.4     5228.4    6415.3    5002.2   2950.4    725.7    348.7     246.3   360.2    614.6    1299.8
+
+
+         Na imagem a seguir é mostrada uma comparação dos cenários gerados para o posto 288 com as
+         versões 3.10 e 5.4. Note que as diferenças começam a aparecer do mês de abril em diante.
+
+
+
+
+         ___________________________________________________________________________________________________
+                                                                                                                                                   5/14
+         F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 27063/ 2016
+
+    3. ANÁLISE DA GERAÇÃO DE CENÁRIOS CONSIDERANDO SALTO APIACÁS NA
+       CONFIGURAÇÃO
+
+Com a introdução da usina hidrelétrica de Salto Apiacás na configuração inicial das usinas
+hidrelétricas, a versão 3.10 ficou impossibilitada de gerar cenários por conta de problemas na
+classificação de usinas. A seguinte mensagem de erro era apresentada no relatório GEVAZP.ERR.
+
+
+
+
+Com o aprimoramento realizada na versão 5.4, elencado no item 7 da Tabela 1, esse problema foi
+solucionado e, por conseguinte,    fez-se possível gerar cenários sintéticos para todas as usinas
+normalmente. A usina hidrelétrica de Salto Apiacás foi classificada como satélite de Teles Pires,
+produzindo os seguintes resultados:
+
+
+
+
+A metodologia empregada para cálculo dos cenários para este tipo de posto satélite pode ser
+consultada no manual de referência do modelo GEVAZP.
+
+
+
+    4. FORNECIMENTO DE TENDÊNCIA HIDROLÓGICA POR POSTO PARA DECOMP
+
+Na versão 5.4 foi introduzida por demanda do ONS uma nova facilidade no GEVAZP para
+fornecimento da tendência hidrológica para o DECOMP por posto, de acordo com o item 6 da Tabela
+1. Como na versão 3.10 esta facilidade não estava implementada não há comparação a fazer entre
+as duas versões relacionada com esta facilidade.
+___________________________________________________________________________________________________
+                                                                                              6/14
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 27063/ 2016
+
+As Tabelas 4a e 4b apresentam um extrato da tendência hidrológica por posto utilizada no caso PMO
+JUL07-rv0 considerando vazões totais e incrementais, respectivamente. Os valores do passado
+recente de vazão total são fornecidos pelo usuário no arquivo histórico de vazões.
+
+
+                       Tabela 4 – Tendência hidrológica (a) total (b) incremental
+
+
+
+
+                                                  (a)
+
+
+
+
+                                                  (b)
+
+
+
+Na figura abaixo é apresentado um eco parcial do arquivo de vazões fornecido ao programa DECOMP
+(VAZOES.RV0). Na terceira linha da área destacada em vermelho estão os números dos postos e na
+quarta linha os valores da tendência hidrológica incremental de cada posto. Como exemplo, pode-se
+verificar que os valores relativos ao mês de agosto/2015, destacados na área vermelha são idênticos
+aos fornecidos pelo usuário.
+
+
+
+
+___________________________________________________________________________________________________
+                                                                                              7/14
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 27063/ 2016
+
+
+
+
+Ressalta-se que esta implementação visa garantir a consistência entre os valores passados e os
+cenários gerados nos estudos do DECOMP.
+
+
+
+    5. GERAÇÃO DE CENÁRIOS PARA SOBRADINHO CONSIDERANDO POSTOS LATERAIS
+
+Foi implementada no programa GEVAZP uma nova funcionalidade capaz que gerar cenários
+compatíveis de vazão total e lateral para usinas afetadas pelo tempo de viagem, item 4 da Tabela 1.
+
+
+Para avaliar esta nova funcionalidade, foi realizada uma geração não condicionada para avaliar o
+conjunto de cenários de vazões laterais para a usina de Sobradinho usando a versão 3.10 e a versão
+5.4. Nesta última versão foi considerada a geração compatibilizada entre o posto total e posto
+lateral de Sobradinho (alternativa 1), e a geração utilizando uma regra de cálculo de propagação
+linear (alternativa 2). O uso da alternativa 1 ou 2 impacta apenas a geração para o posto total, a
+geração para o posto de vazão lateral não se altera.
+
+
+___________________________________________________________________________________________________
+                                                                                              8/14
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 27063/ 2016
+
+Para o caso da versão 3.10 foi utilizada o arquivo com histórico de vazões VAZOESC.DAT, onde o
+posto 169 é o somatório do posto 168 (Sobradinho lateral) com o posto 156 (Três Marias) e o posto
+158 (Queimado). Já para os casos da versão 5.4, foi utilizado o arquivo VAZOES.DAT em que o
+posto 169 intrinsecamente já carrega a informação de tempo de viagem.
+
+
+Na versão 5.4 foi feito um aprimoramento na geração dos cenários para os postos laterais quando
+estes são classificados com satélites, para maiores detalhes consulte o manual de referência do
+modelo GEVAZP.
+
+
+         5.1. Classificação como usina principal
+
+A seguir são apresentados os resultados para usina de Sobradinho considerando sua classificação
+como usina principal. Para tanto, foram retiradas da configuração todas as usinas a jusante de
+Sobradinho. Esta configuração não é real, e foi utilizada apenas para efeito ilustrativo.
+
+
+A análise realizada abaixo é feita a comparação dos valores gerados para o posto de Sobradinho
+lateral (168). Para comparar os valores gerados para o posto lateral de Sobradinho, serão utilizados
+os valores incrementais gerados na versão 3.10 para o posto 169, e os valores gerados para o posto
+168 na versão 5.4. As duas séries históricas são idênticas. Pode-se observar na Tabela 5 que em
+ambas versões e alternativas a geração ficou bastante próxima dos valores históricos. As diferenças
+são atribuídas à utilização de um ruído diferente para a geração do posto 168 na versão 5.4.
+
+
+      Tabela 5 – Média e desvio gerados para Sobradinho posto lateral (168) - Principal
+
+                                 3.10              5.4 Alternativa 1        5.4 Alternativa 2
+
+                        Média       D. Padrão    Média        D. Padrão   Média        D. Padrão
+              Jan       3241.7          1072     3266.7         1076.1    3266.7         1076.1
+              Fev       3387.9          1548.9   3290.7         1521.1    3290.7         1521.1
+             Mar        3466.1          2058.7   3289.5         2006.7    3289.5         2006.7
+              Abr       2746.3          1322     2640.3          1288     2640.3          1288
+             Mai        1701.5          1033.1   1616.4         954.4     1616.4         954.4
+              Jun       1147.4          444.2    1101.1         439.1     1101.1         439.1
+              Jul       985.0            312      942           309.5      942           309.5
+             Ago        864.1           258.6    831.8          252.4     831.8          252.4
+              Set       773.0           229.2     748           230.5      748           230.5
+             Out        838.1           285.5    816.1          294.2     816.1          294.2
+             Nov        1354.0          575.9    1355.5         587.3     1355.5         587.3
+              Dez       2407.7          868.2    2400.8         844.3     2400.8         844.3
+
+___________________________________________________________________________________________________
+                                                                                                   9/14
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 27063/ 2016
+
+         5.2. Classificação como usina satélite
+Na próxima análise a ser feita levou-se em conta a classificação da usina de Sobradinho como
+satélite,   isto      é,   considerou-se        a     configuração   original     do   sistema.   Neste   caso,   o   posto
+total/incremental (posto 169) será obtido com o procedimento tradicional de cálculo para satélite, já
+para o posto lateral (posto 168) será ajustado um modelo PARP e o ruído gerado será correlacionado
+com suas usinas principais a montante e a jusante. Os resultados obtidos desta forma podem ser
+observados na Tabela 6.
+
+
+       Tabela 6 – Média e desvio gerados para Sobradinho posto lateral (168) - Satélite
+
+                                      3.10                   5.4. Alternativa 1            5.4. Alternativa 2
+                              Média          D.Padrão      Média         D.Padrão         Média      D.Padrão
+                Jan           3241.7          1069.1       3255.9         1075.2         3255.9       1075.2
+                Fev           3388.0          1589.4       3383.4         1545.5         3383.4       1545.5
+               Mar            3466.1          2002.7       3377.7         1988.3         3377.7       1988.3
+                Abr           2746.3          1362.6       2723.3         1327.2         2723.3       1327.2
+                Mai           1697.7          1029.9       1669.2         1032.6         1669.2       1032.6
+                Jun           1144.6          440.6        1129.9         444.3          1129.9        444.3
+                Jul           982.7           303.6        965.8           311            965.8         311
+               Ago            864.1           253.4        853.4           258            853.4         258
+                Set           773.0           225.0        762.2          230.4           762.2        230.4
+                Out           838.6           278.0        837.3          287.1           837.3        287.1
+               Nov            1354.0          571.2        1354.3         582.2          1354.3        582.2
+                Dez           2407.8          889.9        2425.2         856.2          2425.2        856.2
+
+
+
+
+    6. GERAÇÃO DE CENÁRIOS PARA POSTOS ARTIFICIAIS
+
+Para a geração de cenários de vazão sintética para postos artificiais, nova funcionalidade listada
+como item 5 da Tabela 1, adotou-se as regras descritas no RE ONS 0205/2015 – ATUALIZAÇÃO DE
+SÉRIES HISTÓRICAS DE VAZÕES – PERÍODO 1931 A 2014. As regras são fornecidas pelo usuário
+em um arquivo específico.
+
+
+Para mostrar que os dados de vazão sintética gerados pelo programa GEVAZP para os postos
+artificiais seguem as regras do relatório supracitado, apresentou-se os valores gerados pelo
+programa GEVAZP e aqueles calculados manualmente, seguindo-se as regras. As usinas hidrelétricas
+escolhidas para demonstrar essa igualdade foram Jordão, Lajes e Pimental. As fórmulas para Jordão
+e Lajes encontram-se no mesmo relatório, a saber:
+___________________________________________________________________________________________________
+                                                                                                                      10/14
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 27063/ 2016
+
+
+
+
+As regras para o cálculo da vazão da usina hidrelétrica de Pimental, todavia, não estão presentes no
+
+relatório RE ONS 0205/2015. Para esta usina hidrelétrica, as regras 1 são apresentadas no quadro
+abaixo:
+
+
+
+
+Os resultados apresentados nas Tabelas 7 a 9 mostram a igualdade entre os dados. Para as UHEs
+Jordão e Pimental, os resultados calculados foram idênticos aos gerados pelo programa GEVAZP.
+Com isso, para simplificação, não se mostrou todos os cenários destas duas usinas hidrelétricas.
+Para Lajes, vê-se diferenças entre os valores gerados e os calculados; porém, tais diferenças são
+muito pequenas e ocorrem em razão da precisão de casas decimais dos dados. Os cenários não
+listados para a UHE Lajes são aqueles que não apresentaram diferenças entre valores calculados e
+valores gerados.
+
+
+
+
+1 Regras informadas à equipe do programa GEVAZP pela GPD3 – Gerência de Recursos
+
+
+Hídricos e Meteorologia, do ONS – Operador Nacional do Sistema, através de correio eletrônico no dia 7 de julho de 2016.
+___________________________________________________________________________________________________
+                                                                                                                   11/14
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 27063/ 2016
+
+                                       Tabela 7 – Valores calculados Jordão
+
+                                                                Jordão
+
+                     (i)        (ii)                 (iii)                   (iv)             (v)           |(iv - v)|
+                                             Min(Vaz(73)-10;              Vaz(70)           Vaz(70)
+                  Cenário     Vaz(73)                                                                      Diferença
+                                                 173.5)                  Calculada          Gerada
+                     1          60.2               50.2                     10                10.0            0.0
+                     2         109.3               99.3                     10                10.0            0.0
+                     3          93.5               83.5                     10                10.0            0.0
+                     4          49.4               39.4                     10                10.0            0.0
+                     5         368.8              173.5                    195.3             195.3            0.0
+                     6         164.3              154.3                     10                10.0            0.0
+                     7         110.6              100.6                     10                10.0            0.0
+                     8          79.2               69.2                     10                10.0            0.0
+                     9          63.2               53.2                     10                10.0            0.0
+                     10         32.7               22.7                     10                10.0            0.0
+                      ⁞           ⁞                 ⁞                        ⁞                 ⁞               ⁞
+                    343         56.5               46.5                     10                10.0            0.0
+                    344         30.5               20.5                     10                10.0            0.0
+                    345         59.2               49.2                     10                10.0            0.0
+                    346         34.6               24.6                     10                10.0            0.0
+                    347        121.6              111.6                     10                10.0            0.0
+                    348         50.7               40.7                     10                10.0            0.0
+                    349        106.5               96.5                     10                10.0            0.0
+                    350         81.5               71.5                     10                10.0            0.0
+                    351         75.8               65.8                     10                10.0            0.0
+                    352        144.0               134                      10                10.0            0.0
+                    353        162.0               152                      10                10.0            0.0
+
+                                       Tabela 8 – Valores calculados Lajes
+
+                                                                 Lajes
+
+                      (i)       (ii)         (iii)                (iv)              (v)             (vi)     |(v-vi)|
+                                                             Min(vaz(201);      Vaz(132)      Vaz(132)
+                 Cenários     Vaz(202)     Vaz(201)                                                        Diferença
+                                                                  25)           Calculada      Gerada
+                       1        2.2           5.0                  5                 7.2         7.1           0.1
+                       2        0.5           2.0                  2                 2.5         2.4           0.1
+                       3        1.6          05.0                  5                 6.6         6.7           0.1
+                       4        1.4          03.9                 3.9                5.3         5.2           0.1
+                       5        1.2          03.8                 3.8                 5          5.1           0.1
+                       6        1.2          04.0                  4                 5.2         5.3           0.1
+                       7        1.4          04.4                 4.4                5.8         5.9           0.1
+                       8        4.4          07.5                 7.5               11.9        12.0           0.1
+                       9        2.1          04.2                 4.2                6.3         6.2           0.1
+                      10        1.6          04.5                 4.5                6.1         6.0           0.1
+                       ⁞
+                     343        2.5          06.2                 6.2                8.7         8.6           0.1
+                     344        1.5          04.9                 4.9                6.4         6.3           0.1
+                     345        3.6          07.2                 7.2               10.8        10.7           0.1
+                     346        2.5          05.9                 5.9                8.4         8.3           0.1
+                     347        2.5          05.7                 5.7                8.2         8.3           0.1
+                     348        1.5          05.1                 5.1                6.6         6.5           0.1
+                     349         2           04.3                 4.3                6.3         6.4           0.1
+                     350        1.1          03.3                 3.3                4.4         4.3           0.1
+                     351        1.9          04.7                 4.7                6.6         6.7           0.1
+                     352        1.6          04.9                 4.9                6.5         6.4           0.1
+                     353        1.5          04.2                 4.2                5.7         5.6           0.1
+___________________________________________________________________________________________________
+                                                                                                                         12/14
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 27063/ 2016
+
+
+
+                                  Tabela 9 – Valores calculados Pimental
+                                                         Pimental
+
+                                  Q(TVR) do        (i)          (ii)        (iii)    |(ii - iii)|
+                       Cenários      mês                     Vaz(292)    Vaz(292)
+                                  estocástico   Vaz(288)                            Diferença
+                                                             Calculada    Gerada
+                          1          900        1521.9        900.0         900         0.0
+                          2          900        1198.8        900.0         900         0.0
+                          3          900         1313         900.0         900         0.0
+                          4          900        1379.9        900.0         900         0.0
+                          5          900         871.9        871.9        871.9        0.0
+                          6          900         995.2        900.0         900         0.0
+                          7          900        1220.9        900.0         900         0.0
+                          8          900         946.9        900.0         900         0.0
+                          9          900        1108.9        900.0         900         0.0
+                         10          900        1123.2        900.0         900         0.0
+                          ⁞           ⁞            ⁞             ⁞            ⁞          ⁞
+                         343         900         837.8        837.8        837.8        0.0
+                         344         900        1253.5        900.0         900         0.0
+                         345         900         967.9        900.0         900         0.0
+                         346         900        1076.4        900.0         900         0.0
+                         347         900        1113.6        900.0         900         0.0
+                         348         900         961.7        900.0         900         0.0
+                         349         900         1394         900.0         900         0.0
+                         350         900         967.6        900.0         900         0.0
+                         351         900         819.4        819.4        819.4        0.0
+                         352         900        1032.2        900.0         900         0.0
+                         353         900        1206.6        900.0         900         0.0
+
+
+
+
+    7. CONSIDERAÇÕES FINAIS
+
+Este Relatório Técnico teve como objetivo comparar os resultados obtidos pelo programa GEVAZP
+versão 3.10 com a versão 5.4, a fim de auxiliar na elaboração de testes a serem aplicados durante a
+validação do programa GEVAZP a ser conduzida por ONS e CCEE.
+
+
+Na versão 5.4 do programa GEVAZP se encontram implementados de forma operacional um
+conjunto de 7 itens considerados mais significativos, de acordo com a Tabela 1, reproduzida abaixo.
+
+
+Este Relatório Técnico compreende a análise apenas dos itens 3 a 5 da Tabela 1.
+
+
+Dada a configuração atual do PMO, a alteração listada no item 3 da Tabela 1, causa impacto apenas
+na modelagem do posto 288 (Pimental).
+
+
+
+
+___________________________________________________________________________________________________
+                                                                                                    13/14
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 27063/ 2016
+
+Os itens 4 a 7 da Tabela 1 são relativos a novas funcionalidades solicitadas durante os últimos 12
+meses pelo ONS. Nas seções 3 a 6 desse Relatório Técnico foram apresentados alguns resultados
+para avaliar tais funcionalidades.
+
+
+
+                              Tabela 1 – Itens operacionais na versão 5.4
+            Item      Descrição
+            1         Reprodutibilidade de resultados em micros com arquitetura diferente.
+                      Mudança na precisão numérica de variável na rotina de cálculo de
+                      distância para o processo de agregação. Esta alteração modifica os
+                      resultados na geração em formato árvore e foi realizada, pois rodadas
+                      em máquinas com configurações diferentes poderiam gerar resultados
+                      distintos o que impossibilita a reprodutibilidade dos resultados
+            2         Mudança de compilador (Watcom para Intel), o que ocasionou uma
+                      redução no tempo computacional do programa
+            3         Possibilidade de ajustar um modelo AR(0) quando for necessário
+            4         Geração de cenários de forma compatível para postos de vazão
+                      total/incremental e lateral para usinas afetadas pela defasagem oriunda
+                      do tempo de viagem. Esta implementação substitui as implementações
+                      anteriores relacionadas a tempo de viagem e postos incrementais
+            5         Geração de cenários para postos artificiais
+            6         Fornecimento da tendência hidrológica recente mensal e semanal por
+                      posto no arquivo de vazões gerado para o programa DECOMP
+            7         Geração para postos altamente correlacionados, em cascatas diferentes,
+                      porém localizadas na mesma região hidrográfica
+
+
+
+
+___________________________________________________________________________________________________
+                                                                                                14/14
+F-CO-005 REV. 2, 04/03/2013
+

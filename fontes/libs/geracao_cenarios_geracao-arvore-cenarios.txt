@@ -1,0 +1,33 @@
+Fonte: https://see.cepel.br/manual/libs/latest/geracao_cenarios/geracao-arvore-cenarios.html (baixado em 26/10/2026)
+
+itemprop="articleBody">
+Geração de Árvore de Cenários¶
+Para a etapa “backward” de cálculo da política no modelo NEWAVE (Modelo de Planejamento da Operação de Sistemas Hidrotérmicos Interligados de Longo e Médio-Prazo) e para o modelo DECOMP (Modelo de Planejamento da Operação de Sistemas Hidrotérmicos Interligados de Curto Prazo) é necessária a construção de uma árvore de cenários, composta de um conjunto de possíveis realizações das incertezas em cada período de tempo e que, devido à correlação temporal, dependem das realizações passadas a cada cenário.
+A construção destes cenários é feita utilizando-se o modelo Par(p) 1, que a partir de 2020 também permite considerar, além das correlações mensais, a vazão média nos últimos doze meses também como variável de estado (modelo Par(p)-A) 23. Com isso, consegue-se representar melhor a persistência de séries críticas de maior duração, que vêm sendo observadas recentemente no sistema brasileiro. Para aferir a qualidade dos cenários que são gerados, uma série de análises estatísticas são realizadas. 4
+Em virtude de restrições de tempo computacional para resolução do problema de otimização estocástica nos modelos de planejamento da operação, o modelo GEVAZP utiliza o método de amostragem seletiva, que possibilita representar, de forma adequada, o processo estocástico de vazões/energias com um reduzido número de cenários. A amostragem seletiva 5 consiste em aplicar técnicas de clusterzização a um grande número de cenários hidrológicos gerados, de forma a escolher um conjunto representativo a partir da amostra original de cenários.
+Os cenários hidrológicos utilizados nos modelos de planejamento da operação de médio e curto prazos são gerados levando-se em consideração a preservação das características estatísticas do processo estocástico original, como média, variância, correlações temporais e espaciais das vazões, regras operativas, registros de vazão incremental bem como informação macroclimática (Oceanic Niño Index ONI) com o objetivo de capturar a influência do El Niño – Oscilação Sul (ENOS) sobre a precipitação em diversas regiões do Brasil, o que impacta diretamente nos regimes hidrológicos e na geração de energia do país. 6, 7.
+Apresenta-se a seguir um esquema ilustrativo do conjunto de cenários que é gerado para o DECOMP (à esquerda) e para o NEWAVE (à esquerda). Na resolução do problema pelo DECOMP, todos os arquivos são percorridos, aplicando-se a técnica de programação dinâmica dual (PDD). Já o NEWAVE percorre a árvore de cenários de forma amostral, em virtude da enorme quantidade de cenários para o problema como um todo, que corresponde a todas as combinações possíveis entre as aberturas de cada período.
+O modelo GEVAZP também permite o cálculo das vazões afluentes para postos de vazão artificial e postos de vazão incremental. 8 Postos de vazão artificial são aqueles que possuem regras operativas próprias, inseridas como dados de entrada ao modelo, em geral associadas a postos de vazão natural. Para casos onde o tempo de viagem da água entre duas usinas é significativo, permite-se adotar diretamente o registro de vazão incremental para a usina impactada pelo tempo de viagem.
+Referências
+1
+M. E. Maceira and C. V. Bezerra. Stochastic streamflow model for hydroelectric systems. In 5th Int. Conf. on Probabilistic Methods Applied to Power Systems -PMAPS. 1997.
+2
+F. Treistman, M. E. P. Maceira, J. M. Damázio, and C. B. Cruz. Proposta metodológica para o aprimoramento da memória de modelos auto-regressivos periódicos. Relatório Técnico 1416/2020, CEPEL - Centro de Pesquisas de Energia Elétrica, Fev. 2020.
+3
+F. Treistman, M. E. P. Maceira, J. M. Damazio, and C. B. Cruz. Periodic time series model with annual component applied to operation planning of hydrothermal systems. In International Conference on Probabilistic Methods Applied to Power Systems (PMAPS). Liege, Belgium, 2020.
+4
+J. M. Damazio, H. S. Araújo, and C. B. Cruz. Testes estatísticos para avaliação de aderência entre séries históricas de energias naturais afluentes ao sin e cenários sintéticos dos modelos par(p) e par(p)-a. Relatório Técnico 1274/2021, CEPEL - Centro de Pesquisas de Energia Elétrica, Maio 2021.
+5
+D. D. J. Penna, M. E. P. Maceira, and J. M. Damázio. Selective sampling applied to long-term hydrothermal generation planning. In 17th Power Systems Computaion Conference. 2011.
+6
+F. Treistman, M. E. P. Maceira, D. D. J. Penna, J. M. Damazio, and Rotunno Filho, O. C. Synthetic scenario generation of monthly streamflows conditioned to the el niño–southern oscillation: application to operation planning of hydrothermal systems. Stochastic Environmental Research and Risk Assessment, 34:331–353, 2020. doi:https://doi.org/10.1007/s00477-019-01763-2.
+7
+J. F. M. Pessanha, V. A. Almeida, and P. D. S. Chan. Ms-par(p): generation of synthetic flow scenarios using a markov-switching periodic auto-regressive model. Brazilian Journal of Water Resources, 28:e44, 2023. doi:https://doi.org/10.1016/j.epsr.2021.107722.
+8
+F. Treistman, H. S. Araújo, D. D. J. Penna, and M. E. P. Maceira. Comparação de resultados entre a versão 3.10 e a versão 5.4 do modelo gevazp – geração de cenários para postos de vazões laterais e para postos artificiais, geração para usinas altamente correlacionadas em cascatas distintas, possibilidade de ajuste de ar(0) e fornecimento da tendência hidrológica por posto para o modelo decomp. Relatório Técnico 27063/2016, CEPEL - Centro de Pesquisas de Energia Elétrica, 2016.
+        © Copyright 2026, Cepel - Centro de Pesquisas de Energia Elétrica
+.
+        Última actualização em 30 de setembro de 2026.
+    Built with Sphinx using a
+    theme
+    provided by Read the Docs. 

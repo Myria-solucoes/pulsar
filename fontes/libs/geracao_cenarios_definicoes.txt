@@ -1,0 +1,25 @@
+Fonte: https://see.cepel.br/manual/libs/latest/geracao_cenarios/definicoes.html (baixado em 26/10/2026)
+
+itemprop="articleBody">
+Definições¶
+O processo de geração de cenários dá origem a algumas definições («jargões»), utilizadas ao longo dessa documentação, que são ilustrados na figura abaixo e descritos a seguir.
+Aberturas¶
+Consiste em um conjunto de valores da variável aleatória para determinado período, gerados a partir de uma representação determinística ou estocástica dos períodos anteriores;
+Árvore de Cenários¶
+Consiste na combinação das aberturas consideradas em diferentes períodos de tempo, que são encadeadas de forma sucessiva.
+Nesta árvore podemos definir os seguintes elementos:
+caminho da árvore: consiste, literalmente, em um «caminho» que se percorre na árvore de cenários, desde o seu período inicial até o seu período final.
+nós: consiste nos «pontos» que são produzidos em uma árvore de cenários (quando se realizam aberturas) ou em um conjunto de séries, quando se seleciona uma série e um período.
+Séries sintéticas¶
+Do ponto de vista conceitual, é semelhante ao caminho em uma Árvore de Cenários, porque consiste em uma combinação de valores da variável aleatória em cada período de tempo. A distinção que se faz é que não há, de forma explícita, uma árvore de cenários da qual se extraiu essa série, ou seja, são geradas «livremente».
+Semente¶
+Em um processo de geração de cenários, a semente aleatória (ou simplesmente semente) é um número utilizado para iniciar um algoritmo gerador de números aleatórios, que é utilizado por métodos de geração de cenários. Ou seja, diferentes execuções de um mesmo algoritmo para geração de números aleatórios resulta na obtenção de sequências diferentes de números aleatórios.
+Como os métodos de geração de cenários dependem da geração de números aleatórios, os cenários gerados acabam dependendo da semente escolhida.
+Para atender aos requisitos de reprodutibilidade dos resultados, ou seja, diferentes execuções dos modelos produzirem sempre o mesmo resultado, é necessário fixar a semente que é utilizada nos métodos de Amostragem Aleatória Simples (AAS) e Amostragem Seletiva (AS) utilizada pelo GEVAZP.
+Entretanto, durante os processos de validação dos modelos junto às instituições e com participação dos agentes, permite-se que a semente seja um dado de entrada do modelo, de forma a permitir que se avalie de forma mais adequada a Avaliação da Acurácia da Modelagem das variáveis aleatórias, assim como a estabilidade e robustez dos resultados ao se variar a semente.
+        © Copyright 2026, Cepel - Centro de Pesquisas de Energia Elétrica
+.
+        Última actualização em 30 de setembro de 2026.
+    Built with Sphinx using a
+    theme
+    provided by Read the Docs. 

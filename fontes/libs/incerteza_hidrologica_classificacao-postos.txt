@@ -1,0 +1,14 @@
+Fonte: https://see.cepel.br/manual/libs/latest/incerteza_hidrologica/classificacao-postos.html (baixado em 26/10/2026)
+
+itemprop="articleBody">
+Classificação dos Postos¶
+Posto Principal: o conjunto de postos principais selecionados se resume ao próprio posto de vazão total;
+Posto Satélite: Sua vazão possui alta correlação com a do posto principal. Ao se descobrir duas usinas altamente correlacionadas e pertencentes a mesma cascata ou região hidrográfica, a usina com menor vazão (MLT) será feita satélite enquanto a outra será classificada como principal. O conjunto de cenários da usina satélite será calculado com base nos cenários calculados para  usina principal.
+Posto Artificial: postos que possuem alterações no fluxo natural da água. Estas alterações podem ser causadas por desvios, consumo, irrigação etc. Os postos artificiais são indicadas por «NPOSNW» no arquivo DADGER.XXX. Também são informadas no arquivo MODIF.dat utilizando o mnemônico PARTIF. Assim, para se calcular a vazão num posto artificial, são consideradas regras diferenciadas de cálculo, informadas no arquivo de entrada do GEVAZP regras.dat.
+Posto Nulo: usinas com posto nulo possuem vazão incremental SEMPRE igual a zero
+        © Copyright 2026, Cepel - Centro de Pesquisas de Energia Elétrica
+.
+        Última actualização em 30 de setembro de 2026.
+    Built with Sphinx using a
+    theme
+    provided by Read the Docs. 

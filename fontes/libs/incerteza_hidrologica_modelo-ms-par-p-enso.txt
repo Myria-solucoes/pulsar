@@ -1,0 +1,141 @@
+Fonte: https://see.cepel.br/manual/libs/latest/incerteza_hidrologica/modelo-ms-par-p-enso.html (baixado em 26/10/2026)
+
+itemprop="articleBody">
+Modelo MS-Par(p) - Fenômeno ENOS¶
+El Niño e La Niña são as fases quente e fria de um padrão climático recorrente no Pacífico tropical — a El Niño-Oscilação Sul (ENOS). Este padrão oscila irregularmente a cada dois a sete anos, provocando mudanças previsíveis na temperatura da superfície do oceano e alterando os padrões de vento e chuva nos trópicos. Essas mudanças têm uma cascata de efeitos colaterais globais 1. Particularmente no Brasil, o ENOS impacta as vazões afluentes dos rios, influenciando a geração de energia elétrica no país. A Fig. 4 ilustra os efeitos das fases El Niño e La Niña na temperatura dos oceanos.
+Fig. 4 Mapas da anomalia de temperatura da superfície do mar no Oceano Pacífico durante uma La Niña intensa (topo, dezembro de 1988) e El Niño (abaixo, dezembro de 1997).¶
+Para considerar esses efeitos na criação de cenários sintéticos de vazões, foi proposto um modelo estocástico alternativo denominado Autorregressivo Periódico com Chaveamento Markoviano (MS-PAR(p)). A descrição da implementação do modelo MS-PAR(p) no modelo GEVAZP foi retirada dos trabalhos 2, 3 e 4.
+Esse modelo segmenta a estimação dos parâmetros autorregressivos periódicos de acordo com as fases do fenômeno ENOS, classificadas como La Niña (LN), Neutro (N) e El Niño (EN). Os eventos ENOS são mensalmente categorizados nesses três estados por meio do Oceanic Niño Index (ONI) 5. O ONI é construído com base na média móvel trimestral das anomalias da temperatura da superfície do mar da região NINO 3.4, de modo que cada valor corresponde a um período de três meses.
+A classificação dos eventos de acordo com o ONI é feita da seguinte forma:
+Se o índice ONI permanecer igual ou inferior a -0,5 °C por 5 períodos consecutivos, o estado do período é considerado um evento La Niña;
+Se o índice ONI permanecer igual ou superior a +0,5 °C por 5 períodos consecutivos, o estado do período é considerado um evento El Niño;
+Se o índice ONI estiver dentro da faixa de -0,5 °C a +0,5 °C, o estado do período é considerado um evento Neutro.
+Como o modelo apresentado é autorregressivo por natureza, ou seja, utiliza valores passados para representar o comportamento futuro, é necessário acessar previsões dos valores do ONI para os períodos futuros a fim de estimar os futuros estados do ENOS. O Instituto Internacional de Pesquisa para o Clima e Sociedade (IRI) fornece previsões para até dez estações a frente feitas por várias instituições de pesquisa 6. É importante enfatizar que essas previsões dizem respeito à classificação do ONI entre as três condições do ENOS. Além disso, deve-se notar que as previsões fornecidas são feitas para o período subsequente ao qual foram realizadas. Por exemplo, a primeira previsão fornecida no final de março refere-se ao período MAM. De acordo com o critério de classificação utilizado neste trabalho, essa previsão seria classificada para abril. Portanto, para março, é necessário obter a previsão da estação FMA, disponibilizada em fevereiro. Finalmente, para a estimativa do estado do mês anterior (fevereiro), é coletada a previsão disponibilizada em janeiro para seu primeiro período (JFM).
+Do ponto de vista metodológico o MS-PAR(p) pode ser entendido como como um modelo PAR(p) em que os parâmetros se alteram de acordo com alguns estados que seguem uma cadeia de Markov. A ideia principal aqui apresentada é, por meio da identificação dos diferentes estados de ENOS no histórico, fazer uma estimação segmentada dos parâmetros utilizados na parte autorregressiva periódica do modelo. Além dos parâmetros serem estimados de acordo com o mês em questão, eles também irão variar de acordo com os estados de LN, N e EN. Deve-se observar que ao contrário dos modelos propostos por 7 e 8, o modelo MS-PAR(p), apresentado neste relatório técnico, apesar de fazer parte da mesma família de modelos, não segue uma cadeia de Markov oculta para seus estados, mas sim identifica diretamente os estados do ENOS, proporcionando uma modelagem mais precisa dos impactos climáticos sobre as vazões e, consequentemente, a geração de energia elétrica. Mais detalhes sobre modelagem da cadeia de Markov, serão vistos, posteriormente, na seção Modelagem do processo Markoviano. Assim sendo, o modelo MS-PAR(p) proposto neste manual possui a seguinte formulação matemática:
+(38)¶\[(\frac{{Z_t}-{\mu_m^{\varepsilon_t}}}{\sigma_m^{\varepsilon_t}})= \sum_{i=1}^{p_m} {\phi_i^m}.(\frac{{Z_{t-i}}-{\mu_{m-i}^{\varepsilon_t}}}{\sigma_{m-i}^{\varepsilon_t}})+{a_t}\]
+onde: \(\varepsilon_t\) é a série temporal sazonal com período \(m\), com espaço-estado \(r = 1, 2, 3\) (LN, N e EN), que segue uma cadeia de Markov homogênea; \(\mu_m^{\varepsilon_t}\) é a média do período \(m\) para o estado \(\varepsilon_t\); \(\sigma_m^{\varepsilon_t}\) é o desvio padrão do período \(m\) para o estado \(\varepsilon_t\).
+Sobre o modelo MS-PAR(p) descrito na (38), deve-se notar que os parâmetros média e desvio-padrão alternam de acordo com o período \(m\) e com o estado de \(\varepsilon_t\), ao contrário do parâmetro autorregressivo \(\phi_{p_m}^m\), que somente varia com o período \(m\). Como esse modelo será utilizado para a geração de cenários sintéticos de vazões afluentes, optou-se por apresentar aqui uma formulação mais próxima da realidade do processo estocástico em questão. Enquanto a média e desvio padrão podem sofrer alterações de acordo com o estado do fenômeno ENOS, devido ao aumento ou decréscimo da precipitação, que se transformará futuramente em vazão fluvial, o parâmetro autorregressivo \(\phi_{p_m}^m\) está relacionado à resposta que a área de drenagem da UHE modelada oferece a eventos passados. Em outras palavras, o parâmetro \(\phi_{p_m}^m\) por representar estatisticamente uma característica física da bacia de drenagem, não deve sofrer modificações por conta do fenômeno ENOS e, por isso, não é alterado segundo o estado de \(\varepsilon_t\).
+Para o cálculo da média e do desvio-padrão amostrais, calculados para cada mês e estado, e da autocorrelação amostral, variável mensalmente apenas, apresentam-se as Equações (39), (40) e (41). O cálculo da média e do desvio padrão é realizado com informações a priori sobre o espaço de estados.
+(39)¶\[\mu_m^r = \sum_{i=1}^{N} 1_(\varepsilon_t=r) \frac{Z_{im}}{N_m^r}, m = 1,...12, r = 1, 2, 3\]
+(40)¶\[\sigma_m^r = \sqrt{\sum_{i=1}^{N} 1_(\varepsilon_t=r) \frac{(Z_{im} - \mu_m^r)^2}{N_m^r}}, m = 1,...12, r = 1, 2, 3\]
+(41)¶\[\rho_k^m = \frac{1}{N}\sum_{i=1}^{N}[(\frac{z_{im}-\mu_m^r}{\sigma_m^r})(\frac{{z_{i,{m-k}} - \mu_{m-k}^r}}{{\sigma_{m-k}^r}})] , m = 1,...12\]
+onde \(1_(\varepsilon_t=r)\) denota a função indicadora, assumindo o valor unitário quando \(\varepsilon_t=r\) e zero para qualquer outro valor e \(N_m^r\) é o número de ocorrências do estado \(r\) no mês \(m\).
+Definida a formulação matemática do modelo MS-PAR(p), o processo de identificação da ordem e estimação dos parâmetros, bem como o processo de transformações dos ruídos em lognormal três parâmetros correlacionados espacialmente, seguirão exatamente os mesmos passos do modelo Modelo Autorregressivo Periódico - Par(p). Sendo assim, o modelo proposto MS-PAR(p) é um aprimoramento metodológico do modelo GEVAZP. Com o advento de sua implementação, informações sobre o fenômeno climático ENOS serão incorporadas na geração de cenários sintéticos de vazões e energias mensais voltados para o SIN. Espera-se, assim, poder determinar com uma precisão maior as distribuições multivariadas de probabilidades para as afluências futuras. Esse novo modelo altera a concepção da modelagem autorregressiva de olhar somente para os valores passados da série temporal para prever os passos futuros. Dado o estado \(r\) esperado para o mês \(m\) no instante \(t\), no qual se deseja realizar a geração de cenários, utiliza-se um conjunto específico de parâmetros para gerar os cenários, capturando efetivamente a função de distribuição histórica correspondente a esse estado, que é diferente das funções dos outros estados.
+Modelagem do processo Markoviano¶
+A série temporal de estados do fenômeno ENOS pode ser compreendida como uma variável discreta \(\varepsilon_t\) com espaço de estados \(r\) relacionados aos seus três estados possíveis (LN, N e EN). A classe de modelo mais comumente utilizada para representar a série temporal de uma variável discreta é conhecida como cadeia de Markov 9. O comportamento de uma cadeia de Markov é conduzido por um conjunto de probabilidades de transição entre seus estados, \(P_m\), sendo a forma mais simples a cadeia de Markov de ordem um (ou um modelo autorregressivo de ordem um). Ou seja, o estado seguinte depende apenas do estado mais recente, independentemente da sequência de estados anteriores. A probabilidade de transição é dada pela (42):
+(42)¶\[ P(\varepsilon_t = r \mid \varepsilon_{t-1}, \varepsilon_{t-2}, \ldots, \varepsilon_1) = P(\varepsilon_t = r \mid \varepsilon_{t-1})\]
+As probabilidades de transição são probabilidades condicionadas com relação ao estado \(t-1\) mais recente. Como o fenômeno ENOS será dividido entre seus três possíveis estados, a matriz de transição \(P_m\) será de dimensão 3x3.
+(43)¶\[\begin{split}\begin{bmatrix}
+{p_m^{1,1}} & {p_m^{1,2}} & {p_m^{1,3}} \\
+{p_m^{2,1}} & {p_m^{2,2}} & {p_m^{2,3}} \\
+{p_m^{3,1}} & {p_m^{3,2}} & {p_m^{3,3}} \\
+\end{bmatrix}\end{split}\]
+O diagrama dos estados de Markov representado na Fig. 5 mostra graficamente os estados e probabilidades de transição. Dado que não existe transição direta entre estados de EN para LN, assim como para as condições, não existe arco de transição entre os estados EN e LN. Desta forma, os elementos \(p_m^{1,3}\) e \(p_m^{3,1}\) da matriz serão sempre nulos.
+Fig. 5 Estados de Markov do fenômeno ENOS.¶
+Dado que não existe transição direta entre estados de EN para LN, assim como para as condições, os elementos \(p_m^{1,3}\) e \(p_m^{3,1}\) serão sempre nulos.
+Neste contexto, vamos trabalhar com os conceitos de estado e condição, sendo que condição de ENOS refere-se ao estado atual do fenômeno ENOS em um ponto específico no tempo, enquanto que o estado refere-se a uma fase ou regime específico do fenômeno ENOS ao longo de um período de tempo maior, neste caso, 5 meses.
+Para cada mês \(m\) será estimada a matriz de transição para os estados de ENOS e para as condições de ENOS, ambas utilizando (44).
+(44)¶\[p_m^{i,j} = P(\varepsilon_t = j \mid \varepsilon_{t-1} = i)_m = \frac{N_m^{i,j}}{N_{m-1}^i}\]
+onde \(p_m^{i,j}\) é a probabilidade condicionada a se transitar para o estado \(j\) no mês \(m\) dado que o mês anterior \(m-1\) encontrava-se no estado \(i\); \(N_m^{i,j}\) é o número de vezes em que ocorreu a transição do estado \(i\) para o estado \(j\) no mês \(m\) no histórico; e \(N_{m-1}^{i}\) é o número de ocorrências no histórico do estado \(i\) no mês \(m-1\). A matriz de transição \(P_m\) pode ser estimada utilizando-se a (44) variando-se os índices dos estados.
+Dada a matriz de transição entre os estados do ENOS obtida a partir de dados históricos, o próximo passo é usar esses dados para produzir matrizes de transição previstas que aderem à distribuição de probabilidade prevista pelo IRI. Para diferenciar os valores referentes às condições de ENOS, o sub-índice «c» será adicionado nas notações, evitando-se possíveis confusões entre os conceitos de condição e estado de ENOS. O cálculo das matrizes de transição previstas mensalmente entre as condições do ENOS pode ser entendido como um problema de otimização cujo objetivo é minimizar as diferenças, \(\Delta_i\), entre as matrizes históricas e previstas, conforme descrito na (45).
+(45)¶\[\begin{split} &\min \sum_{i=1}^{14} \Delta_i \\
+ &\text{s.t.} \\
+ &P_c(\text{LN}|\text{LN})^{\text{prev}}_m = P_c(\text{LN}|\text{LN})^{\text{hist}}_m + \Delta_1^+ + \Delta_2^{-} \\
+ &P_c(\text{LN}|\text{N})^{\text{prev}}_m = P_c(\text{LN}|\text{N})^{\text{hist}}_m + \Delta_3^+ + \Delta_4^{-} \\
+ &P_c(\text{N}|\text{LN})^{\text{prev}}_m = P_c(\text{N}|\text{LN})^{\text{hist}}_m + \Delta_5^+ + \Delta_6^{-} \\
+ &P_c(\text{N}|\text{N})^{\text{prev}}_m = P_c(\text{N}|\text{N})^{\text{hist}}_m + \Delta_7^+ + \Delta_8^{-} \\
+ &P_c(\text{N}|\text{EN})^{\text{prev}}_m = P_c(\text{N}|\text{EN})^{\text{hist}}_m + \Delta_9^+ + \Delta_{10}^{-} \\
+ &P_c(\text{EN}|\text{N})^{\text{prev}}_m = P_c(\text{EN}|\text{N})^{\text{hist}}_m + \Delta_{11}^+ + \Delta_{12}^{-} \\
+ &P_c(\text{EN}|\text{EN})^{\text{prev}}_m = P_c(\text{EN}|\text{EN})^{\text{hist}}_m + \Delta_{13}^+ + \Delta_{14}^{-} \\\end{split}\]
+Com as restrições (46) referentes ao somatório das probabilidades condicionadas:
+(46)¶\[\begin{split} P_c(\text{LN} \mid \text{LN})^{\text{prev}}_m + P_c(\text{LN} \mid \text{N})^{\text{prev}}_m &= 1 \\
+ P_c(\text{N} \mid \text{LN})^{\text{prev}}_m + P_c(\text{N} \mid \text{N})^{\text{prev}}_m + P_c(\text{N} \mid \text{EN})^{\text{prev}}_m &= 1 \\
+ P_c(\text{EN} \mid \text{N})^{\text{prev}}_m + P_c(\text{EN} \mid \text{EN})^{\text{prev}}_m &= 1\end{split}\]
+Além das restrições (47) referentes aos limites das probabilidades condicionadas:
+(47)¶\[\begin{split} 0 &\leq P_c(\text{LN} \mid \text{LN})^{\text{prev}}_m \leq 1 \\
+ 0 &\leq P_c(\text{LN} \mid \text{N})^{\text{prev}}_m \leq 1 \\
+ 0 &\leq P_c(\text{N} \mid \text{LN})^{\text{prev}}_m \leq 1 \\
+ 0 &\leq P_c(\text{N} \mid \text{N})^{\text{prev}}_m \leq 1 \\
+ 0 &\leq P_c(\text{N} \mid \text{EN})^{\text{prev}}_m \leq 1 \\
+ 0 &\leq P_c(\text{EN} \mid \text{N})^{\text{prev}}_m \leq 1 \\
+ 0 &\leq P_c(\text{EN} \mid \text{EN})^{\text{prev}}_m \leq 1\end{split}\]
+E as restrições (48) referentes à reprodução das previsões probabilísticas:
+(48)¶\[\begin{split} P_c(\text{LN})^{\text{prev}}_m &= P_c(\text{LN})^{\text{prev}}_{m-1} \times P_c(\text{LN} \mid \text{LN})^{\text{prev}}_m \\
+ &\quad + P_c(\text{N})^{\text{prev}}_{m-1} \times P_c(\text{LN} \mid \text{N})^{\text{prev}}_m \\
+ &\quad + P_c(\text{EN})^{\text{prev}}_{m-1} \times P_c(\text{LN} \mid \text{EN})^{\text{prev}}_m \\
+ P_c(\text{N})^{\text{prev}}_m &= P_c(\text{LN})^{\text{prev}}_{m-1} \times P_c(\text{N} \mid \text{LN})^{\text{prev}}_m \\
+ &\quad + P_c(\text{N})^{\text{prev}}_{m-1} \times P_c(\text{N} \mid \text{N})^{\text{prev}}_m \\
+ &\quad + P_c(\text{EN})^{\text{prev}}_{m-1} \times P_c(\text{N} \mid \text{EN})^{\text{prev}}_m \\
+ P_c(\text{EN})^{\text{prev}}_m &= P_c(\text{LN})^{\text{prev}}_{m-1} \times P_c(\text{EN} \mid \text{LN})^{\text{prev}}_m \\
+ &\quad + P_c(\text{N})^{\text{prev}}_{m-1} \times P_c(\text{EN} \mid \text{N})^{\text{prev}}_m \\
+ &\quad + P_c(\text{EN})^{\text{prev}}_{m-1} \times P_c(\text{EN} \mid \text{EN})^{\text{prev}}_m\end{split}\]
+O problema de otimização acima possui é um problema de progração linear, já que possui função objetivo e restrições lineares. Este problema pode ser resolvido utilizando um algoritmo simplex, por exemplo.
+Ao resolver o problema de otimização acima para todos os meses em que existem previsões das condições ENOS, pode-se então estimar a matriz de transição prevista entre os estados ENOS. O cálculo da matriz de transição de estados ENOS segue os mesmos critérios usados para classificação histórica, conforme descrito abaixo:
+Se o estado anterior for classificado como LN:
+A probabilidade de permanecer como LN será igual à probabilidade de permanecer na condição de LN.
+A probabilidade de transição para o estado N será igual à probabilidade de transição para a condição N, dado que estava em estado LN.
+Se o estado anterior for classificado como N:
+A probabilidade de transição para um estado LN será igual ao produto da transição para a condição de LN no mês \(m\) e persistência na condição de LN por mais quatro meses.
+A probabilidade de transição para um estado EN será igual ao produto da transição para a condição de EN no mês \(m\) e persistência na condição de EN por mais quatro meses.
+A probabilidade de persistência como neutro é dada pelo complemento das duas opções anteriores.
+Se o estado anterior for classificado como EN:
+A probabilidade de permanecer como EN será igual à probabilidade de persistir na condição de EN.
+A probabilidade de transição para o estado N será igual à probabilidade de transição para a condição N, dado que estava em estado EN.
+Matematicamente, os critérios acima podem ser resumidos pelas seguintes expressões na (49):
+(49)¶\[\begin{split} P(\text{LN} \mid \text{LN})^{\text{prev}}_m &= P_c(\text{LN} \mid \text{LN})^{\text{prev}}_m \\
+ P(\text{LN} \mid \text{LN})^{\text{prev}}_m &= P_c(\text{LN} \mid \text{LN})^{\text{prev}}_m \\
+ P(\text{N} \mid \text{LN})^{\text{prev}}_m &= P_c(\text{N} \mid \text{LN})^{\text{prev}}_m \\
+ P(\text{LN} \mid \text{N})^{\text{prev}}m &= P_c(\text{LN} \mid \text{N})^{\text{prev}}_m \times \prod{i=1}^{4} P_c(\text{LN} \mid \text{LN})^{\text{prev}}_{m+i} \\
+ P(\text{EN} \mid \text{N})^{\text{prev}}m &= P_c(\text{EN} \mid \text{N})^{\text{prev}}_m \times \prod{i=1}^{4} P_c(\text{EN} \mid \text{EN})^{\text{prev}}_{m+i} \\
+ P(\text{N} \mid \text{N})^{\text{prev}}_m &= 1 - P(\text{EN} \mid \text{N})^{\text{prev}}_m - P(\text{LN} \mid \text{N})^{\text{prev}}_m \\
+ P(\text{EN} \mid \text{EN})^{\text{prev}}_m &= P_c(\text{EN} \mid \text{EN})^{\text{prev}}_m \\
+ P(\text{N} \mid \text{EN})^{\text{prev}}_m &= P_c(\text{N} \mid \text{EN})^{\text{prev}}_m\end{split}\]
+Enquanto houver previsões disponíveis, o modelo calculará as matrizes \(P_m^{\text{prev}}\). Para o cálculo de \(P(LN \mid LN)^{\text{prev}}_m\)  e \(P(EN \mid LN)^{\text{prev}}_m\), quando não existirem previsões para os termos dos meses \(m+1\), \(m+2\), \(m+3\) e \(m+4\), esses serão substituídos pelos valores históricos. Com essa implementação, pretende-se aproveitar ao máximo a previsão probabilística disponibilizada.
+Estimadas as matrizes de transição mensais para os estados e condições do fenômeno ENOS, a sua geração de cenários pode ser realizada de maneira direta para todo o horizonte de estudo. Dada a matriz de transição de estados, histórica ou prevista, sorteia-se qual será o estado do período seguinte. Para manter coerência com o critério de classificação dos estados, caso um cenário transite de um estado N para LN ou EN, o mesmo permanecerá nesse estado por mais quatro períodos no mínimo, contabilizando-se assim uma persistência de no mínimo cinco períodos. Assim como ocorre na geração de cenários de afluências, a geração de cenários de ENOS poderá ser realizada de forma não condicionada, ou condicionada ao passado recente.
+Geração não condicionada¶
+O processo de geração não condicionada de cenários de ENOS segue o mesmo princípio utilizado na geração não condicionada de afluências, dividindo o processo em duas etapas. Primeiramente, sorteia-se, da distribuição de probabilidades histórica dos estados, os valores para o mês \(m-1\). Após esse passo, é feita a geração de cenários de ENOS utilizando as cadeias de Markov históricas para definir as probabilidades de transição ou persistência dos estados, por cinco anos. Finda essa etapa, os cenários gerados para os últimos 11 meses (valor máximo da ordem do modelo MS-PAR(p)) são guardados, servindo de passado para a geração de cenários para a segunda etapa de geração.
+Geração condicionada¶
+Para a geração condicionada dos estados, o modelo MS-PAR(p) aplicado a outros tipos de problemas poderia gerar cenários de estados de forma direta, partindo do último estado observado. Porém, a aplicação neste relatório técnico visa a geração de cenários de estados de ENOS. Conforme descrito na seção Modelo MS-Par(p) - Fenômeno ENOS, o estado de \(\varepsilon_{t-1}\) nunca será conhecido, dado que ele depende de um valor do ONI que leva em consideração a temperatura da superfície do mar (TSM) do período \(t\). Além disso, o próprio critério de classificação de ENOS é dependente dos valores futuros. De forma a estimar o estado de ENOS probabilisticamente em \(\varepsilon_{t-1}\) serão utilizadas as previsões fornecidas pelo IRI.
+Para estimar o estado \(\varepsilon_{t-1}\) o seguinte procedimento é realizado:
+Verifica-se recursivamente as condições de ENOS nos períodos \(t-j\), \(j=2,3,4,5\) para identificar uma tendência de formação de EN ou LN;
+Contabiliza-se o número de períodos passados a partir de \(j-2\), chamado de \(\Delta\), em que condições de EN ou LN foram observadas seguidamente, depois da ocorrência de uma condição N;
+Caso \(\Delta\) seja igual a zero, a condição em \(j-2\) foi classificada como neutra. Com isso:
+a probabilidade do estado \(\varepsilon_{t-1}\) ser EN será igual a probabilidade ao produtório de se transitar à condição EN no período \(t-1\) e sua persistência na condição LN por mais quatro períodos, de \(t\) a \(t+3\);
+a probabilidade do estado \(\varepsilon_{t-1}\) ser LN será igual a probabilidade ao produtório de se transitar à condição LN no período \(t-1\) e sua persistência na condição LN por mais quatro períodos, de \(t\) a \(t+3\);
+a probabilidade de persistir como neutro é dada pelo complemento das duas opções anteriores;
+Caso \(\Delta\) seja maior que zero, as condições \(t-j\), \(j=2, \ldots, \Delta + 1\) foram classificadas como LN (ou EN). Assumindo-se:
+a probabilidade do estado \(\varepsilon_{t-1}\) ser LN (ou EN) será igual ao produtório de sua persistência por mais \(5-\Delta\) períodos;
+a probabilidade do estado \(\varepsilon_{t-1}\) ser N é dada pelo complemento da opção anterior;
+Resumindo matematicamente o procedimento anterior, para a condição anterior N, tem-se:
+(50)¶\[\begin{split} P_{\text{prev}}(\text{LN})_{t-1} &= P_c(\text{LN} \mid \text{N})_{t-1}^{\text{prev}} \times \prod_{i=0}^{3} P_c(\text{LN} \mid \text{LN})_{t+i}^{\text{prev}} \\
+ P_{\text{prev}}(\text{EN})_{t-1} &= P_c(\text{EN} \mid \text{N})_{t-1}^{\text{prev}} \times \prod_{i=0}^{3} P_c(\text{EN} \mid \text{EN})_{t+i}^{\text{prev}} \\
+ P_{\text{prev}}(\text{N})_{t-1} &= 1 - P_{\text{prev}}(\text{EN})_{t-1} - P_{\text{prev}}(\text{LN})_{t-1}\end{split}\]
+Para casos em que a condição anterior seja LN ou EN, e dado \(\Delta\), o número de condições de mesma classificação imediatamente anteriores ao período \(t-1\), tem-se:
+(51)¶\[\begin{split} P_{\text{prev}}(r)_{t-1} = \prod_{i=0}^{4-\Delta} P_c(r \mid r)_{t+i}^{\text{prev}} \\
+ P_{\text{prev}}(\text{N})_{t-1} = 1 - P_{\text{prev}}(r)_{t-1}\end{split}\]
+sendo \(r=1\) para o estado LN e \(r=3\) para o estado EN.
+Calculada a distribuição de probabilidades dos estados em \(\varepsilon_{t-1}\), realiza-se um sorteio para definir o estado passado de cada série sintética. O procedimento para a geração de cenários dos períodos posteriores será feito através de sorteios aleatórios seguindo as matrizes de transição prevista \((P_m^{\text{prev}})\), enquanto houver dados previstos disponíveis, e, posteriormente, se necessário, as matrizes de transição histórica \((P_m^{\text{hist}})\).
+1
+National Oceanic and Atmospheric Administration (NOAA). El niño-southern oscillation (enso). https://www.climate.gov/enso, 2024. Accessed: 2024-07-02.
+2
+F. Treistman, M. E. P. Maceira, D. D. J. Penna, J. M. Damazio, and Rotunno Filho, O. C. Synthetic scenario generation of monthly streamflows conditioned to the el niño–southern oscillation: application to operation planning of hydrothermal systems. Stochastic Environmental Research and Risk Assessment, 34:331–353, 2020. doi:https://doi.org/10.1007/s00477-019-01763-2.
+3
+J. F. M. Pessanha, V. A. Almeida, and P. D. S. Chan. Ms-par(p): generation of synthetic flow scenarios using a markov-switching periodic auto-regressive model. Brazilian Journal of Water Resources, 28:e44, 2023. doi:https://doi.org/10.1016/j.epsr.2021.107722.
+4
+Felipe Treistman. Geração de cenários sintéticos mensais de vazões condicionadas ao el niño / oscilação sul: aplicação ao planejamento da operação de sistemas hidrotérmicos. Master’s thesis, Universidade Federal do Rio de Janeiro, Brasil, dezembro 2018. URL: https://pantheon.ufrj.br/handle/11422/21709.
+5
+Boyin Huang, Chunying Liu, Viva Banzon, Huai-Min Zhang, Eric Freeman, Jay Lawrimore, Thomas C. Peterson, Thomas M. Smith, Peter W. Thorne, Scott D. Woodruff, and Matthew J. Menne. Extended reconstructed sea surface temperature, version 5 (ersstv5): upgrades, validations, and intercomparisons. Journal of Climate, 30:8179–8205, 2017. URL: https://doi.org/10.1175/JCLI-D-16-0836.1, doi:10.1175/JCLI-D-16-0836.1.
+6
+International Research Institute for Climate and Society. Enso forecast. https://iri.columbia.edu/our-expertise/climate/forecasts/enso/current/, 2023. Accessed: 2024-06-10.
+7
+James D. Hamilton. A new approach to the economic analysis of nonstationary time series and the business cycle. Econometrica, 57(2):357–384, 1989. Accessed 10 June 2024. URL: https://doi.org/10.2307/1912559, doi:10.2307/1912559.
+8
+Emiliano Gelati, Henrik Madsen, and Dan Rosbjerg. Markov-switching model for nonstationary runoff conditioned on el niño information. Water Resources Research, 46:W02517, 2010. doi:10.1029/2009WR007736.
+9
+Daniel S. Wilks. Statistical Methods in the Atmospheric Sciences. Volume 100 of International Geophysics Series. Academic Press, New York, 2011.
+        © Copyright 2026, Cepel - Centro de Pesquisas de Energia Elétrica
+.
+        Última actualização em 30 de setembro de 2026.
+    Built with Sphinx using a
+    theme
+    provided by Read the Docs. 

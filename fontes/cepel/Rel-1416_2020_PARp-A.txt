@@ -1,0 +1,1246 @@
+Centro de Pesquisas de Energia Elétrica - CEPEL
+Relatório de Projeto          DEA - 1416/2020
+
+Cliente: CPAMP
+
+
+
+Título: Proposta Metodológica para o Aprimoramento da Memória de                            Nº de Páginas: 24
+Modelos Auto-Regressivos Periódicos.
+                                                                                            Nº de Anexos: 0
+
+
+
+Dados do Cliente:
+Comissão Permanente Análise de Metodologias e Programas Computacionais do Setor Elétrico - GT
+Metodologia/CPAMP
+
+
+
+Departamento: Departamento de Otimização Energética e Meio Ambiente - DEA
+Centro de Lucro: C230000101                                   Centro de Custo: C203000006/C203000020
+
+
+Resumo: Neste relatório foi proposta uma abordagem para ampliar a memória do modelo de series
+temporais PAR(p), utilizado pelo modelo GEVAZP na geração de cenários sintéticos de afluências aos
+modelos NEWAVE e DECOMP, denominada modelo Auto-Regressivo Periódico com Componente Anual
+- PAR(p)-A, por meio da inclusão de um novo termo na equação de auto-regressão de cada período
+sazonal, dado pela média das 12 últimas afluências. Os resultados obtidos mostraram que o novo
+modelo possibilitou representar melhor a persistência de uma tendência hidrológica incomum.
+Adicionalmente, foi apresentado o cálculo das estimativas dos parâmetros bem como a identificação
+da ordem do modelo proposto. A abordagem proposta foi aplicada ao Programa Mensal de Operação
+do mês de janeiro de 2019.
+
+
+Autores:                                                        Palavras-Chave:
+Felipe Treistman PUC/RJ*                                        Modelos auto-regressivos periódicos; hidrologia
+Maria Elvira Piñeiro Maceira Cepel                              estocástica; geração de séries sintéticas; séries
+Jorge Machado Damázio - Cepel                                   temporais; planejamento da operação de
+                                                                longo/médio prazo.
+Cristiane Barbosa da Cruz Oliveira Cepel
+* Atualmente, o pesquisador encontra-se no
+ONS.                                                            Classificação de acesso: Público
+
+
+
+
+          Aprovação e data de emissão                                     Aprovação e data de emissão
+
+
+
+
+        André Luiz Diniz Souto Lima
+   Chefe do Departamento de Otimização                                        Mauricio Barreto Lisboa
+        Energética e Meio Ambiente
+Tel.: 21-2598-6046                                                 Diretor de Pesquisa, Desenvolvimento e
+E-mail: diniz@cepel.br                                                            Inovação
+
+
+Centro de Pesquisas de Energia Elétrica                       C E P E L www.cepel.br
+Sede: A v. Horácio Macedo, 354 - Cidade Universitária - CEP 21941-911 - Rio de Janeiro - RJ - Brasil - Tel.: 21 2598-6000
+Unidade Adrianópolis: Av. Olinda, 5800 - Adrianópolis - CEP 26053-121 - Nova Iguaçu - RJ - Brasil - Tel.: 21 2666-6200
+Endereço Postal: CEPEL Caixa Postal 68007 - CEP 21941-971 - Rio de Janeiro - RJ - Brasil / Endereço Eletrônico: cepel@cepel.br
+
+F-CO-005 REV. 3, 26/05/2020
+ Centro de Pesquisas de Energia Elétrica - CEPEL
+ Relatório de Projeto           DEA - 1416/2020
+
+ Cliente: CPAMP
+
+____________________________________________________________________________________________________________________
+
+
+
+
+   Proposta Metodológica para o Aprimoramento da Memória de Modelos Auto-Regressivos
+                                       Periódicos
+
+
+
+
+                                      Relatório de Projeto CEPEL 1416/20
+
+
+
+
+                                            Projetos GEVAZP e NEWAVE
+
+
+
+
+                                                   gevazp@cepel.br
+                                                   newave@cepel.br
+
+
+
+
+                                                   Fevereiro de 2020
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                               2/24
+O modelo PAR(p)-A para geração de séries sintéticas de afluências   Projetos GEVAZP e NEWAVE
+F-CO-005 REV. 3, 26/05/2020
+ Centro de Pesquisas de Energia Elétrica - CEPEL
+ Relatório de Projeto           DEA - 1416/2020
+
+ Cliente: CPAMP
+
+____________________________________________________________________________________________________________________
+                                                         SUMÁRIO
+
+      SUMÁRIO EXECUTIVO                                                                                         4
+
+      1     INTRODUÇÃO                                                                                          5
+
+      2     MODELAGEM DE SÉRIES TEMPORAIS PERIÓDICAS                                                            9
+
+2.1       O MODELO AUTO-REGRESSIVO PERIÓDICO                                                               9
+2.2       ESTIMADORES DE MOMENTOS DOS PARÂMETROS DO MODELO                                                10
+2.3       IDENTIFICAÇÃO DA ORDEM DO MODELO                                                                10
+
+
+      3    ABORDAGEM PROPOSTA PARA A MODELAGEM DE SÉRIES TEMPORAIS PERIÓDICAS12
+
+3.1       MODELO AUTO-REGRESSIVO PERIÓDICO COM COMPONENTE ANUAL PAR(P)-A                                  12
+3.2       ESTIMADORES DE MOMENTOS DOS PARÂMETROS DO MODELO                                                13
+3.3       IDENTIFICAÇÃO DA ORDEM DO MODELO                                                                13
+
+
+      4     GERAÇÃO DE CENÁRIOS SINTÉTICOS - MODELOS PAR(P) E PAR(P)-A                                         15
+
+      5     APLICAÇÃO DA ABORDAGEM PROPOSTA                                                                    16
+
+      6     CONCLUSÕES                                                                                         22
+
+      7     REFERÊNCIAS                                                                                        23
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                               3/24
+O modelo PAR(p)-A para geração de séries sintéticas de afluências   Projetos GEVAZP e NEWAVE
+F-CO-005 REV. 3, 26/05/2020
+ Centro de Pesquisas de Energia Elétrica - CEPEL
+ Relatório de Projeto           DEA - 1416/2020
+
+ Cliente: CPAMP
+
+____________________________________________________________________________________________________________________
+
+
+
+                                                SUMÁRIO EXECUTIVO
+
+O objetivo deste relatório técnico é descrever a abordagem proposta pelo CEPEL para ampliar a
+memória do modelo de series temporais PAR(p), utilizado pelo modelo GEVAZP na geração de cenários
+sintéticos de afluências aos modelos NEWAVE e DECOMP, denominada modelo Auto-Regressivo
+Periódico com Componente Anual - PAR(p)-A, por meio da inclusão de um novo termo na equação de
+auto-regressão de cada período sazonal, dado pela média das 12 últimas afluências.
+
+Desde 2013, a região Nordeste e parte da região Sudeste do Brasil estão passando por um longo
+período mais seco, com vazões mensais na grande maioria inferiores às médias de longo termo,
+enquanto parte da região Sul está passando por um período mais úmido prolongado, com vazões
+mensais na grande maioria superiores às médias de longo termo. Durante esse período, a média dos
+cenários sintéticos de afluências mensais gerados pelo modelo PAR(p) apresenta o prognóstico usual de
+retorno à média histórica em aproximadamente alguns meses (tipicamente 6 meses), embora o regime
+incomum de afluências persistisse. Esse comportamento indica que o modelo de séries temporais
+PAR(p) pode ser aprimorado para incorporar mais memória nos cenários de afluências gerados.
+
+Os resultados obtidos mostraram que o novo modelo possibilitou representar melhor a persistência de
+uma tendência hidrológica incomum. Adicionalmente, foi apresentado o cálculo das estimativas dos
+parâmetros bem como a identificação da ordem do modelo proposto. A abordagem proposta foi
+aplicada ao Programa Mensal de Operação do mês de janeiro de 2019.
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                               4/24
+O modelo PAR(p)-A para geração de séries sintéticas de afluências   Projetos GEVAZP e NEWAVE
+F-CO-005 REV. 3, 26/05/2020
+ Centro de Pesquisas de Energia Elétrica - CEPEL
+ Relatório de Projeto           DEA - 1416/2020
+
+ Cliente: CPAMP
+
+____________________________________________________________________________________________________________________
+
+
+
+1 INTRODUÇÃO
+
+O planejamento da operação em sistemas hidrotérmicos de grande porte, devido a sua alta
+complexidade, é dividido, em diversos países, em diferentes etapas que consideram distintos
+horizontes de tempo e graus de detalhamento na representação do sistema elétrico [1][2][3]. No
+Brasil, o problema de planejamento da operação do sistema interligado nacional (SIN) é dividido em
+planejamento de médio e curto prazos, e programação da operação, sendo resolvido através de uma
+cadeia de modelos [2]. O sistema de geração de energia elétrica brasileiro apresenta uma alta parcela
+de fontes renováveis de energia, que inclui energia hidrelétrica, biomassa e energia eólica,
+representando mais de 80% do consumo de eletricidade do país, conforme ilustrado na Figura 1.1. A
+participação da fonte hidrelétrica é preponderante, caracterizada por grandes reservatórios com
+capacidade de regulação plurianual, dispostos em diversas cascatas localizadas em diferentes bacias
+hidrográficas, tendo como principal fonte de incertezas as afluências hidrológicas futuras.
+
+
+
+
+     Biomassa         Eólica        Fóssil       Hídrica        Nuclear       Solar        Undi-     Importação
+      8,41%           8,66%        14,70%        61,05%         1,11%        1,50%        Elétrica     4,57%
+
+                          Figura 1.1      Matriz de Energia Elétrica Brasileira - 2019.
+
+Desde 1998, são empregados algoritmos de programação dinâmica dual estocástica (PDDE) para
+definir a programação das usinas geradoras do SIN, especialmente fontes hídricas e térmicas, no
+planejamento da operação a longo e médio prazo [4][5]. O modelo NEWAVE [6] é um modelo de
+planejamento da operação energética que emprega a técnica de PDDE para construir a política de
+operação. Esse modelo tem como objetivo determinar a estratégia de operação de longo/médio prazo,
+de forma a minimizar o valor esperado do custo total de operação ao longo do período de planejamento
+da operação, considerando mecanismos de aversão a risco; analisar as condições de atendimento
+energético no horizonte de longo/médio prazo; fornecer a política de operação por meio da função de
+custo futuro para o modelo de programação de curto prazo         DECOMP [7]e calcular, entre outras
+variáveis, os custos marginais de operação mensais para cada patamar de carga, utilizando 2.000
+cenários hidrológicos sintéticos. Mensalmente, o Operador Nacional do Sistema Elétrico (ONS) elabora,
+com a participação dos agentes envolvidos, o Programa Mensal da Operação Energética PMO, com os
+modelos NEWAVE e DECOMP, a fim de fornecer metas e diretrizes a serem seguidas pelos órgãos
+executivos da programação diária da operação e da operação em tempo real; e anualmente, o Plano da
+Operação Energética      PEN, este com o modelo NEWAVE. Em um processo correlato, a Câmara de
+Comercialização de Energia Elétrica (CCEE) também utiliza esses modelos para o cálculo do Preço de
+_____________________________________________________________________________________________________
+                                                                                                               5/24
+O modelo PAR(p)-A para geração de séries sintéticas de afluências   Projetos GEVAZP e NEWAVE
+F-CO-005 REV. 3, 26/05/2020
+ Centro de Pesquisas de Energia Elétrica - CEPEL
+ Relatório de Projeto            DEA - 1416/2020
+
+ Cliente: CPAMP
+
+____________________________________________________________________________________________________________________
+Liquidação das Diferenças (PLD). Já o Ministério de Minas e Energia (MME) e a Empresa de Pesquisa
+Energética (EPE) utiliza o modelo NEWAVE na elaboração do Plano Decenal de Expansão de Energia
+(PDE), que traz uma indicação das perspectivas de expansão futura do setor de energia sob a ótica do
+Governo.
+
+No modelo NEWAVE, o sistema de geração é representado por um conjunto de subsistemas
+eletricamente interligados (atualmente são quatro) e o problema de planejamento de operação a longo
+e médio prazos é modelado como um problema de programação linear estocástica multi-estágios. As
+variáveis que caracterizam o estado do sistema são o armazenamento dos reservatórios e a tendência
+hidrológica, esta representada pelas afluências passadas às usinas hidroelétricas. O objetivo do modelo
+é minimizar o valor esperado do custo da operação durante o período de planejamento (t = 1 até t = T,
+onde T varia de 5 a 30 anos discretizado em etapas mensais), dado um estado inicial conhecido do
+sistema (armazenamento e tendência hidrológica) e considerando mecanismos de aversão a risco;
+custos de combustível e penalidades pela falha no suprimento de energia compõem o custo da
+operação. As usinas hidrelétricas em cada subsistema podem ser representadas individualmente
+(UHEs) ou agregadas em reservatórios equivalentes de energia (REEs) [8][9]. As incertezas nas
+afluências - vazões quando a representação do sistema se dá a UHEs ou energia quando a
+representação do sistema se dá a REEs - são modeladas por um modelo auto-regressivo periódico da
+ordem p, PAR(p) [10], empregado no modelo GEVAZP, a fim de considerar as correlações temporais
+das afluências, e um esquema de simulação de Monte Carlo é usado para construir iterativamente as
+funções de custo futuro em cada estágio. O conjunto de funções de custo futuro representa a política
+ótima de operação. Cenários sintéticos de afluência condicionados a afluências observadas recentes
+devem ser fornecidos ao algoritmo iterativo de PDDE. Adicionalmente, após a política de operação ter
+sido construída, uma simulação final da operação do sistema com 2.000 cenários de afluências é
+executada para obter índices de desempenho do sistema.
+
+Desde 2013, a região Nordeste e parte da região Sudeste do Brasil estão passando por um longo
+período mais seco, com vazões mensais na grande maioria inferiores às médias de longo termo,
+enquanto parte da região Sul está passando por um período mais úmido prolongado, com vazões
+mensais na grande maioria superiores às médias de longo termo, conforme ilustrado na Figura 1.2.
+
+
+
+                                                      Southeast EER
+                         18000
+                         16000
+                         14000
+                         12000
+                         10000
+                          8000
+                          6000
+                          4000
+                          2000
+                             0
+
+
+
+                                                        Historical   Average
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                               6/24
+O modelo PAR(p)-A para geração de séries sintéticas de afluências    Projetos GEVAZP e NEWAVE
+F-CO-005 REV. 3, 26/05/2020
+ Centro de Pesquisas de Energia Elétrica - CEPEL
+ Relatório de Projeto             DEA - 1416/2020
+
+ Cliente: CPAMP
+
+____________________________________________________________________________________________________________________
+
+                                                         Itaipu EER
+                         14000
+                         12000
+                         10000
+                          8000
+                          6000
+                          4000
+                          2000
+                              0
+
+
+
+                                                        Historical   Average
+
+                                                      Northeast EER
+                         18000
+                         16000
+                         14000
+                         12000
+                         10000
+                          8000
+                          6000
+                          4000
+                          2000
+                             0
+
+
+
+                                                        Historical   Average
+
+
+   Figura 1.2        Energias afluentes históricas recentes aos REEs Sudeste, Itaipu e Nordeste.
+
+Durante esse período, a média dos cenários sintéticos de afluências mensais gerados pelo modelo
+PAR(p) apresenta o prognóstico usual de retorno à média histórica em aproximadamente alguns meses
+(tipicamente 6 meses), embora o regime incomum de afluências persistisse, conforme ilustrado na
+Figura 1.3. Esse comportamento indica que o modelo de séries temporais PAR (p) pode ser aprimorado
+para incorporar mais memória nos cenários de afluências gerados.
+
+Este relatório apresenta uma proposta de ampliação da memória do modelo PAR(p) por meio da
+inclusão de um novo termo na equação de auto-regressão de cada período sazonal. As próximas
+seções descrevem o modelo PAR(p) tradicional e a metodologia proposta para a sua extensão. Um
+estudo de caso com uma configuração real do sistema hidrotérmico interligado brasileiro (PMO Janeiro
+2019) é apresentado e discutido.
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                               7/24
+O modelo PAR(p)-A para geração de séries sintéticas de afluências    Projetos GEVAZP e NEWAVE
+F-CO-005 REV. 3, 26/05/2020
+ Centro de Pesquisas de Energia Elétrica - CEPEL
+ Relatório de Projeto           DEA - 1416/2020
+
+ Cliente: CPAMP
+
+____________________________________________________________________________________________________________________
+                                                              Southeast EER
+                                         12000
+
+
+                                         10000
+
+
+                                          8000
+
+
+                                          6000
+
+
+                                          4000
+
+
+                                          2000
+
+
+                                             0
+
+
+
+                                                 Historical    Historical Average   Synthetic Average
+
+
+                                                                Itaipu EER
+                                         12000
+
+
+                                         10000
+
+
+                                          8000
+
+
+                                          6000
+
+
+                                          4000
+
+
+                                          2000
+
+
+                                             0
+
+
+
+                                                 Historical    Historical Average   Synthetic Average
+
+
+                                                              Northeast EER
+                                         16000
+
+                                         14000
+
+                                         12000
+
+                                         10000
+
+                                          8000
+
+                                          6000
+
+                                          4000
+
+                                          2000
+
+                                             0
+
+
+
+                                                 Historical    Historical Average   Synthetic Average
+
+
+
+ Figura 1.3       Energias afluentes históricas recentes e a médias mensais do registro histórico
+                  e dos cenários sintéticos para os REEs Sudeste, Itaipu e Nordeste.
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                               8/24
+O modelo PAR(p)-A para geração de séries sintéticas de afluências               Projetos GEVAZP e NEWAVE
+F-CO-005 REV. 3, 26/05/2020
+ Centro de Pesquisas de Energia Elétrica - CEPEL
+ Relatório de Projeto           DEA - 1416/2020
+
+ Cliente: CPAMP
+
+____________________________________________________________________________________________________________________
+
+
+
+2 MODELAGEM DE SÉRIES TEMPORAIS PERIÓDICAS
+
+2.1    O Modelo Auto-Regressivo Periódico
+
+Os modelos de séries temporais em que parte dos parâmetros, ou todos, variam dentro do ano são
+conhecidos como modelos auto-regressivos com parâmetros periódicos e são denotados por modelos
+PAR(p).
+
+O modelo auto-regressivo periódico, caracterizado por PAR(p1, ..., ps), pode ser escrito como:
+
+                                                                                                         (1)
+
+onde:
+
+Zt é a variável aleatória do processo estocástico com s períodos sazonais;
+
+O índice de tempo t pode ser considerado como uma função do ano T, e do período sazonal m: t = (T -
+1) s + m;
+
+                                     ;
+
+B é o operador defasagem no estágio t. B Zt = Zt-1;
+
+    é a média do processo estocástico do período sazonal m correspondente ao estágio t;
+
+    é o desvio-padrão do processo estocástico do sazonal período m correspondente ao estágio t.
+
+A série at não correlacionada temporalmente é independente de Z t, possui média zero e variância
+e pode ser escrita como uma função das auto-correlações              de Zt e dos coeficientes auto-
+regressivos periódicos [11][12].
+
+                                                                                                         (2)
+
+A função de auto-correlação      de Zt é obtida multiplicando-se ambos os lados da equação (1) por
+          e aplicando o valor esperado a todos os termos desta equação. Ela satisfaz a equação de
+diferenças (sistema de equações de Yule-Walker).
+
+                                                                                                         (3)
+
+                                                                                                         (4)
+
+Para cada período m, variando k de 1 a pm na equação (4), obtém-se um conjunto de equações
+lineares, o sistema de equações de Yule Walker estendido para modelos PAR(p).
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                               9/24
+O modelo PAR(p)-A para geração de séries sintéticas de afluências   Projetos GEVAZP e NEWAVE
+F-CO-005 REV. 3, 26/05/2020
+ Centro de Pesquisas de Energia Elétrica - CEPEL
+ Relatório de Projeto            DEA - 1416/2020
+
+ Cliente: CPAMP
+
+____________________________________________________________________________________________________________________
+
+
+
+                                                                                                         (5)
+
+
+
+2.2    Estimadores de Momentos dos Parâmetros do Modelo
+
+Seja Zt, t = 1, 2, ..., uma série temporal de período s (um ano tem s períodos sazonais). O índice de
+tempo pode ser considerado uma função do ano T (T = 1, ..., N) e do período sazonal m (m = 1, ...,
+s): t = (T - 1) s + m, ilustrado na Figura 2.1.
+
+                         período m    período m                           período m
+
+                     s períodos      s períodos                          s períodos              t
+                     sazonais        sazonais               ...          sazonais
+
+
+                      T=1             T=2                                T=N
+                      (1º ano)        (2º ano)                           (Nº ano)
+
+          Figura 2.1          Esquema ilustrativo relacionando tempo, ano e períodos sazonais.
+
+As estimativas de momento dos parâmetros                  e       são:
+
+                                                                                                         (6)
+
+                                                                                                         (7)
+
+Os coeficientes auto-regressivos periódicos                 são estimados resolvendo o sistema de
+equações lineares pm dadas pela expressão (5), onde os coeficientes de auto-correlação periódicos da
+população são substituídos pelas estimativas dadas por (8).
+
+                                                                                                         (8)
+
+2.3    Identificação da Ordem do Modelo
+
+A função de auto-correlação parcial (FACP) é outra forma de se representar a estrutura de dependência
+temporal de um modelo. É útil na identificação da ordem do modelo auto-regressivo que deve ser
+ajustado a uma série temporal histórica.
+
+Hipel e McLeod [13] definiram a FACP periódica para um modelo PAR(p) de forma semelhante à feita
+para um modelo de auto-regressivo não periódico - AR(p). Para cada período m, a FACP periódica é
+definida pelo conjunto dos últimos parâmetros auto-regressivos dos modelos auto-regressivos de
+ordem k, k = 1, ..., deste período m, usualmente denominados de         . Como decorrência dessa
+definição, a FACP do período m deve ser igual a zero após o lag pm, quando a ordem do modelo de
+AR(p) nesse período é pm [13]. Também como consequência dessa definição, a resolução de cada um
+_____________________________________________________________________________________________________
+                                                                                                               10/24
+O modelo PAR(p)-A para geração de séries sintéticas de afluências   Projetos GEVAZP e NEWAVE
+F-CO-005 REV. 3, 26/05/2020
+ Centro de Pesquisas de Energia Elétrica - CEPEL
+ Relatório de Projeto           DEA - 1416/2020
+
+ Cliente: CPAMP
+
+____________________________________________________________________________________________________________________
+dos sistemas de equações de Yule-Walker dadas por (5) fornece       até lag k = pm. Os valores da FACP
+teórica do período m podem ser calculados resolvendo-se k sucessivos sistemas de equações de Yule-
+Walker, onde k = 1, ... As auto-correlações parciais estimadas para cada período m podem ser obtidas
+substituindo em (5) as estimativas          das autocorrelações teóricas e resolvendo-se sucessivos
+sistemas de equações de Yule-Walker com lags crescentes.
+
+Na referência [14], pode-se encontrar uma definição mais geral, o coeficiente kk é chamado de auto-
+correlação parcial lag k do processo estocástico Z , já que é igual à correlação parcial entre as variáveis
+  e z - ajustadas para as variáveis intermediárias     1,   2        +1 (ou a correlação entre    e z - não
+explicada por    1,   2        +1). Pode ser interpretada como   a correlação  condicionada  entre    ez-,
+dado o conhecimento das variáveis intermediárias       1,  2        +1, expressa em (9).
+
+
+                                                                                                         (9)
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                               11/24
+O modelo PAR(p)-A para geração de séries sintéticas de afluências   Projetos GEVAZP e NEWAVE
+F-CO-005 REV. 3, 26/05/2020
+ Centro de Pesquisas de Energia Elétrica - CEPEL
+ Relatório de Projeto           DEA - 1416/2020
+
+ Cliente: CPAMP
+
+____________________________________________________________________________________________________________________
+
+
+3 ABORDAGEM PROPOSTA PARA A MODELAGEM DE SÉRIES TEMPORAIS PERIÓDICAS
+
+A abordagem proposta que será descrita na próxima seção introduz um novo termo na equação auto-
+regressiva periódica. Ela representa a média das últimas 12 afluências periódicas. No caso do modelo
+NEWAVE, que possui discretização mensal, representa a média das últimas 12 afluências. Este termo
+tem o objetivo de estender a memória da formulação do modelo PAR(p) tradicional.
+
+3.1    Modelo Auto-Regressivo Periódico com Componente Anual                           PAR(p)-A
+
+O modelo Auto-regressivo periódico com componente anual, denominado de PAR(p1, ..., ps)-A pode ser
+escrito da seguinte forma:
+
+                                                                                                        (10)
+
+Onde At-1 representa a média das últimas 12 observações do processo estocástico Zt com referência a
+(t-1).
+
+                                                                                                        (11)
+
+A função de auto-correlação       de Zt pode ser obtida multiplicando-se ambos os lados da equação
+(10) por          e aplicando o valor esperado a cada termo.
+
+                                                                                                        (12)
+
+onde:
+
+                                                                                                        (13)
+
+
+Multiplicando ambos os lados da equação (10) por                         e aplicando o valor esperado a cada termo,
+obtém-se uma equação adicional.
+
+                                                                                                        (14)
+
+onde:
+
+                                                                                                        (15)
+
+Assim como no modelo PAR(p), para cada período m, variando-se k de 1 a pm na equação (12), obtém-
+se um conjunto de equações. A fim de se obter tantas equações quantos forem o número de
+parâmetros, a equação (14) deve ser adicionada ao conjunto original de equações lineares, conforme
+exemplificado em (16).
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                               12/24
+O modelo PAR(p)-A para geração de séries sintéticas de afluências   Projetos GEVAZP e NEWAVE
+F-CO-005 REV. 3, 26/05/2020
+ Centro de Pesquisas de Energia Elétrica - CEPEL
+ Relatório de Projeto           DEA - 1416/2020
+
+ Cliente: CPAMP
+
+____________________________________________________________________________________________________________________
+
+
+
+
+                                                                                                        (16)
+
+
+
+
+3.2    Estimadores de Momentos dos Parâmetros do Modelo
+
+As estimativas de momento dos parâmetros             e    são dados pelas equações (6) e (7)
+respectivamente. De forma correlata, as estimativas de momento dos parâmetros e     são dados
+pelas expressões (17) e (18) respectivamente.
+
+                                                                                                        (17)
+
+                                                                                                        (18)
+
+Os coeficientes auto-regressivos de cada período m,                   , e o coeficiente anual     são
+estimados resolvendo-se o sistema de (pm+1) equações lineares dadas por (16), onde os coeficientes
+de auto-correlação periódicos são substituídos pelas estimativas de momento dadas por (8) e (19).
+
+                                                                                                        (19)
+
+3.3    Identificação da Ordem do Modelo
+
+Para derivar a FACP do modelo PAR(p)-A deve-se aplicar a definição dada em [14]: ela representa a
+correlação entre as variáveis e   condicionada aos valores intermediários 1,   2        +1 e At-1.
+
+
+                                                                                                        (20)
+
+
+
+
+A auto-correlação parcial entre Zt e Zt-k pode ser obtida conforme [15] usando:
+
+                                                                                                        (21)
+
+Onde:
+
+    é a matriz de auto-covariância entre            e     ;
+
+_____________________________________________________________________________________________________
+                                                                                                               13/24
+O modelo PAR(p)-A para geração de séries sintéticas de afluências   Projetos GEVAZP e NEWAVE
+F-CO-005 REV. 3, 26/05/2020
+ Centro de Pesquisas de Energia Elétrica - CEPEL
+ Relatório de Projeto           DEA - 1416/2020
+
+ Cliente: CPAMP
+
+____________________________________________________________________________________________________________________
+    é a matriz de auto-covariância entre { ,               }e{       1,      2          +1, At-1};
+
+
+    é a matriz de auto-covariância entre {            1,    2             +1} e At-1.
+
+
+  é a matriz de auto-covariância parcial entre             e        condicionada a {         1,      2   +1, At-1}.
+
+
+A FACP do período m deve ser igual a zero a partir do lag p m quando a ordem das componentes auto-
+regressivas neste período é pm.
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                                      14/24
+O modelo PAR(p)-A para geração de séries sintéticas de afluências    Projetos GEVAZP e NEWAVE
+F-CO-005 REV. 3, 26/05/2020
+ Centro de Pesquisas de Energia Elétrica - CEPEL
+ Relatório de Projeto           DEA - 1416/2020
+
+ Cliente: CPAMP
+
+____________________________________________________________________________________________________________________
+
+
+
+4 GERAÇÃO DE CENÁRIOS SINTÉTICOS - MODELOS PAR(P) E PAR(P)-A
+
+Para gerar cenários sintéticos de afluências é necessário, inicialmente, obter uma amostra de ruídos,
+at, não correlacionados temporalmente, uma para cada período de tempo e para cada cenário de
+afluências. Atualmente, essas amostras são produzidas por amostragem seletiva a partir de uma
+distribuição Lognormal multivariada [16]. A Figura 4.1 ilustra o esquema de geração de cenários
+sintéticos em um período de tempo T.
+
+                                        t=0                                        t=T
+
+
+
+
+                          Figura 4.1      Esquema de geração de cenários sintéticos.
+
+O método de amostragem seletiva consiste na aplicação de técnicas de agrupamento no processo de
+geração de cenários de afluências. Nesse caso, as técnicas de agrupamento são usadas para obter
+amostras de séries de ruídos, at, multivariados e não correlacionados no tempo, usadas pelos modelos
+PAR(p) e PAR(p)-A.
+
+O esquema adotado para geração de cenários sintéticos de afluências pode ser resumido da seguinte
+forma:
+
+         Obter as afluências incrementais mensais históricas para cada usina hidrelétrica ou reservatório
+         equivalente de energia. A vazão incremental a uma UHE pode ser obtida pela diferença entre a
+         vazão total a uma UHE e a soma das vazões totais das UHEs imediatamente a montante;
+         Escolher a ordem do modelo AR de cada período sazonal para cada usina hidroelétrica ou
+         reservatório equivalente de energia, examinando as parcelas da FACP;
+         Estimar os coeficientes dos modelos PAR(p) ou PAR(p)-A através das expressões (5) ou (16),
+         respectivamente;
+         Gerar uma amostra muito grande (por exemplo, 100.000) de resíduos at normais, não
+         correlacionados temporalmente e espacialmente, usando amostragem aleatória simples onde
+         são tratados como equiprováveis;
+         Aplicar o método K-means para reduzir a cardinalidade da amostra original; os resíduos
+         resultantes passam, então, a ser tratados como não equiprováveis;
+         Uma distribuição Lognormal três parâmetros é ajustada aos resíduos espacialmente
+         correlacionados;
+         Os cenários sintéticos são obtidos usando-se as expressões (1) ou (10) conforme o modelo
+         selecionado, PAR(p) ou PAR(p)-A respectivamente;
+         A soma das afluências incrementais ao longo da cascata de UHEs, em cada período e cenário, é
+         realizada para obter as afluências totais.
+
+Maiores detalhes da metodologia para geração de cenários sintéticos são obtidos em [10] e [16].
+
+_____________________________________________________________________________________________________
+                                                                                                              15/24
+O modelo PAR(p)-A para geração de séries sintéticas de afluências   Projetos GEVAZP e NEWAVE
+F-CO-005 REV. 3, 26/05/2020
+ Centro de Pesquisas de Energia Elétrica - CEPEL
+ Relatório de Projeto           DEA - 1416/2020
+
+ Cliente: CPAMP
+
+____________________________________________________________________________________________________________________
+
+
+
+5       APLICAÇÃO DA ABORDAGEM PROPOSTA
+
+O desempenho do modelo de séries temporais proposto foi avaliado com uma configuração oficial do
+sistema interligado brasileiro, o PMO de janeiro de 2019. O PMO é realizado pelo ONS todos os meses,
+considerando um horizonte de cinco anos discretizado em períodos mensais. Os resultados
+apresentados foram obtidos com 2.000 cenários sintéticos mensais multivariados e referem-se aos três
+primeiros anos do horizonte do PMO. Esse número de cenários é atualmente utilizado nos estudos
+oficiais do setor elétrico brasileiro [17][18].
+
+A configuração hidrelétrica foi representada por 11 REEs, agregando mais de 160 usinas hidrelétricas
+distribuídas pelos quatro subsistemas do país, conforme ilustrado na Figura 5.1. Os resultados
+apresentados referem-se aos mesmos três REEs apresentados na Figura 1.3, a saber, Sudeste,
+Nordeste e Itaipu, cada um com um regime hidrológico distinto.
+
+
+                                                                                          NE
+                                        N
+                                                  AM
+                                            N
+                                                                        SE
+                                             BM
+                                                            MAD                   TP
+
+                                                                    SE
+                                                             PR                   PRP
+
+                                                                        IT
+
+
+
+
+                                                                    S
+
+                                                                        S
+                                                                             IG
+
+
+
+
+          Figura 5.1 Topologia do sistema elétrico brasileiro                           4 subsistemas e 11 REEs.
+
+Como ilustração, a Tabela 5.1 apresenta as ordens dos modelos auto-regressivos escolhidas pelos
+modelos PAR(p) e PAR(p)-A para janeiro (estação chuvosa) e julho (estação seca). Observa-se que o
+modelo PAR(p)-A reduziu a ordem em janeiro para o REE Itaipu, e em julho para os REEs Itaipu e
+Nordeste. No entanto devemos lembrar que o modelo PAR(p)-A possui sempre um coeficiente adicional
+associado à média das 12 afluências anteriores. Esse coeficiente adicional contabiliza a contribuição de
+Z 1 a Z    , substituindo, às vezes, ordens mensais mais altas. Um comportamento semelhante é
+encontrado para outros meses e REEs, quando a auto-correlação anual é significativa. Observe que, se
+uma modelagem de periodicidade sazonal diferente da periodicidade mensal for usada, poderão
+aparecer resultados com comportamento diferente.
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                                   16/24
+O modelo PAR(p)-A para geração de séries sintéticas de afluências       Projetos GEVAZP e NEWAVE
+F-CO-005 REV. 3, 26/05/2020
+ Centro de Pesquisas de Energia Elétrica - CEPEL
+ Relatório de Projeto             DEA - 1416/2020
+
+ Cliente: CPAMP
+
+____________________________________________________________________________________________________________________
+ Tabela 5.1 Ordem selecionada dos modelos auto-regressivos dos meses de Janeiro e Julho
+                            dos modelos PAR(p) e PAR(p)-A.
+
+                                                      PAR(p)                        PAR-A(p)
+                                                jan            jul             jan              jul
+                     Southeast                   1              2               1               2
+                     Itaipu                      6              3               6               1
+                     Northeast                   3              2               1               1
+
+A Figura 5.2, a Figura 5.3 e a Figura 5.4 exibem as funções de auto-correlação amostral mensal
+histórica comparadas com àquelas produzidas pelos cenários sintéticos gerados pelos modelos PAR(p) e
+PAR(p)-A dos REEs Sudeste, Itaipu e Nordeste, nos meses de janeiro e julho.
+
+
+
+                     Correlogram     Southeast - January                      Correlogram     Southeast - July
+
+
+                               Historical x PAR(p)                                   Historical x PAR(p)
+
+
+
+
+                     Correlogram      Southeast - January
+                                                                           Correlogram     Southeast - July
+                              Historical x PAR-A(p)
+                                                                                    Historical x PAR-A(p)
+
+
+
+
+Figura 5.2 Função de auto-correlação mensal amostral das séries sintéticas produzidas pelos
+              modelos PAR(p) e PAR(p)-A e da série histórica REE Sudeste.
+
+
+_____________________________________________________________________________________________________
+                                                                                                                 17/24
+O modelo PAR(p)-A para geração de séries sintéticas de afluências    Projetos GEVAZP e NEWAVE
+F-CO-005 REV. 3, 26/05/2020
+ Centro de Pesquisas de Energia Elétrica - CEPEL
+ Relatório de Projeto              DEA - 1416/2020
+
+ Cliente: CPAMP
+
+____________________________________________________________________________________________________________________
+
+                      Correlogram      Itaipu - January                      Correlogram     Itaipu - July
+
+                              Historical x PAR(p)                               Historical x PAR(p)
+
+
+
+
+                       Correlogram     Itaipu - January                    Correlogram    Itaipu - July
+
+                              Historical x PAR-A(p)                            Historical x PAR-A(p)
+
+
+
+
+Figura 5.3 Função de auto-correlação mensal amostral das séries sintéticas produzidas pelos
+               modelos PAR(p) e PAR(p)-A e da série histórica REE Itaipu.
+
+
+
+                     Correlogram      Northeast - January                   Correlogram    Northeast - July
+
+                               Historical x PAR(p)                               Historical x PAR(p)
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                              18/24
+O modelo PAR(p)-A para geração de séries sintéticas de afluências   Projetos GEVAZP e NEWAVE
+F-CO-005 REV. 3, 26/05/2020
+ Centro de Pesquisas de Energia Elétrica - CEPEL
+ Relatório de Projeto             DEA - 1416/2020
+
+ Cliente: CPAMP
+
+____________________________________________________________________________________________________________________
+
+                     Correlogram       Northeast - January               Correlogram   Northeast - July
+
+                              Historical x PAR-A(p)                            Historical x PAR-A(p)
+
+
+
+
+Figura 5.4 Função de auto-correlação mensal amostral dos modelos PAR(p) e PAR(p)-A e da
+                              série histórica REE Nordeste.
+
+Observa-se que, para lags inferiores às ordens do modelo, não há diferença significativa entre as
+funções mensais dos dois modelos e o histórico. Para lags maiores que as ordens do modelo, a função
+de auto-correlação amostral mensal produzida pelo modelo PAR(p) apresenta valores inferiores à do
+histórico. Já a função de auto-correlação amostral mensal produzida pelo modelo PAR(p)-A aproximou-
+se bem mais da função de auto-correlação mensal histórica, melhorando a memória do modelo mensal.
+Esse recurso contribui para preservar a auto-correlação anual lag um conforme ilustrado na Erro!
+Fonte de referência não encontrada.. A auto-correlação anual observada nos cenários sintéticos
+produzidos pelo modelo PAR(p)-A é muito mais próxima da auto-correlação anual presente no registro
+histórico do que aquela observada nos cenários sintéticos produzidos pelo modelo PAR(p).
+
+
+                                                Auto-correlação Anual
+                                 0,8
+                                 0,7
+                                 0,6
+                                 0,5
+                                 0,4
+                                 0,3
+                                 0,2
+                                 0,1
+                                   0
+                                              SUDESTE               ITAIPU             NORDESTE
+                         PAR(p)                 0,092               0,363                0,165
+                         PAR-A(p)               0,274               0,638                 0,38
+                         HISTÓRICO              0,313               0,733                0,477
+
+
+   Figura 5.5 Auto-correlação anual obtida do registro histórico e dos cenários sintéticos de
+                                          afluências
+
+
+_____________________________________________________________________________________________________
+                                                                                                              19/24
+O modelo PAR(p)-A para geração de séries sintéticas de afluências   Projetos GEVAZP e NEWAVE
+F-CO-005 REV. 3, 26/05/2020
+ Centro de Pesquisas de Energia Elétrica - CEPEL
+ Relatório de Projeto           DEA - 1416/2020
+
+ Cliente: CPAMP
+
+____________________________________________________________________________________________________________________
+A Figura 5.6 ilustra as médias mensais do registro histórico de afluências e dos cenários sintéticos
+gerados pelos dois modelos periódicos, PAR(p) e PAR(p)-A para os REEs Sudeste, Itaipu e Nordeste.
+
+                                                                       Southeast EER
+                                            12000
+
+
+                                            10000
+
+
+                                             8000
+
+
+                                             6000
+
+
+                                             4000
+
+
+                                             2000
+
+
+                                                    0
+
+
+
+                                      Historical         Historical Average       Synthetic Average    Synthetic Average A12
+
+
+
+
+                                                                             Itaipu EER
+                                            12000
+
+
+                                            10000
+
+
+                                             8000
+
+
+                                             6000
+
+
+                                             4000
+
+
+                                             2000
+
+
+                                                    0
+
+
+
+                                       Historical         Historical Average      Synthetic Average    Synthetic Average A12
+
+
+
+
+                                                                      Northeast EER
+                                           16000
+
+                                           14000
+
+                                           12000
+
+                                           10000
+
+                                            8000
+
+                                            6000
+
+                                            4000
+
+                                            2000
+
+                                                   0
+
+
+
+                                     Historical         Historical Average       Synthetic Average    Synthetic Average A12
+
+
+
+      Figura 5.6 Comparação entre os cenários gerados pelos modelos PAR(p) e PAR(p)-A
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                                               20/24
+O modelo PAR(p)-A para geração de séries sintéticas de afluências                       Projetos GEVAZP e NEWAVE
+F-CO-005 REV. 3, 26/05/2020
+ Centro de Pesquisas de Energia Elétrica - CEPEL
+ Relatório de Projeto           DEA - 1416/2020
+
+ Cliente: CPAMP
+
+____________________________________________________________________________________________________________________
+A análise dessa figura permite avaliar o impacto do modelo proposto, PAR(p)-A, que teve por objetivo
+estender a memória do modelo PAR(p). A abordagem proposta reduz o otimismo do modelo tradicional
+PAR(p) quando as afluências anteriores eram muito baixas, como foi o caso dos REEs Sudeste e
+Nordeste e reduz o comportamento pessimista sempre que as afluências anteriores resultam de
+períodos mais favoráveis. Outros REEs apresentaram comportamento similar.
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                              21/24
+O modelo PAR(p)-A para geração de séries sintéticas de afluências   Projetos GEVAZP e NEWAVE
+F-CO-005 REV. 3, 26/05/2020
+ Centro de Pesquisas de Energia Elétrica - CEPEL
+ Relatório de Projeto           DEA - 1416/2020
+
+ Cliente: CPAMP
+
+____________________________________________________________________________________________________________________
+
+
+
+6 CONCLUSÕES
+
+Nos países que apresentam elevada participação da fonte hidrelétrica em suas matrizes elétricas, como
+é o caso do Brasil, o planejamento da operação é baseado em modelos de otimização que requerem a
+geração de cenários sintéticos de afluências hidrológicas por meio de modelos que representam o
+comportamento periódico intrínseco dessas afluências. No caso do Brasil, a modelagem PAR(p) é
+empregada nos modelos NEWAVE, DECOMP e GEVAZP, desenvolvidos pelo CEPEL, para representar as
+incertezas nas afluências, quer na forma de vazões - quando a representação das UHEs se dá
+individualmente, ou de energia quando se utiliza reservatórios equivalentes de energia. Por sua vez,
+estes modelos são utilizados pelo ONS na elaboração Programa Mensal da Operação Energética PMO,
+e do Plano da Operação Energética      PEN; pela CCEE para o cálculo do Preço de Liquidação das
+Diferenças - PLD; e pelo MME e EPE na elaboração do Plano Decenal de Expansão de Energia - PDE).
+
+Verifica-se nos anos recentes um comportamento atípico das afluências em algumas regiões do Brasil:
+a região Nordeste e parte da região Sudeste estão passando por um período de seca prolongado,
+enquanto a região Sul está atravessando um longo período de chuvas acima da média. Durante esta
+fase, a média dos cenários sintéticos de afluências mensais gerados pelo modelo PAR (p) tem
+apresentado o prognóstico usual de retorno à média histórica, aproximadamente em alguns meses
+(geralmente 6 meses), embora o regime incomum persistisse. Esse comportamento indica que o
+modelo de séries temporais PAR(p) pode ser aprimorado para incorporar mais memória nos cenários de
+afluências gerados
+
+Neste relatório foi proposta uma abordagem para ampliar a memória do modelo PAR(p), denominada
+modelo Auto-Regressivo Periódico com Componente Anual - PAR(p)-A, por meio da inclusão de um
+novo termo na equação de auto-regressão de cada período sazonal, dado pela média das 12 últimas
+afluências. Adicionalmente, foi apresentado o cálculo das estimativas dos parâmetros bem como a
+identificação da ordem do modelo proposto.
+
+A abordagem proposta foi aplicada ao Programa Mensal de Operação do Mês de janeiro de 2019. Os
+resultados obtidos mostraram que a inclusão deste novo termo na equação de auto-regressão periódica
+  modelo PAR(p)-A melhorou, de fato, a memória do modelo PAR (p) original e conseguiu reproduzir
+com mais acurácia a função de autocorrelação mensal das afluências.
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                              22/24
+O modelo PAR(p)-A para geração de séries sintéticas de afluências   Projetos GEVAZP e NEWAVE
+F-CO-005 REV. 3, 26/05/2020
+ Centro de Pesquisas de Energia Elétrica - CEPEL
+ Relatório de Projeto           DEA - 1416/2020
+
+ Cliente: CPAMP
+
+____________________________________________________________________________________________________________________
+
+
+
+7       REFERÊNCIAS
+
+[1]
+
+        75-81, Feb. 1999.
+
+[2]     M.E.P. Maceira
+
+        Computation Conference - PSCC, Seville, Spain, 2002.
+
+[3]     E. Gil, J. Bustos, H. Rudnic
+                                                                                                        -1264, Nov.
+        2003.
+
+[4]
+        Mathematical Programming 52, 1991.
+
+[5]
+
+
+[6]     M.E.P. Maceira, D.D.J. Penna, A.L. Diniz, R.J. Pinto, A.C.G. Melo, C.V. Vasconcellos, C.B. Cruz,
+
+        Studies in Brazil
+        Ireland, June 2018.
+
+[7]     A.L. Diniz, F.S. Costa, M.E.P. Maceira, T.N. Santos, L.C. Brandão, R.N. Cabral, "Short/Mid-Term
+        Hydrothermal Dispatch and Spot Pricing for Large-Scale Systems - the Case of Brazil", 20th
+        Power Systems Computation Conference, Dublin, Ireland, June 2018.
+
+[8]
+                                                                                                          -326, Feb.
+        1970.
+
+[9]     M.E.P Maceira, V.S. Duarte, D.D.J. Penna, M.P. Tcheou,
+        coupled systems in the construction of equivalent reservoir model in hydrothermal operation
+
+
+[10]    M.E.P. Maceira, C.V. Bezerra, Stochastic Streamflow Model for Hydroelectric Systems, 5th
+        PMAPS, Vancouver, Canada, September 1997.
+
+[11]    J.D. Salas, J.W. Delleur, V. Yevjevich, W.L. Lane, "Applied Modeling of Hydrologic Time Series",
+        Water Resources Publications, 1980.
+
+[12]    P.H. Franses, R. Paap, Periodic Time Series Models, Oxford University Press, 2006.
+
+[13]    W.H. Hippel, A.
+        Elsevier. 1994
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                              23/24
+O modelo PAR(p)-A para geração de séries sintéticas de afluências   Projetos GEVAZP e NEWAVE
+F-CO-005 REV. 3, 26/05/2020
+ Centro de Pesquisas de Energia Elétrica - CEPEL
+ Relatório de Projeto           DEA - 1416/2020
+
+ Cliente: CPAMP
+
+____________________________________________________________________________________________________________________
+[14]    G.E.P. Box, G.M. Jenkins, G.C. Reinsel, G M. Ljung, Time Series Analysis                   Forecasting and
+        Control, 5th edition, Wiley, 2016.
+
+[15]    W.H. Greene, Econometric Analysis, 3th edition, Prentice-Hall, 1997.
+
+[16]                                                                                                           -Term
+
+
+[17] http://www.ons.org.br/AcervoDigitalDocumentosEPublicacoes/SUMARIO_EXECUTIVO_PMO_202
+005_REV1.pdf#search=pmo.
+
+[18] http://www.epe.gov.br/pt/publicacoes-dados-abertos/publicacoes/plano-decenal-de-expansao-
+de-energia-2029.
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                              24/24
+O modelo PAR(p)-A para geração de séries sintéticas de afluências   Projetos GEVAZP e NEWAVE
+F-CO-005 REV. 3, 26/05/2020
+

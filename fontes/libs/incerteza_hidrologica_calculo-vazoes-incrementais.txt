@@ -1,0 +1,14 @@
+Fonte: https://see.cepel.br/manual/libs/latest/incerteza_hidrologica/calculo-vazoes-incrementais.html (baixado em 26/10/2026)
+
+itemprop="articleBody">
+Cálculo de Vazões Incrementais¶
+A vazão incremental é a diferença entre a vazão total em um posto de medição num dado mês e a soma das vazões totais de todos os postos imediatamente a montante no mesmo mês. A expressão para o cálculo da vazão incremental é mostrada em (1).
+(1)¶\[Z{\text{inc}_{it}} = Z{\text{tot}_{it}} - \sum_{\substack{m \in \text{M}_i}} Z{\text{tot}_{mt}}\]
+A Fig. 1 mostra um exemplo do cálculo da vazão incremental, onde ZA, ZB, ZC e ZD representam as vazões totais e ZiA, ZiB, ZiC e ZiD representam as vazões incrementais de cada posto.
+Fig. 1 Exemplo de cálculo de vazão incremental.¶
+        © Copyright 2026, Cepel - Centro de Pesquisas de Energia Elétrica
+.
+        Última actualização em 30 de setembro de 2026.
+    Built with Sphinx using a
+    theme
+    provided by Read the Docs. 

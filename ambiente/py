@@ -1,0 +1,12 @@
+#!/bin/sh
+# Roda python no container do Pulsar com o repositório montado em /pulsar.
+# As coleções de decks do ONS (03 §1.2) entram só para leitura, no mesmo
+# caminho, quando PULSAR_COLECAO_GEVAZP e PULSAR_COLECAO_DECOMP apontam para
+# diretórios existentes.
+d=$(cd "$(dirname "$0")/.." && pwd)
+extra=""
+for v in PULSAR_COLECAO_GEVAZP PULSAR_COLECAO_DECOMP; do
+  c=$(eval echo "\${$v:-}")
+  [ -n "$c" ] && [ -d "$c" ] && extra="$extra -v $c:$c:ro -e $v=$c"
+done
+exec docker run --rm -i -u "$(id -u):$(id -g)" -v "$d":/pulsar $extra -w /pulsar pulsar-py:dev python "$@"

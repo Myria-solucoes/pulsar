@@ -1,0 +1,7 @@
+decks/
+fontes/**/*.pdf
+fontes/**/*.html
+__pycache__/
+explora/
+cache/
+saida/

@@ -1,0 +1,17 @@
+Fonte: https://see.cepel.br/manual/libs/latest/incerteza_hidrologica/geracao-series-sinteticas-condicionadas.html (baixado em 26/10/2026)
+
+itemprop="articleBody">
+Geração de Séries Sintéticas Condicionadas¶
+Para se iniciar o processo de geração é preciso arbitrar valores iniciais \(Z_{t-\tau}\), onde \(\tau\) pode ir de 1 a \(p_m\). Estimativas para esses valores iniciais podem ser, por exemplo, as médias mensais ou os últimos valores amostrais. Para não condicionar a série sintética aos valores iniciais deve-se desprezar, por exemplo, os primeiros gerados.
+O conjunto dos últimos valores observados \(Z_{t-\tau}\) em uma série hidrológica é denominado de tendência hidrológica, Fig. 6, e a média mensal da série histórica é chamada de MLT mensal.
+Fig. 6 Tendência Hidrológica.¶
+A geração das séries sintéticas pode ser realizada de forma condicionada ou não aos valores iniciais. Para não condicionar a série sintética aos valores iniciais deve-se desprezar, por exemplo, os primeiros valores gerados. Para tanto, o processo de geração da série sintética deve ser realizado em duas etapas. Na primeira etapa, a geração das séries sintéticas utiliza como valores iniciais as médias correspondentes a cada período (MLT mensal), conforme ilustrado na Fig. 7. Os valores gerados, resultantes da primeira etapa, para os últimos períodos são utilizados como valores iniciais na segunda etapa do processo de geração, conforme  Fig. 8. Desta forma, as séries sintéticas geradas durante a segunda etapa são ditas “não condicionadas”.
+Fig. 7 Geração não condicionada – Primeira etapa.¶
+Fig. 8 Geração não condicionada – Segunda etapa.¶
+Para gerar séries sintéticas “condicionadas” deve-se efetuar apenas a primeira etapa do processo descrito acima, utilizando como valores iniciais uma tendência hidrológica apropriada.
+        © Copyright 2026, Cepel - Centro de Pesquisas de Energia Elétrica
+.
+        Última actualização em 30 de setembro de 2026.
+    Built with Sphinx using a
+    theme
+    provided by Read the Docs. 

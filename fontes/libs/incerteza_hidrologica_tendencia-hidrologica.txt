@@ -1,0 +1,14 @@
+Fonte: https://see.cepel.br/manual/libs/latest/incerteza_hidrologica/tendencia-hidrologica.html (baixado em 26/10/2026)
+
+itemprop="articleBody">
+Tendência Hidrológica¶
+Nota
+Volte mais tarde ou consulte os relatórios técnicos do CEPEL que descrevem as funcionalidades e os manuais já existentes em pdf dos modelos, que estão disponíveis para download público no seguinte endereço:
+(https://www.cepel.br/produtos/documentacao-tecnica/)
+Dúvidas? Contacte as equipes dos modelos: newave@cepel.br; decomp@cepel.br; dessemp@cepel.br; gevazp@cepel.br; suishi@cepel.br;  previvaz@cepel.br
+        © Copyright 2026, Cepel - Centro de Pesquisas de Energia Elétrica
+.
+        Última actualização em 30 de setembro de 2026.
+    Built with Sphinx using a
+    theme
+    provided by Read the Docs. 

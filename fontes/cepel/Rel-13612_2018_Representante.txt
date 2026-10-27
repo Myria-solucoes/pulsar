@@ -1,0 +1,1362 @@
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+                                                     CEPEL
+
+                              Centro de Pesquisas de Energia Elétrica
+
+
+
+
+                                  PROJETOS NEWAVE e GEVAZP
+
+
+
+
+                                            Relatório Técnico
+
+
+                       Avaliação de Alternativas para Escolha do
+                       Representante no Processo de Agregação
+                                da Amostagem Seletiva
+
+
+
+
+                                             Dezembro/2018
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                              2/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+                                                   ÍNDICE
+
+
+
+
+1     Introdução .............................................................................................. 4
+2     Representação da incerteza no planejamento da operação ..................... 6
+3     Geração de Cenários ................................................................................ 9
+    3.1    Amostragem Seletiva ........................................................................... 11
+    3.2    Seleção do representante...................................................................... 12
+    3.3    Representatividade da árvore de cenários ............................................... 13
+4     Resultados com aplicação do centroide ................................................. 15
+5     Conclusões ............................................................................................ 26
+6     Referências............................................................................................ 27
+7     Anexo – Nota Técnica 42 do Projeto NEWAVE ....................................... 29
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                              3/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+1 Introdução
+
+Durante o processo de validação da mudança de configuração do SIN, de 9 para 12 reservatórios
+equivalentes de energia (REEs), foram rodados os casos de PMO do ano de 2017 com a nova
+representação dos REEs. A partir destas análises, observou-se um comportamento de redução do
+custo marginal de operação obtido nas simulações finais na configuração com maior número de REEs.
+Foram elencadas três possíveis causas para o comportamento observado no custo marginal de
+operação (CMO), dentre elas, a variação amostral na representação da árvore de cenários de
+afluências no algoritmo da PDDE (recursão backward).
+
+
+No Relatório Técnico intitulado “Análise da inflexão do custo marginal de operação no modelo NEWAVE
+entre os quarto e quinto estágios temporais ao se adotar a representação de 12 REEs para Sistema
+Interligado Nacional” de setembro de 2018[1], o CEPEL realizou uma avaliação detalhada dos cenários
+de energia naturais afluentes (ENAs), desde a etapa da geração dos ruídos independentes até a
+obtenção dos cenários de afluências propriamente ditos. Foi mostrado que a redução abrupta do CMO
+foi ocasionada pela geração de cenários de afluência com valores atipicamente superiores, gerados
+pelo sorteio de ruídos aleatórios com média bastante elevada, cuja probabilidade de ocorrência era
+bem pequena (~0.27%).
+
+
+Durante     os    estudos     da   Comissão   Permanente     para   Análise   de   Metodologias     e   Programas
+Computacionais do Setor Elétrico (CPAMP) sobre a reamostragem de cenários forward, foram
+realizadas sensibilidades com relação à árvore de cenários utilizada na solução do problema de
+planejamento da operação (árvore completa). Observou-se que a variabilidade dos resultados era
+grande e, em princípio, a reamostragem de cenários da simulação forward não era suficiente para
+reduzir a variabilidade amostral associada à árvore completa, definida pelos cenários da recursão
+backward.
+
+
+A partir destas análises, o CEPEL investigou aprimoramentos no processo de geração de cenários de
+afluências de forma a minimizar a ocorrência de cenários tão atípicos e a variabilidade amostral. O
+presente relatório tem como objetivo apresentar uma alternativa para a escolha do representante do
+processo de agregação do processo de Amostragem Seletiva (AS), que resultou em uma redução na
+variabilidade amostral observada nos resultados do planejamento da operação de médio e longo
+prazos.
+
+
+Esse relatório é organizado da seguinte forma: nesta seção, apresentou-se a motivação para o
+aprimoramento no processo de AS. A seção 2 mostra como é feita a representação da incerteza
+hidrológica no problema de planejamento da operação. Na seção 3 é apresentada uma revisão da
+
+_____________________________________________________________________________________________________
+                                                                                                              4/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+metodologia e um histórico do desenvolvimento da AS utilizada para a geração dos cenários de
+afluência e como o processo de agregação é utilizado. Na seção 4 são apresentados resultados que
+confirmam a redução da variabilidade amostral obtida com a nova alternativa proposta neste relatório
+e, por fim, a seção 5 traz as conclusões e possíveis trabalhos futuros.
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                              5/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+2 REPRESENTAÇÃO DA INCERTEZA NO PLANEJAMENTO DA OPERAÇÃO
+
+O objetivo principal do planejamento da operação energética de médio e longo prazo é definir a
+alocação de recursos hídricos e térmicos de forma ótima considerando a minimização do valor
+esperado do custo total de operação e a segurança energética do sistema. Atualmente, o problema de
+planejamento da operação energética do sistema interligado nacional de médio e longo prazos,
+resolvido pelo modelo NEWAVE [2], [3], é representado por um problema de programação estocástica
+linear multiestágio e o método aplicado para construção da política é a Programação Dinâmica Dual
+Estocástica (PDDE) [4], levando-se em conta a correlação temporal das afluências aos reservatórios
+e/ou usinas hidráulicas [5]. Assim, consideram-se como variáveis de estado do problema o
+armazenamento no início do período e as afluências passadas (tendência hidrológica). A incerteza
+hidrológica     é    representada   explicitamente     através    de    cenários    de   afluências    construídos
+sinteticamente empregando-se um modelo autorregressivo periódico [6] e um processo de
+Amostragem Seletiva [7]. O modelo NEWAVE faz parte da cadeia de modelos de otimização e
+simulação desenvolvida pelo CEPEL para o planejamento da expansão e operação energética [8].
+
+
+Os primeiros métodos de decomposição desenvolvidos para resolver problemas de programação linear
+estocástico percorriam a árvore de cenários em sua totalidade (árvore completa – vide Figura 2.1a),
+porém para problemas onde a árvore de cenários apresenta uma cardinalidade elevada, percorrê-la
+em sua totalidade é impossível do ponto de vista computacional ou prático. Para contornar este
+problema foram desenvolvidos diversos métodos que utilizam técnicas de amostragens para
+selecionar uma subárvore de cenários com tamanho reduzido. O primeiro método a fazer uso da
+amostragem em programação estocástica foi a PDDE, cujas subárvores forward e backward utilizadas
+durante seu processo de solução estão ilustradas na Figura 2.1b e 2.1c, respectivamente.
+Usualmente, o conjunto de cenários visitados na recursão backward a cada estado é chamado de
+“aberturas”.
+
+
+A subárvore forward pode ser definida por um subconjunto de cenários amostrados diretamente da
+árvore completa de cenários, ou por um conjunto de cenários escolhidos a partir da distribuição
+original da variável aleatória. O importante é que a subárvore forward represente a mesma
+distribuição de probabilidades associada à árvore original.
+
+
+A subárvore backward é dada pelo conjunto de cenários que serão utilizados nos problemas de
+programação linear do passo backward do algoritmo da PDDE para produzir cortes de Benders para a
+função de custo futuro (FCF) em cada estágio do horizonte de planejamento. De forma geral, para
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                              6/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+cada estágio de tempo são visitados os NSIM1 estados, e para cada estado são resolvidos NLEQ2
+problemas de despacho ótimo resultando em um corte de Benders médio por estado a ser incluído na
+FCF.
+
+                   t=0        t=T                      t=0        t=T                       t=0         t=T
+
+
+
+
+                                    (a)                                 (b)                                   (c)
+                         Figura 2.1: (a) árvore completa (b) subárvore forward (c) subárvore backward
+
+O processo de solução iterativa da PDDE compreende dois passos principais que são executadas ao
+longo de todo o horizonte de estudo:
+
+
+         • passo backward: realiza uma simulação recursiva cujo objetivo é produzir os cortes de
+         Benders, que correspondem a uma aproximação inferior da função de custo futuro para cada
+         estágio, a partir dos estados fornecidos pelo passo forward.
+
+
+         • passo forward: realiza uma simulação direta e resolve um conjunto de problemas de
+         programação linear para cada estágio de tempo. O objetivo deste passo é produzir alguns
+         caminhos de operação possíveis (estados de armazenamento), que cumprem todas as
+         restrições do problema de programação linear estocástica. O custo médio ao longo de todos os
+         caminhos da operação fornece o valor esperado do custo total de operação. O passo forward
+         fornece a convergência do algoritmo PDDE.
+
+
+Depois de calcular a política ótima de operação, são simulados 2.000 cenários sintéticos de afluências
+para estimar os índices de desempenho probabilístico do sistema, como risco de déficit, energia
+esperada não suprida, intercâmbios entre sistemas, entre outros.
+
+
+Do ponto de vista matemático, na prática é o problema de árvore completa que se está resolvendo,
+embora tendo sempre a preocupação de que este represente suficientemente bem o problema real
+dado pela distribuição de probabilidades da variável aleatória contínua multivariada. Desta forma,
+
+
+1
+    NSIM corresponde ao número de cenários da subárvore forward (estados) a cada período.
+2
+    NLEQ corresponde ao número de aberturas por período e estado.
+_____________________________________________________________________________________________________
+                                                                                                                    7/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+espera-se que, ao escolher outro conjunto de cenários para representar a árvore completa, o valor
+ótimo obtido para o novo problema não seja muito diferente daquele obtido com a árvore completa
+anterior. A diferença entre os valores ótimos obtidos é devido à variação amostral da representação
+da árvore completa de cenários. Quanto melhor a representação da árvore completa, menor será a
+variabilidade nos resultados.
+
+
+Para se obter resultados mais robustos, isto é, menos subjeitos à variação amostral, pode-se aplicar
+por exemplo técnicas, como a Sample Average Approximation (SAA) [9], que envolve a resolução do
+problema diversas vezes, com árvores backward diferentes, ou aumentar o número de cenários para
+representar a árvore completa (aumentar NLEQ). Porém, as duas opções podem tornar a solução do
+problema inviável computacionalmente. Outra opção é utilizar métodos de amostragem que
+possibilitem a representação adequada do processo estocástico de afluências com um número
+reduzido de cenários.
+
+
+Atualmente, a amostra de ruídos aleatórios utilizada pelo modelo PAR(p) para gerar os cenários de
+afluências é obtida através do método de Amostragem Seletiva, método que propicia maior robustez
+aos resultados obtidos pela PDDE com relação a variações nos cenários hidrológicos da subárvore
+backward, em relação a uma Amostragem Aleatória Simples.
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                              8/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+3 GERAÇÃO DE CENÁRIOS
+
+O modelo GEVAZP [10]é responsável pela geração de cenários sintéticos multivariados de energia e
+vazão mensais. Esse cenários são essenciais para o cálculo da política de operação ótima no problema
+otimização multi-estágio e multi-reservatório do SIN.
+
+
+Para desempenhar essa tarefa, o modelo GEVAZP adota em sua modelagem estocástica a família de
+modelos autorregressivos periódicos de ordem p, PAR(P) [6][11]. A escolha desse modelo é
+justificada pela sua capacidade de capturar o comportamento periódico da estrutura de autocorrelação
+observado comumente em séries de afluências mensais. O modelo PAR(p) pode ser descrito
+matematicamente pela equação 3.1:
+
+
+        ൬ t       ൰ = φm ቆ                ቇ + …+ φm  ቆ                  ቇ + at
+          Z -μm              Zt-1 -μm-1                  Zt-pm -μm-pm
+           σm          1       σm-1               pm        σm-pm                                         (3.1)
+
+
+Onde:
+Zt      é a série hidrológica sazonal de período T;
+N       é número de anos;
+T       é o índice de tempo, t = 1, 2, ..., sN; função do ano T (T = 1, 2, ..., N) e do período m (m = 1,
+        2, ..., s);
+s       é o número de períodos (s = 12 para séries mensais);
+μm      é a média sazonal do período s;
+σm      é o desvio padrão sazonal do período s;
+φm
+ i
+        é o i-ésimo coeficiente autorregressivo do período m;
+pm      é a ordem do operador de defasagem de período m;
+at      é a série de ruídos independentes com média zero e variância σ2m
+                                                                      a
+
+
+
+Usualmente, assume-se que os ruídos at na equação (3.1) possuem distribuição normal e são
+independentes e identicamente distribuídos. Se for constatada a não normalidade dos ruídos, pode-se
+aplicar a transformação Box-Cox [12]. No caso da modelagem de afluências feita pelo modelo
+GEVAZP, emprega-se a série histórica original sem transformação e, consequentemente, deve-se
+modelar ruídos que demonstram uma distribuição assimétrica, como a distribuição lognormal.
+
+
+A Figura 3.1 ilustra os passos necessários para geração de ruídos lognormais correlacionados
+espacialmente como executado pelo modelo GEVAZP, internalizado no programa NEWAVE.
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                              9/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+                    Figura 3.1: Processo de geração de ruídos como feito pelo modelo GEVAZP para a PDDE.
+
+Atualmente, a amostra de ruídos aleatórios utilizada pelo modelo PAR(p) é obtida através do método
+de Amostragem Seletiva [7] a partir de uma distribuição multivariada lognormal, onde cada
+componente da variável aleatória representa o ruído de um reservatório equivalente de energia
+considerado na configuração.
+
+
+A Amostragem Seletiva gera vetores de ruídos independentes que posteriormente passam a ser
+correlacionados espacialmente através da imposição da correlação observada nas vazões/ENAs
+históricas sobre os ruídos resultantes da agregação. Essa correlação imposta aos ruídos garante a
+multivariabilidade dos cenários sintéticos gerados de vazões e energias afluentes.                         Uma vez
+correlacionados espacialmente, os ruídos aleatórios ainda normais são transformados em ruídos log-
+normais com 3 parâmetros [13], com o objetivo de evitar a geração de valores negativos de afluência.
+A partir dessa etapa, os ruídos são usados nos processo de geração de cenários sintéticos
+multivariados de vazão e energia afluente de acordo com a equação (3.1). Este processo é repetido a
+cada período do horizonte de estudo.
+
+
+Os ruídos da amostra backward constituem a incerteza do problema de otimização estocástica de
+árvore completa a ser resolvido. O conjunto de ruídos backward de cada período é o mesmo para
+todos os estados deste período, porém os cenários de vazão ou energia afluente são diferentes, dado
+que o passado de cada estado é diferente.
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             10/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+                                     Figura 3.2: Construção da subárvore backward
+
+
+3.1 Amostragem Seletiva
+
+A Amostragem Seletiva consiste em aplicar técnicas de agregação para gerar as amostras de ruídos
+aleatórios multivariados com o intuito de aumentar a representatividade da amostra.
+
+
+Inicialmente gera-se uma amostra de 100 mil vetores de ruídos aleatórios independentes ~N(0,1),
+onde cada componente do vetor de ruídos independentes corresponde a uma UHE ou REE. A esta
+amostra inicial dá-se o nome de amostra original. Depois de gerados, os vetores de ruídos
+independentes são agregados através da técnica de agregação K-means [14], que servem para
+diminuir a dimensionalidade dos dados enquanto se preserva a exploração do espaço amostral. Após a
+conclusão do processo de agregação é selecionado um representante para cada grupo, e o conjunto
+destes representantes irá formar a amostra de ruídos backward e forward.
+
+
+A aplicação das técnicas de agregação na amostra original, cujo algoritmo envolve a substituição de
+agrupamentos de objetos da amostra original por um único representante, resulta na obtenção de
+amostras agregadas com menor variabilidade do que a correspondente amostra original (a
+variabilidade interna nos agrupamentos é perdida). Para os estudos de PMO realizados à época da
+validação da Amostragem Seletiva, a forma de atenuar a redução do desvio padrão na amostra
+agregada foi selecionar como representante dos grupos o objeto mais próximo do centroide ao invés
+do próprio centroide. No entanto para os estudos de PDE, que representavam o sistema interligado
+nacional com um número maior de REEs, a degradação do desvio padrão na amostra agregada voltou
+a crescer. A solução foi ajustar um fator de correção para o desvio padrão da amostra original, com
+base na degradação observada e aplicá-lo à amostra original antes do processo de agregação-. Na
+Figura 3.3 apresenta o desvio padrão da amostra de ruídos obtidos com a Amostragem Seletiva com e
+sem a adoção da compensação do desvio padrão.
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             11/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+Mais detalhes sobre a Amostragem Seletiva e fator de compensação do desvio padrão podem ser
+consultados na Nota Técnica 42 do projeto NEWAVE, que se encontra no Anexo A deste relatório.
+
+
+
+
+                               (a)                                                    (b)
+
+    Figura 3.3: Desvio Padrão dos ruídos após o processo de agregação (a) com e (b) sem a compensação do desvio padrão
+
+
+3.2 Seleção do representante
+
+Durante os estudos que resultaram no Relatório Técnico “Análise da inflexão do custo marginal de
+operação no modelo NEWAVE entre os quarto e quinto estágios temporais ao se adotar a
+representação de 12 REEs para Sistema Interligado Nacional” [1], foi observada a ocorrência de
+conjuntos de ruídos com média elevada em alguma das 12 dimensões do vetor de ruídos. A fim de
+reduzir a chance de ocorrência deste comportamento, foi avaliada alternativa de seleção para o
+representante do grupo no processo de agregação. Ao invés de utilizar o objeto mais próximo do
+centroide, foi utilizado o próprio centroide. A Figura 3.4 ilustra a escolha dos representantes.
+
+                                               4
+
+
+                                               3
+
+
+                                               2
+
+
+                                               1                                                amostra original
+                                                                                                centroide
+                                               0                                                mais próximo
+                              -3     -2   -1        0   1   2    3     4    5     6         7
+
+                                               -1
+
+
+                                               -2
+
+
+                                               -3
+
+
+
+                                     Figura 3.4: Exemplo ilustrativo da escolha do representante
+
+Ao considerar o centroide, a média dos vetores de ruídos tende a zero, porém o desvio padrão fica
+mais degradado (menor do que 1). Todavia, dado que o fator de compensação do desvio padrão é
+calculado sob medida para o processo de agregação, este aumento da degradação resulta em um
+fator de compensação maior, o que ao final do processo leva a um desvio padrão tendendo a 1,
+conforme desejado.
+_____________________________________________________________________________________________________
+                                                                                                                   12/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+Os resultados obtidos com a adoção do centroide ao invés do objeto mais próximo como
+representante no processo de agregação da Amostragem Seletiva, mostraram uma maior robustez
+nos resultados decorrentes do planejamento da operação (geração térmica, geração hidráulica, custo
+marginal de operação, entre outros), além de gerar conjuntos de vetores de ruídos com menor
+dispersão na média e desvio padrão, conforme será mostrado na seção 4.
+
+
+3.3 Representatividade da árvore de cenários
+
+Espera-se que quanto maior o nível de detalhamento da incerteza das afluências, isto é maior número
+de aberturas para a árvore completa de cenários, mais próximo do ótimo do problema contínuo
+estaremos. Isto pode ser verificado com o aumento do limite inferior do custo de operação (ZINF).
+
+
+Esta suposição é válida quando os cenários são gerados com amostragem aleatória simples (AAS),
+pois quanto maior a amostra mais chances de serem sorteados cenários extremos. Porém, quando se
+aplica a Amostragem Seletiva não necessariamente isto ocorrerá, dado que a população, representada
+pela amostra original, não se altera durante a formação dos grupos. Isto quer dizer, mesmo
+aumentando o número de grupos, o cenário mais extremo estará limitado ao cenário mais extremo da
+amostra original.
+
+
+Nas Figuras 3.5 e 3.6 são apresentados exemplos ilustrativos da geração de cenários, considerando
+AAS e AS, respectivamente. Na coluna da direita é mostrada a geração de 5 cenários para um caso
+com duas dimensões e na coluna da esquerda, 6 cenários.
+
+
+
+
+                                           (a)                                    (b)
+
+
+                              Figura 3.5: Exemplo ilustrativo AAS (a) 5 cenários e (b) 6 cenários
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             13/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+Passo 1                           Passo 2                          Passo 1                            Passo 2
+
+
+
+
+                              Passo 3                                                          Passo 3
+
+
+                                (a)                                                              (b)
+
+                                 Figura 3.6: Exemplo ilustrativo AS (a) 5 cenários e (b) 6 cenários
+
+Neste exemplo, a AS é resumida em 3 passos: no Passo 1 é gerada a amostra original, no Passo 2 são
+formados os grupos e, finalmente, no Passo 3 um representante é selecionado para cada grupo. Na
+Figura 3.6, a amostra original é representada pelos pontos pretos, o centroide de cada grupo é
+representado por um “x” vermelho e o objeto mais próximo do centroide, por um ponto verde.
+Observe que o cenário mais extremo do caso com 6 grupos é menor do que aquele representado no
+caso com 5 grupos, no caso cujo representante do grupo é o objeto mais próximo, o que pode levar a
+um custo esperado de operação mais baixo. Na solução do problema de árvore completa, este
+comportamento não é esperado quando se utiliza o centroide como representante do grupo. À medida
+que se aumenta o número de grupos, o cenário mais extremo obtido com a representação do
+centroide tende ao cenário mais extremo da amostra original. Já com a representação pelo objeto
+mais próximo, este comportamento pode ser oscilatório.
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                                14/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+4 RESULTADOS COM APLICAÇÃO DO CENTROIDE
+
+Os resultados apresentados nesta seção foram obtidos com um caso do Programa Mensal de Operação
+(PMO Setembro 2017), considerando 123 usinas hidroelétricas e 82 usinas termoelétricas, com
+aproximadamente 80GW e 19GW de capacidade instalada, respectivamente. Foi considerado um
+horizonte de planejamento de médio prazo de 5 anos, compreendendo os anos de 2017 a 2021,
+discretizado em estágios mensais. O sistema é dividido em 12 reservatórios equivalentes de energia:
+Sudeste, Madeira, Teles Pires, Paraná, Itaipu, Paranapanema, Sul, Iguaçu, Nordeste, Norte, Belo
+Monte e Manaus, conforme ilustrado na Figura 4.1.
+
+
+                                                                                 NE
+                                       N
+                                                AM
+                                           N
+                                                                 SE
+                                           BM
+                                                       MAD                 TP
+
+                                                             SE
+                                                        PR                 PRP
+
+                                                                 IT
+
+
+
+
+                                                             S
+
+                                                                 S
+                                                                      IG
+
+
+
+
+                                     Figura 4.1 – Topologias do SIN com 12 REEs.
+
+As Figuras 4.2 (a) a (d) apresentam os resultados obtidos após o processo de agregação de uma
+amostra original de 100.000 vetores de ruídos com 12 dimensões (número atual de REEs), que foram
+agregados para 20 vetores (número de aberturas backward) com 12 dimensões, ao longo de 60
+períodos. As figuras à esquerda são referentes aos resultados obtidos quando o representante de cada
+grupo é o objeto mais próximo (metodologia atualmente utilizada). À direita, apresentam-se os
+resultados obtidos quando o representante de cada grupo é o próprio centroide do grupo. Para facilitar
+a visualização, escolheram-se apenas cinco dos doze REEs. As linhas em vermelho mostram o
+intervalo de confiança de 95%.
+
+
+Dado que ambos os casos foram obtidos após o processo de agregação de uma amostra original com
+uma distribuição normal padrão, tem-se como resultado ideal que a média de cada vetor de ruídos
+seja igual a zero, e possua um desvio padrão igual a um. É possível observar que as amostras
+resultantes do processo de agregação com o centroide apresentam resultados bem superiores quando
+comparado com a amostra do mais próximo, tanto em média quanto em desvio padrão.
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             15/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+                         (a)                                                  (b)
+           Figura 4.2: Análise da dispersão da média dos vetores de ruídos backward (a) mais próximo (b) centroide
+
+
+
+
+                         (c)                                                 (d)
+       Figura 4.2: Análise da dispersão do desvio padrão dos vetores de ruídos backward (c) mais próximo (d) centroide
+
+
+
+
+Os resultados a seguir foram obtidos a partir da simulação da operação do sistema elétrico interligado
+com 2.000 cenários de afluências sintéticas aos REEs ao longo do período de planejamento,
+considerando-se a política de operação calculada por PDDE. No algoritmo de PDDE foram considerados
+200 cenários para a simulação forward e 20 cenários para a recursão backward. O mecanismo de
+aversão a risco adotado foi o CvaR (α=50, λ=40).
+
+
+A próxima análise a ser feita, visa avaliar a reprodução das estatísticas históricas de ENA nos cenários
+sintéticos na amostra backward, que possui um total de 4.000 cenários (200 séries forward x 20
+aberturas backward). Dado que a geração de cenários sintéticos é feita condicionada ao passado
+recente, é de se esperar que os primeiros períodos possam apresentar médias e desvios padrão
+diferentes do histórico. Porém, a medida que se avança no horizonte, esses valores devem passar a
+reproduzir o histórico. Comparando-se as Figuras 4.3 (mais próximo) com a Figura 4.4 (centroide) é
+possível observar uma ligeira vantagem das médias dos cenários resultantes do centroide,
+principalmente nos REEs 4, 6, 7 e 8.
+
+
+Os resultados de desvio padrão são apresentados nas Figuras 4.5 (mais próximo) e 4.6 (centroide),
+onde nota-se uma ampla superioridade dos resultados obtidos com centroide. Pode-se observar que
+as estatísticas resultantes do centroide são mais aderentes ao histórico, quase sempre estando
+sobrepostas as duas curvas, enquanto as estatísticas resultantes da amostra original por algumas
+_____________________________________________________________________________________________________
+                                                                                                                     16/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+vezes apresentam diferenças com relação ao histórico. A diferença observada nos primeiros períodos,
+deve-se ao condicionamento ao passado recente dos cenários gerados.
+
+
+
+
+                   Figura 4.3: ENA média histórica x ENA média obtida na amostra backward (mais próximo)
+
+
+
+
+                         Figura 4.4: ENA média histórica x ENA média na amostra backward (centroide)
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             17/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+                   Figura 4.5: Desvio padrão histórico x desvio padrão da amostra backward (mais próximo)
+
+
+
+
+                     Figura 4.6: Desvio padrão histórico x desvio padrão da amostra backward (centroide)
+
+A seguir apresentam-se na Figura 4.7 (a) e (b) as distribuições de frequência acumuladas dos
+cenários de ENA backward para o REE Paraná, entre janeiro e abril de 2018 para o PMO de setembro
+de 2017. À esquerda, apresentam-se os resultados originais, e à direita os resultados com centroide.
+Optou-se por mostrar esse intervalo de tempo, pois conforme o relatório técnico ”Análise do
+Comportamento do Custo Marginal de Operação do Modelo Newave ao se Passar de 9 para 12
+Reservatórios Equivalentes de Energia” [15], em janeiro de 2018 do referido PMO havia uma inflexão
+da curva de evolução do CMO. As curvas em azul representam as distribuições condicionadas teóricas
+em cada período, obtidas através de 2.000 cenários da simulação final, enquanto em vermelho
+_____________________________________________________________________________________________________
+                                                                                                             18/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+mostram-se as distribuições de cenários backward. É possível observar um grande descolamento das
+distribuições de frequência em janeiro, devido a uma concentração de cenários mais úmidos que o
+esperado, o que não ocorre na amostra backward obtida com o centroide.
+
+
+
+
+             Figura 4.7: Função de distribuição acumulada ENA backward – Paraná (a) mais próximo (b) centroide
+
+Passada a análise dos resultados da geração de cenários sintéticos de ENA, apresenta-se a seguir uma
+avaliação da variabilidade dos resultados obtidos com o modelo NEWAVE, variando-se a semente
+inicial da amostra backward, e considerando reamostragem plena dos cenários da forward com passo
+3. Foram realizadas onze rodadas (onze sementes diferentes) do PMO de setembro de 2017
+utilizando-se o objeto mais próximo como o representante do processo de agregação dos ruídos e
+outras onze rodadas com o centroide sendo o representante. A Figura 4.8 traz os resultados de ZINF
+com o mais próximo (barras em azul) e centroide (barras em vermelho) e suas respectivas médias
+representadas pela linha preta. Os mesmos resultados são apresentados na forma de boxplots na
+Figura 4.9.
+
+
+É possível observar que há uma considerável diminuição da variabilidade dos resultados entre as
+diferentes sementes backward. Para uma dada árvore de cenários (semente backward fixa), não há
+um comportamento esperado para o valor de ZINF entre os casos centroide e mais próximo.
+Adicionalmente, quando se considera reamostragem de cenários forward, espera-se que as médias
+dos ZINFs entre várias sementes sejam próximas, pois uma cobertura mais exaustiva da árvore
+completa é obtida, seja ela adotando-se como representante no processo de agregação da
+Amostagem Seletiva, o centroide ou o representante mais próximo.
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                                 19/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+                        Figura 4.8: ZINF do PMO de setembro de 2017 variando-se a semente backward
+                                 representantes mais próximo (azul) e centroide (vermelho)
+
+
+
+
+                  Figura 4.9: Boxplot do ZINF do PMO de setembro de 2017 variando-se a semente backward
+
+As Figuras 4.10 e 4.11 trazem os resultados do valor esperado do custo total de operação (COPER)
+para os casos citados anteriormente. Novamente é possível observar uma considerável redução da
+variabilidade dos resultados quando utilizado o centroide como objeto representante no processo de
+agregação.
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             20/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+                      Figura 4.10: COPER do PMO de setembro de 2017 variando-se a semente backward,
+                                  representantes mais próximo (azul) e centroide (vermelho)
+
+
+
+
+                Figura 4.11: Boxplot do COPER do PMO de setembro de 2017 variando-se a semente backward
+
+A Figura 4.12 apresenta a evolução do CMO para o subsistema Sudeste nos 11 casos, com o mais
+próximo (à esquerda) e com centroide (à direita). Novamente é possível observar uma redução da
+variabilidade dos resultados obtidos com o centroide. Além disso, verifica-se que a inflexão da
+evolução do CMO que ocorre na semente 0 (utilizada em casos oficiais, destacada na Figura 4.12 (a))
+não é observada com o centroide.
+
+
+
+
+                               (a)                                                     (b)
+       Figura 4.12: Evolução do CMO do subsistema SE variando-se a semente backward (a) mais próximo (b) centroide
+
+_____________________________________________________________________________________________________
+                                                                                                                 21/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+Por último, a Figura 4.13 traz o custo térmico (eixo x) de cada caso com relação à energia não-
+suprida - ENS (eixo y), para cada um dos 22 casos. Nota-se uma redução na variabilidade dos
+resultados tanto da ENS quanto do custo de térmica.
+
+
+
+
+                       Figura 4.13: Evolução do CMO do subsistema SE variando-se a semente backward
+
+
+
+
+A mesma estabilidade verificada nos resultados acima também pode ser obervada em variáveis
+associadas diretamente à operação do sistema, quando se considera o centroide como representante
+do grupo. Nas Figuras 4.14 a 4.16 são apresentadas as evoluções temporais da geração hidráulica
+total média do SIN e de cada submercado, calculada como o somatório da geração de todos os REEs
+que compõe o mercado, da geração térmica média e da energia armazenada final média.
+
+
+Para o mercado Norte a redução da variabilidade nos resultados e geração hidráulica total, e
+consequentemente na energia armazenada final, não é tão evidente quanto para os demais mercados
+e para o SIN. Com relação à geração térmica, a redução na variabilidade pode ser facilmente
+verificada para todos os mercados e o SIN.
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             22/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+              Figura 4.14: Evolução do GHTOT (MWmês) do SIN, SE, S, NE e N variando-se a semente backward
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             23/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+              Figura 4.15: Evolução do GTERM (MWmês) do SIN, SE, S, NE e N variando-se a semente backward
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             24/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+                  Figura 4.16: Evolução do EARMf (%) do SIN, SE, S, NE e N variando-se a semente backward
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             25/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+5 CONCLUSÕES
+
+Durante o processo de validação da mudança de configuração do SIN, de 9 para 12 reservatórios
+equivalentes de energia (REEs), foram rodados os casos de PMO do ano de 2017 com a nova
+representação dos REEs. A partir destas análises, observou-se um comportamento de redução do
+custo marginal de operação obtido nas simulações finais na configuração com maior número de REEs.
+Foram elencadas três possíveis causas para o comportamento observado no custo marginal de
+operação (CMO), dentre elas, a variação amostral na representação da árvore de cenários de
+afluências no algoritmo da PDDE (recursão backward).
+
+
+Durante o ano de 2018 foi introduzida no modelo NEWAVE a reamostragem de cenários forward, que
+reduziu a variabilidade dos resultados decorrentes do planejamento da operação em relação a
+diferentes sementes para a geração de cenários forward. No entanto, foram realizadas sensibilidades
+com relação à árvore de cenários utilizada na solução do problema de planejamento da operação
+(árvore completa) e, observou-se que ainda havia certa variabilidade dos resultados em relação a
+diferentes sementes para a geração de cenários backward,o que, em princípio, não é contornado
+apenas com a reamostragem de cenários da simulação forward.
+
+
+O CEPEL investigou então aprimoramentos no processo de geração de cenários de afluências de forma
+a minimizar a ocorrência de cenários extremamente atípicos e a variabilidade amostral. O presente
+relatório apresentou uma alternativa para a escolha do representante do processo de agregação do
+processo de Amostragem Seletiva (AS), utilizando-se o centróide de cada grupo, o que resultou em
+uma redução na variabilidade amostral observada nos resultados do planejamento da operação de
+médio e longo prazos em relação a variações da semente para a geração de cenários backward. Os
+resultados apresentados neste relatório basearam-se no PMO de Setembro de 2017, mas foram
+comprovados em diferentes estudos para o planejamento da expansão e operação, apresentados
+durante as reuniões do GT-Metodologia/CPAMP ocorridas durante o ano de 2018 pelas Instituições
+participantes.
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             26/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+6 REFERÊNCIAS
+
+[1]    D.D.J. Penna, M.E.P. Maceira, J.M. Damázio, F.Treistman, H.S. Araújo, A.C.G. Melo, “Análise da
+inflexão do custo marginal de operação no modelo NEWAVE entre os quarto e quinto estágios
+temporais ao se adotar a representação de 12 REEs para Sistema Interligado Nacional”, Relatório
+Técnico CEPEL no 10783/2018, Setembro de 2018.
+
+[2]    M.E.P. Maceira, D.D.J. Penna, A.L. Diniz, R.J. Pinto, A.C.G. Melo, C.V. Vasconcellos, C.B. Cruz,
+“Twenty years of application of stochastic dual dynamic Programming in official and agent studies in
+Brazil – Main features and improvements on theNEWAVE model”, 20th PSCC – Power Systems
+Computation conference, Dublin, Ireland, 2018.
+
+[3]    CEPEL, Centro de Pesquisas de Energia Elétrica - Manual do Usuário do modelo NEWAVE,
+versão 22, Dezembro de 2015.
+
+[4]  M.V.F. Pereira, L.M.V.G. Pinto, “Multi-stage stochastic optimization applied to energy planning”,
+Mathematical Programming, v. 52, n.1-3, pp. 359-375, Maio 1991
+
+[5]    M.E.P. Maceira, “Programação Dinâmica Dual Estocástica Aplicada ao Planejamento da
+Operação Energética de Sistemas Hidrotérmicos com Representação do Processo Estocástico de
+Afluências por Modelos Auto-Regressivos Periódicos”, Relatório Técnico Cepel, Junho 1993.
+
+[6]   M. E. P. Maceira, C. V. Bezerra, “Stochastic Streamflow model for Hydroelectric Systems”, In:
+Proceedings of 5th International Conference on Probabilistic Methods Applied to Power Systems, pp.
+305-310, Vancouver, Canada, Set. 1997.
+
+[7]   D. D. J. Penna, M. E. P. Maceira, J.M. Damázio, “Selective sampling applied to long-term
+hydrothermal generation planning”, 17th PSCC - Power Systems Computation Conferfence,
+Stockholm, Sweden, Ago. 2011.
+
+[8]   M.E.P. Maceira, L.A. Terry, F.S. Costa, J.M. Damazio, A.C.G. Melo, “Chain of Optimization
+Models for Setting the Energy Dispatch and Spot Price in the Brazilian System”, 14th PSCC – Power
+Systems Computation conference, Sevilla, Spain, 2002.
+
+[9]    A. Kleywegt, A. Shapiro, T. Homem-de-Mello, “The sample average approximation method for
+stochastic discrete optimization”, Siam Journal on Optimizaton, v.12, pp. 479-502, 2001.
+
+[10] D.D.J. Penna, M.E.P. Maceira, J.M.Damázio, F. Treistman, H.S. Araújo, Manual de Referência
+do modelo GEVAZP, Relatório Técnico CEPEL – no 27155/2017, 2017.
+
+[11] J.D. Salas, J.W. Delleur, V. Yevjevich, W.L. Lane, “Applied Modeling of Hydrologic Time Series”,
+Water Resources Publications, 1980.
+
+[12] G.E.P.Box, D.R.Cox, "An Analysis of Transformations", Journal of The Royal Statistical Society,
+A127, pp. 211-252, 1964.
+
+[13] R. J. Charbeneau, "Comparison of the two and three parameter lognormal distributions used in
+streamflow synthesis", Water Resources Research, Vol. 14, No. 1, pp. 149-150, 1978.
+
+[14] J.Hartigan, M. Wong, “A K-Means Clustering Algorithm”, Applied Statistics, vol.28, no. 1, pp.
+100-108, 1979.
+
+
+_____________________________________________________________________________________________________
+                                                                                                             27/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+[15] D.D.J. Penna, M.E.P. Maceira, A. Diniz, A.C.G. Melo, F. Treistman, “Análise do Comportamento
+do Custo Marginal de Operação do Modelo Newave ao se Passar de 9 para 12 Reservatórios
+Equivalentes de Energia”, Relatório Técnico CEPEL no 27538/2017, Dezembro de 2017.
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             28/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+7 ANEXO – NOTA TÉCNICA 42 DO PROJETO NEWAVE
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             29/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             30/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             31/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             32/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             33/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             34/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             35/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             36/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             37/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             38/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             39/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             40/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             41/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             42/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             43/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             44/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             45/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             46/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             47/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             48/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             49/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             50/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             51/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             52/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             53/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             54/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             55/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             56/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             57/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             58/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             59/60
+F-CO-005 REV. 2, 04/03/2013
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 13612 / 2018
+____________________________________________________________________________________________________________________
+
+
+
+
+_____________________________________________________________________________________________________
+                                                                                                             60/60
+F-CO-005 REV. 2, 04/03/2013
+

@@ -1,0 +1,16 @@
+Fonte: https://see.cepel.br/manual/libs/latest/incerteza_hidrologica/correlacao-espacial.html (baixado em 26/10/2026)
+
+itemprop="articleBody">
+Correlação Espacial¶
+Uma das principais vantagens do SIN reside na complementaridade hidrológica entre as regiões hidrográficas que o compõem. Assim, essa característica deve ser adequadamente incorporada no modelo de geração de cenários sintéticos, para que as séries sejam geradas de forma multivariada, levando em conta as correlações espaciais entre as diversas UHEs ou EERs. Inicialmente, o modelo PAR(p) gera séries univariadas. No entanto, um resíduo espacialmente não correlacionado \(w_t\), pode ser transformado para considerar a correlação espacial, resultando em \(b_t\), da seguinte forma:
+(28)¶\[b_t = \text{D}w_t\]
+onde D é a matriz quadrada de dimensão igual ao número de HPPs (ou EERs) que correlaciona espacialmente os resíduos, geralmente chamada de matriz de carga. A matriz de carga D, é uma transformação obtida a partir da matriz de correlação espacial U. Na matriz U o elemento \(u_{ij}\) é a covariância espacial lag zero entre os resíduos das usinas \(i\) e \(j\).
+Para obter a matriz U pode-se utilizar, por exemplo, uma técnica conhecida como método de Jacobi que realiza uma decomposição espectral, em que U (anual ou mensal) é decomposta em uma matriz diagonal contendo seus autovalores (A) e uma matriz simétrica de autovetores (V), conforme (29) and (30):
+(29)¶\[\]
+(30)¶\[\text{D = A} \sqrt{\text{V}} \text{A'}\]
+        © Copyright 2026, Cepel - Centro de Pesquisas de Energia Elétrica
+.
+        Última actualização em 30 de setembro de 2026.
+    Built with Sphinx using a
+    theme
+    provided by Read the Docs. 

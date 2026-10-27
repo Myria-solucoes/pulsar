@@ -1,0 +1,21 @@
+Fonte: https://see.cepel.br/manual/libs/latest/geracao_cenarios/amostragem-seletiva.html (baixado em 26/10/2026)
+
+itemprop="articleBody">
+Amostragem Seletiva (AS)¶
+Atenção
+Enquanto esta página não está pronta, você pode consultar o material sobre Amostragem Seletiva nos relatórios técnicos 1, 2 e artigos 3, 4 do CEPEL sobre essa funcionalidade.
+Referências
+1
+D. D. J. Penna, F. Treistman, and M. E. P. Maceira. Avaliação de alternativas para escolha do representante no processo de agregação da amostagem seletiva. Relatório Técnico 13612-2018, CEPEL - Centro de Pesquisas de Energia Elétrica, 2018.
+2
+D. D. J. Penna, M. E. P. Maceira, and J. M. Damázio. Definição da árvore de cenários de afluências para o planejamento da operação energética de médio prazo. Relatório Técnico 46994/2009, CEPEL - Centro de Pesquisas de Energia Elétrica, 2009.
+3
+M. E. P. Maceira, D. D. J. Penna, A. L. Diniz, R. J Pinto, A. C. G. Melo, C. V Vasconcellos, and C. B. Cruz. Twenty years of application of stochastic dual dynamic programming in official and agent studies in brazil - main features and improvements on the newave model. In 20th PSCC - Power Systems Computation Conference. Dublin, Ireland, June 2018.
+4
+D. D. J. Penna, M. E. P. Maceira, and J. M. Damázio. Selective sampling applied to long-term hydrothermal generation planning. In 17th Power Systems Computaion Conference. 2011.
+        © Copyright 2026, Cepel - Centro de Pesquisas de Energia Elétrica
+.
+        Última actualização em 30 de setembro de 2026.
+    Built with Sphinx using a
+    theme
+    provided by Read the Docs. 

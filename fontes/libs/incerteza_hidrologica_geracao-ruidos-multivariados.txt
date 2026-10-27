@@ -1,0 +1,15 @@
+Fonte: https://see.cepel.br/manual/libs/latest/incerteza_hidrologica/geracao-ruidos-multivariados.html (baixado em 26/10/2026)
+
+itemprop="articleBody">
+Geração de ruídos multivariados¶
+Os processos de geração de ruídos já foram explorados em diversas seções deste manual, como a Correlação Espacial e a Distribuição Lognormal 3 parâmetros. No entanto, aqui iremos fazer um resumo da geração de resíduos multivariados de forma a deixar este processo o mais claro possível:
+A geração de ruídos inicia com a geração de ruídos normais espacialmente não correlacionados, aqui chamados de \(w_t\).
+Os resíduos \(w_t\) são então multiplicados pela matriz de carga D, passando a serem correlacionados espacialmente e chamados de \(b_t\).
+A partir disso, realiza-se a estimação da distribuição lognormal a 3 parâmetros, obtendo-se \(\xi_t\) e o ruído multivariado final dado por (52).
+(52)¶\[a_t = e^{\xi_t} + \Delta_t\]
+        © Copyright 2026, Cepel - Centro de Pesquisas de Energia Elétrica
+.
+        Última actualização em 30 de setembro de 2026.
+    Built with Sphinx using a
+    theme
+    provided by Read the Docs. 

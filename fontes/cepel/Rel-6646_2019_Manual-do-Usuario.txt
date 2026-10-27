@@ -1,0 +1,1983 @@
+      PROJETO GEVAZP
+
+ MODELO DE GERAÇÃO DE SÉRIES
+SINTÉTICAS DE ENERGIAS E VAZÕES
+
+
+      MANUAL DO USUÁRIO
+
+            Versão 8
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+
+
+    1 INTRODUÇÃO ................................................................................................................................4
+
+    2 ASPECTOS PRINCIPAIS DO MODELO GEVAZP ...................................................................4
+
+    2.1 FLUXOGRAMA DO MODELO GEVAZP .........................................................................................4
+
+    3 ESPECIFICAÇÃO DOS DADOS DE ENTRADA .......................................................................5
+
+    3.1 CLASSES DE DADOS ........................................................................................................................5
+    3.2 LISTA DE ARQUIVOS .......................................................................................................................6
+    3.3 DADOS GERAIS ...............................................................................................................................6
+    3.4 CONFIGURAÇÃO DAS USINAS/SUBSISTEMAS ...............................................................................10
+    3.4.1 CONFIGURAÇÃO DE USINAS PARA GERAÇÃO DE SÉRIES DE VAZÕES ..........................................10
+    3.5 ARQUIVOS DE BACIAS HIDROGRÁFICAS .....................................................................................12
+    3.6 ARQUIVOS DE VAZÕES NATURAIS AFLUENTES HISTÓRICAS......................................................12
+    3.7 ARQUIVO COM O ANO INICIAL E FINAL DO HISTÓRICO DE VAZÕES..........................................12
+    3.8 ARQUIVO COM A TENDÊNCIA HIDROLÓGICA .............................................................................12
+    3.9 ARQUIVO DE DADOS GERAIS PARA ESTUDO DE SIMILARIDADE E SEVERIDADE .......................13
+    3.10 ARQUIVO DE REGRAS DE CÁLCULO PARA POSTOS ARTIFICIAIS (REGRAS.DAT) ....................13
+    3.11 ARQUIVO DE LICENÇA ...............................................................................................................15
+    3.12 ARQUIVO DE HISTÓRICO DO ÍNDICE ONI (ONI.DAT) ...............................................................15
+    3.13 ARQUIVO DE PREVISÕES PROBABILÍSTICAS DO ÍNDICE ONI (ONIPREV.DAT) ........................16
+    3.14 ARQUIVO DE INFORMAÇÕES REFERENTES AO MS-PAR(P) (MSPAR.DAT) .............................17
+
+    4 GERAÇÃO DE CENÁRIOS PARA O PROGRAMA DECOMP .............................................18
+
+    4.1 ARQUIVO DO CASO .......................................................................................................................18
+    4.2 LISTA DE ARQUIVOS .....................................................................................................................18
+    4.3 ARQUIVO DE DADOS GERAIS DO GEVAZP ................................................................................18
+    4.4 LISTA DE ARQUIVOS .....................................................................................................................18
+    4.5 ARQUIVO DE DADOS GERAIS DO DECOMP ...............................................................................18
+    4.6 ARQUIVO DE CADASTRO DE USINAS HIDRÁULICAS ....................................................................22
+    4.7 ARQUIVO DE VAZÕES PREVISTAS ................................................................................................22
+    4.8 ARQUIVO DE VAZÕES SEMANAIS OBSERVADAS PARA O MÊS ANTERIOR AO INÍCIO DO ESTUDO
+        23
+    4.9 ARQUIVO DE HISTÓRICO DE VAZÃO ...........................................................................................24
+    4.10 ARQUIVO DE POSTOS .................................................................................................................24
+    4.11 ARQUIVO DE MODIFICAÇÕES ....................................................................................................24
+    4.12 ARQUIVO DE ESTUDOS PROSPECTIVOS .....................................................................................25
+
+    5 ARQUIVOS DE SAÍDA ................................................................................................................27
+
+    5.1 RELATÓRIO DE ACOMPANHAMENTO DO PROGRAMA ................................................................27
+    5.2 ARQUIVOS DE DADOS PARA INTERFACE GRÁFICA .....................................................................28
+    5.3 ARQUIVO COM AS SÉRIES DE VAZÕES GERADAS ........................................................................28
+    5.3.1 ARQUIVO DE SÉRIES SINTÉTICAS DE VAZÕES TOTAIS .................................................................28
+    5.3.2 ARQUIVO DE SÉRIES SINTÉTICAS DE VAZÕES INCREMENTAIS ....................................................30
+    5.3.3 ARQUIVOS DE SÉRIES SINTÉTICAS DE VAZÕES FORMATADOS ....................................................30
+    5.3.4 ARQUIVO DE VAZÕES PARA UTILIZAÇÃO DO PROGRAMA DECOMP .........................................30
+
+    F-CO-005 REV. 2, 04/03/2013                                                                                                             2/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+
+
+    5.4 ARQUIVO DAS PROBABILIDADES.................................................................................................31
+    5.5 ARQUIVO DE TESTES ...................................................................................................................32
+
+    6 MENSAGENS DE ERRO .............................................................................................................32
+
+    7 CAPACIDADE DO PROGRAMA ...............................................................................................32
+
+    8 REFERÊNCIAS .............................................................................................................................33
+
+    9 ALTERAÇÕES ..............................................................................................................................33
+
+    3. ANEXO A - SISTEMA COMPUTACIONAL GEVAZP ..........................................................42
+
+    A.1 - INSTALAÇÃO .................................................................................................................................42
+    A.2 - ARQUIVOS UTILIZADOS ...............................................................................................................42
+    A.3 - INSTALAÇÃO DA LICENÇA DO PROGRAMA GEVAZP ................................................................43
+    A.4 - ATENDIMENTO AO USUÁRIO .......................................................................................................43
+
+    ANEXO B – VAZÕES PARA OPERAÇÃO E CÁLCULO DE ENA .............................................44
+
+
+
+
+    F-CO-005 REV. 2, 04/03/2013                                                                                                                3/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+
+    1        Introdução
+    Este manual descreve a utilização do Modelo de Geração de Séries Sintéticas de Vazões e
+    Energias – GEVAZP [1].
+
+    2        Aspectos principais do modelo GEVAZP
+    2.1      Fluxograma do Modelo GEVAZP
+    A Figura 1 abaixo apresenta o fluxograma do modelo GEVAZP.
+
+
+
+           Leitura dos dados gerais
+
+
+
+         Leitura da configuração das
+                    usinas
+
+
+
+         Classificação das usinas em
+            satélites ou principais
+
+
+
+        Definição da ordem do modelo
+                    PAR(P)
+
+
+                                                (*)
+     Geração das séries sintéticas de
+                                                      Agregação das séries sintéticas
+          vazões incrementais
+
+
+
+    Totalização das vazões sintéticas
+                 geradas
+
+
+
+          Testes das séries sintéticas                                       (*) Caso seja
+                                                                            escolhida opção
+                   geradas                                                  de geração com
+                                                                               agregação
+
+
+
+                                  Figura 1- Fluxograma do modelo GEVAZP
+
+
+
+
+    F-CO-005 REV. 2, 04/03/2013                                                               4/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+
+    3          Especificação dos dados de entrada
+    O nome do arquivo, que contém a lista de arquivos utilizados pelo programa e seus relatórios
+    gerados, é fixo e igual a CASO.DAT. Este arquivo contém um registro apenas, onde deve
+    constar o nome do arquivo que contém lista de arquivos utilizados no GEVAZP.
+    Os dados de entrada para o Modelo GEVAZP devem ser informados em formato específico,
+    apresentado a seguir.
+    3.1        Classes de dados
+    Os dados de entrada se dividem nas seguintes classes:
+           •    dados gerais
+           •    configuração das usinas para geração das séries sintéticas
+           •    bacias hidrográficas
+           •    vazões naturais afluentes históricas
+           •    anos inicial e final do histórico de vazões/energias naturais afluentes
+           •    vazões/energias mensais para adoção da tendência hidrológica
+           •    regras para cálculo de postos artificiais
+           •    arquivo de dados gerais para estudo de similaridade e severidade (funcionalidade
+                não operacional nesta versão)
+           •    arquivos de dados utilizados para gerar os cenários hidrológicos para o programa
+                DECOMP (rvx, dadger.xxx, hidr.dat, prevs.xxx e modif.dat)
+    Estes dados estão organizados em arquivos, cada um tratado por rotinas de leitura específicas,
+    conforme tabela abaixo. O nome destes arquivos pode ser modificado pelo usuário para
+    identificação do caso-estudo, com exceção dos arquivos de vazões e postos fluviométricos,
+    respectivamente. Alterações nestes arquivos devem ser realizadas apenas pelo ONS.
+                        Rotina                              Arquivo
+                      lenome.for       caso.dat
+                       ledger.for      Arquivo de dados gerais
+                       leconf.for      Arquivo de configuração hidraúlica
+                       leconf.for      Arquivo de histórico de vazões
+
+                       lehist.for      Arquivo de postos
+                      lebaciah.for     Arquivo de bacias hidrográficas
+                     ledadger.for      Arquivos de dados utilizados para gerar os
+                                       cenários hidrológicos para o programa DECOMP
+                                       (rvx, dadger.xxx, hidr.dat, prevs.xxx e modif.dat)
+                       calcss.for      Arquivo de dados gerais para estudo de
+                                       similaridade e severidade
+
+    F-CO-005 REV. 2, 04/03/2013                                                             5/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+
+                        Rotina                             Arquivo
+                      leregra.for      Arquivo contendo as regras de cálculo para postos
+                                       artificiais
+
+    3.2       Lista de arquivos
+    Este arquivo possui 11 registros contendo a lista dos arquivos utilizados pelo programa e seus
+    relatórios gerados.
+      Registro       Colunas        Formato                        Descrição
+          1           31 a 42        A12      Nome do arquivo de dados gerais
+          2           31 a 42        A12      Nome do arquivo de configuração hidraúlica
+          3           31 a 42        A12      Nome do arquivo de bacias hidrográficas
+          4           31 a 42        A12      Nome do arquivo com as tendências hidrológicas
+          5           31 a 42        A12      Nome do arquivo de histórico de vazões
+          6           31 a 42        A12      Nome do arquivo de postos
+          7           31 a 42        A12      Nome do arquivo utilizado como relatório de saída
+          8           31 a 42        A12      Nome do arquivo com os cenários gerados de vazão
+                                              total (em formato binário).
+          9           31 a 42        A12      Nome do arquivo com os cenários gerados de vazão
+                                              incremental (em formato binário).
+          10          31 a 42        A12      Nome da lista de arquivos do DECOMP
+          11          31 a 42        A12      Nome do arquivo que contem as regras de cálculo
+                                              para postos artificiais
+          12          31 a 42        A12      Nome do arquivo que contem os dados de entrada
+                                              para o estudo de similaridade/severidade
+                                              (funcionalidade não operacional nesta versão)
+
+
+    3.3       Dados gerais
+    O arquivo de dados gerais é composto por um conjunto de 24 registros dispostos em ordem
+    fixa. A ordem em que os registros são fornecidos não pode ser modificada.
+    O primeiro registro refere-se ao nome do caso em estudo, podendo conter no máximo 70
+    caracteres. O propósito deste registro é servir como identificação do caso-estudo e seu
+    conteúdo será impresso em todas as páginas dos relatórios de saída do programa.
+    Para todos os demais registros deste arquivo, exceto para os registros 4 e 5, o conteúdo das
+    primeiras 30 colunas é ignorado pelo programa, e seu propósito é servir de orientação para o
+    usuário no preenchimento/modificação dos dados. A ordem dos registros deve ser mantida.
+    A descrição dos registros encontra-se na tabela a seguir.
+      Registro       Colunas        Formato                        Descrição
+    F-CO-005 REV. 2, 04/03/2013                                                                6/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+
+      Registro       Colunas      Formato                           Descrição
+          1            1 a 70      A70      Nome do caso
+          2           31 a 34       I2      Flag para tipo de execução do estudo:
+                                            0 = formato PARALELO (PENTE)
+                                            1 = formato ÁRVORE
+                                            3 = ruídos históricos (funcionalidade não operacional
+                                            nesta versão)
+                                            4 = similaridade e severidade (funcionalidade não
+                                            operacional nesta versão)
+                                            99 = formato para acionar a geração de cenários para
+                                            o modelo de planejamento da operação de curto
+                                            prazo (DECOMP)
+          3           31 a 34       I1      Flag para tipo de amostragem:
+                                            0 = Amostragem aleatória simples
+                                            1 = Agregação
+                                            2 = Redução ótima de cenários (opção não
+                                            operacional nesta versão)
+          4           31 a 34       I1      Flag para que determina onde será aplicada a
+                                            amostragem:
+                                            0 = Vazão
+                                            1 = Ruído (opção não operacional nesta versão)
+                                            2 = Ruído simétrico
+          5           31 a 34       I1      Flag para tipo dos cenários gerados:
+                                            0 = Vazão
+                                            1 = Energia natural afluente (funcionalidade não
+                                            operacional nesta versão)
+          6           31 a 34       I4      Ano de Referência do Estudo
+          7           31 a 34       I4      Número de anos do estudo
+          8           31 a 34       I4      Mês inicial do estudo
+          9           31 a 34       I4      Mês final do estudo
+          10          31 a 34       I4      Número de segmentos sintéticos a ser gerado
+          11           1 a 70      A70      Linha de comentário – este registro é ignorado
+          12           1 a 70      A70      Linha de comentário – este registro é ignorado
+          13          13 a 70               Ver descrição do registro 13
+          14          13 a 70               Ver descrição do registro 13
+          15          31 a 34       I4      Ordem máxima para o modeloautorregressivo
+    F-CO-005 REV. 2, 04/03/2013                                                                7/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+          16          31 a 34     I4   Ano inicial do histórico
+          17          31 a 34     I1   Flag indicativo do número de postos:
+                                       0 = 320 postos
+                                       1 = 600 postos
+          18          31 a 34     I1   Flag para adoção de tendência hidrológica para a
+                                       geração de séries sintéticas:
+                                       0 = Não considera
+                                       1 = Considera
+          19          31 a 34     I1   Flag para impressão de relatório:
+                                       0 = Não imprime
+                                       1 = Imprime
+          20          31 a 34     I1   Flag para impressão de testes:
+                                       0 = Não imprime
+                                       1 = Imprime
+          21          31 a 34     I1   Flag para a impressão de cenários:
+                                       0 = Não imprime
+                                       1 = Imprime
+          22          31 a 34     I1   Flag para consideração de modelo MS-PAR(p)
+                                       0 = Não considera
+                                       1 = Considera
+          23          31 a 34     I1   Flag de escolha do objeto representante no processo
+                                       de agregação:
+                                       0 = Mais próximo
+                                       1 = Centróide
+          24          31 a 34     I1   Flag da matriz de correlação cruzada utilizada no
+                                       estudo:
+                                       0 = Anual
+                                       1 = Mensal
+          25          31 a 34     I1   Flag para consideração de ordenação automática das
+                                       usinas
+                                       0 = Não considera
+                                       1 = Considera
+
+
+
+
+    F-CO-005 REV. 2, 04/03/2013                                                            8/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+          26          31 a 34       I1      Flag para ajuste de modelo estocástico a todas as
+                                            UHEs:
+                                            0 = Não
+                                            1 = Sim
+          26          31 a 34       I1      Flag para consideração da compensação da
+                                            correlação cruzada (funcionalidade não operacional
+                                            nesta versão):
+                                            0 = Não considera
+                                            1 = Considera
+
+
+    Registro tipo 13
+      Campo          Colunas      Formato                         Descrição
+          1           12 a 15       I4      Número de aberturas no mês 1 do ano 1
+          2           17 a 20       I4      Número de aberturas no mês 2 do ano 1
+          ...
+          12          67 a 70       I4      Número de aberturas no mês 12 do ano 1
+
+
+    O registro tipo 14 tem estrutura idêntica à descrita acima, porém referenciado ao ano 2.
+    Séries sintéticas no formato em PARALELO são utilizadas pelos modelos NEWAVE e
+    SUISHI-O. Para o modelo DECOMP as séries devem ser geradas no formato ÁRVORE.
+    Se o formato de geração de séries sintéticas desejado for ÁRVORE (utilizando ou não técnica
+    de agregação), o número de segmentos será calculado com base no número de aberturas para
+    cada mês do horizonte de estudo, contidas nos registros 13 e 14. Porém, se o formato desejado
+    for PARALELO, o número de segmentos a ser gerados deve ser informado no registro 10,
+    sendo os registros 13 e 14 ignorados.
+    Se o formato de geração de séries sintéticas for especificado como ÁRVORE (utilizando ou
+    não técnica de agregação) no registro 2, a adoção de tendência hidrológica se faz obrigatória
+    no registro 18.
+    Se no registro 2 for escolhida a opção 99, serão lidos os dados de entrada utilizados para gerar
+    os cenários para o programa DECOMP (rvx, daddger.xxx, modif.dat, prevs.xxx e hidr.dat),
+    assim como a lista de arquivos e os dados gerais do programa GEVAZP. Ao final da execução
+    estará disponível o arquivo de vazões (vazões.xxx) contendo a árvore de afluências utilizada
+    pelo DECOMP (previsão semanal + cenários mensais).
+    Se no registro 2 for escolhida a opção 3 (ruído histórico), o programa GEVAZP irá gerar
+    séries históricas condicionadas. Serão geradas séries a partir do ano inicial do histórico mais 1
+    (registro 16). Funcionalidade não operacional nesta versão.
+    Os testes de sequência negativa só serão realizados se as séries forem geradas no formato em
+    PARALELO e se as seguintes condições forem satisfeitas: mês inicial igual a janeiro (registro
+    8), não adoção de tendência hidrológica (registro 18), número de séries sintéticas geradas
+    F-CO-005 REV. 2, 04/03/2013                                                                 9/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+    superior ou igual a 100 (registro 10), número de anos do estudo igual ou superior a 74 anos e
+    opcões para a realização dos testes e impressão do relatório habilitadas (registro 19 e 20,
+    respectivamente).
+    No caso de geração de séries de vazões, se for especificado o formato em paralelo, o campo
+    mês final será ignorado, sendo sempre gerados cenários até o mês de dezembro.
+    Caso seja considerada a adoção de ordenação automática das usinas/subsistemas (registro 22),
+    esta será realizada de acordo com a ordem crescente do número externo da usina (registro 1,
+    do item 3.4.1)ATENÇÃO: As opções de consideração da compensação da correlação cruzada
+    (registro 24), e redução ótima de cenários (registro 2, opção 2), geração de cenários do tipo
+    ENA (registro 5, opção 1) 1) e estudo de similaridade e severidade (registro 2, opção 4) não
+    estão operacionais nesta versão.
+    3.4      Configuração das usinas/subsistemas
+    Este arquivo é composto por tantos registros quantos forem as usinas ou subsistemas que
+    terão séries geradas. É inicializado por um conjunto de dois registros, destinado a
+    comentários, de existência obrigatória.
+    3.4.1 Configuração de usinas para geração de séries de vazões
+    Cada registro é composto por 14 campos descritos a seguir.
+        Campo          Colunas    Formato                        Descrição
+            1            2a5        I4      Número da usina correspondente ao posto
+            2           7 a 18     A12      Nome da usina correspondente ao posto
+            3          21 a 24      I4      Código do posto
+            4          27 a 30      I4      Número da usina de jusante
+            5          32 a 35      I4      Número da região/bacia hidrográfica em que se
+                                            encontra a usina
+            6          37 a 42     F6.3     Percentual do valor mínimo observado no
+                                            histórico a ser considerado como limite inferior da
+                                            distribuição da série gerada. Será utilizado apenas
+                                            se a geração for do tipo ruído histórico.
+            7          44 a 47      A4      Status da usina:
+                                            EX = Existente
+                                            NC = Não considera
+                                            PN = Posto nulo
+            8          51 a 54      I1      Opção pelo ajuste automático da ordem.
+                                            0 = utiliza o ajuste automático (default)
+                                            1 = não utiliza o ajuste automático
+            9          60 a 63      I4      Ano inicial do histórico
+           10          69 a 72      I4      Ano final do histórico
+
+
+    F-CO-005 REV. 2, 04/03/2013                                                             10/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+
+        Campo          Colunas    Formato                        Descrição
+           11          78 a 81      I3      Tempo de viagem da usina (horas) até a usina a
+                                            jusante
+           12          87 a 90      I4      Associação a posto de vazão lateral
+           13          96 a 99      I4      Opção pela utilização de uma regra de defasagem
+                                            linear para usinas afetadas pelo tempo de viagem.
+                                            1 = não utiliza defasagem linear
+                                            2 = utiliza defasagem linear (default)
+           14         102 a 105     I4      Associação a posto de vazão artificial
+
+
+    Os códigos dos postos (campo 3), associados às usinas informadas, devem ser diferentes e
+    estar compreendidos entre 1 e NPOS, inclusive. O valor de NPOS (número de postos)
+    dependerá do tamanho do registro do arquivo de vazões históricas (item 3.3, registro 17).
+    Se a usina não possuir uma usina a jusante, ou caso possua e esta usina não estiver sendo
+    considerada, a informação do número da usina de jusante (campo 4) deve ser preenchida com
+    zero.
+    As séries sintéticas serão geradas considerando o conjunto de anos (campos 9 e 10) em
+    comum, entre todos os postos. Os anos inicial e final não precisam, necessariamente, ser
+    fornecidos. Neste caso, o modelo adotará os valores constantes do arquivo de anos inicial e
+    final do histórico (item 3.7).
+    Caso o ano inicial fornecido para uma dada usina for menor que o ano inicial considerado no
+    arquivo de postos (item 3.7), o primero será substituido por este. O mesmo ocorrerá se o ano
+    final fornecido for maior do que o ano final considerado no arquivo de postos. Estas
+    modificações estarão listadas no relatório de saída (item 3.2, registro 8).
+    Caso o campo 5 não esteja preenchido, as usinas serão consideradas na mesma região/bacia
+    hidrográfica. As regiões/bacias fornecidas no campo 5 devem estar declaradas no arquivo de
+    bacias hidrográficas (item 3.5).
+    As usinas marcadas com NC no campo 7 serão retiradas da configuração. Portanto, não são
+    gerados cenários hidrológicos. As usinas marcadas com PN serão consideradas na
+    configuração, porém não serão gerados cenários de vazões para estas usinas. Sua vazão
+    incremental será considerada igual a zero.
+    Caso não seja preenchido o campo 13, será utilizada por default a consideração de defasagem
+    linear.
+    Caso o campo 14 seja preenchido com um valor diferente de zero, ao final da geração de
+    cenários para os postos naturais serão calculados cenários para os postos artificiais de acordo
+    com as regras fornecidas pelo usuário no arquivo de regras de cálculo para postos artificiais.
+    Caso a regra de cálculo não conste nesse arquivo, a execução será interrompida.
+
+
+
+
+    F-CO-005 REV. 2, 04/03/2013                                                              11/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+
+    3.5      Arquivos de bacias hidrográficas
+    O arquivo de bacias hidrográficas é inicializado por um conjunto três registros, destinados a
+    comentários, de caráter obrigatório. Cada registro é composto por dois campos, descritos a
+    seguir:
+        Campo          Colunas    Formato                        Descrição
+            1            2a4        I3       Número da região/bacia hidrográfica
+            2           6 a 10     A10       Nome da região/bacia hidrográfica
+
+
+    Todas as regiões/bacias hidrográficas fornecidas no arquivo de usinas (item 3.4) devem ser
+    declaradas.
+    O valor 999 no campo 1 indica fim de arquivo.
+    3.6      Arquivos de vazões naturais afluentes históricas
+    O arquivo de vazões históricas corresponde ao arquivo de cadastro de vazões naturais
+    históricas afluentes às usinas hidroelétricas. É um arquivo de acesso direto, não formatado,
+    com 320/600 postos, cada registro correspondendo a um mês do histórico. Este arquivo é de
+    responsabilidade do ONS e/ou CCPE.
+    3.7      Arquivo com o ano inicial e final do histórico de vazões
+    O arquivo de dados dos postos fluviométricos corresponde ao arquivo de cadastro com o
+    nome do posto, os anos inicial e final do registro de vazões históricas. É um arquivo de acesso
+    direto, não formatado, com 320/600 registros e cada registro corresponde a um posto
+    fluviométrico. Este arquivo é de responsabilidade do ONS e/ou CCPE.
+    3.8      Arquivo com a tendência hidrológica
+    O arquivo com a tendência hidrológica fornecida pelo usuário contém as vazões mensais
+    totais para calcular as vazões incrementais, a serem adotadas como condição inicial para a
+    geração de séries sintéticas de vazões. Este arquivo inicia-se por um conjunto de três registros
+    destinados a comentários, cujo conteúdo é ignorado pelo programa. O propósito destes
+    registros, de existência obrigatória, é servir de orientação para o usuário no
+    preenchimento/modificação dos dados.
+    A tendência hidrológica deve ser fornecida para todos os postos, constantes do arquivo de
+    configuração (item 3.4.1). No caso das usinas com postos de vazões lateral, a tendência
+    hidrologia deve ser fornecida tanto para o posto de vazão total quanto para o posto de vazão
+    lateral.
+    Cada registro é composto por 14 campos descritos a seguir.
+        Campo          Colunas    Formato                        Descrição
+            1            2a5        I4       Código do posto
+            2           7 a 18     A12       Nome da usina associada ao posto
+            3          20 a 28     F9.2      Vazão para o mês de janeiro, em m3/s
+
+
+    F-CO-005 REV. 2, 04/03/2013                                                               12/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+
+        Campo          Colunas    Formato                       Descrição
+            4          30 a 38     F9.2     Vazão para o mês de fevereiro, em m3/s
+                                                                    
+           14         130 a 138    F9.2     Vazão para o mês de dezembro, em m3/s
+
+
+    Somente os n meses (onde n é a ordem máxima para o modelo autorregressivo, item 3.2
+    registro 10) anteriores ao mês inicial serão considerados no modelo.
+    3.9 Arquivo de dados gerais para estudo de similaridade e
+    severidade
+    O arquivo de dados gerais é composto por um conjunto de nove registros dispostos em ordem
+    fixa. A ordem em que os registros são fornecidos não pode ser modificada.
+       Registro        Colunas    Formato                       Descrição
+            1           1 a 70     A70      Linha de comentário – este registro é ignorado.
+            2          30 a 41     A12      Tipo dos cenários estudados
+            3          30 a 33      I4      Ano inicial do histórico
+            4          30 a 33      I4      Ano final do histórico
+            5          30 a 33      I4      Mês de referência do estudo
+            6          30 a 33      I4      Número de séries similares
+            7          30 a 33     F6.3     Quantidade de meses passados a ser considerados
+                                            na avaliação
+            8           1 a 70     A70      Linha de comentário – este registro é ignorado.
+            9          30 a 75      I4      Peso de cada mês passado
+
+
+    Esta funcionalidade não está operacional nesta versão.
+    3.10 Arquivo de regras de cálculo para postos artificiais
+    (regras.dat)
+    O arquivo de regras de cálculo deve possuir as fórmulas necessárias para o cálculo das vazões
+    de postos artificiais. Ele é inicializado por um conjunto de dois registros, de caráter
+    obrigatório, destinados a comentários.
+    O primeiro bloco de informações possui registros compostos por quatro campos .
+        Campo          Colunas    Formato                       Descrição
+            1            2a5        I4      Código do posto artificial a ser calculado
+            2          10 a 11      I2      Mês em que será aplicada a regra de cálculo. Caso
+                                            a mesma regra se repita para todos os meses,
+                                            deve-se preenchê-lo com o numeral 0
+    F-CO-005 REV. 2, 04/03/2013                                                               13/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+
+        Campo          Colunas    Formato                        Descrição
+            3             17        I1       Número da regra, caso a regra do posto varie ao
+                                             longo dos anos de estudo
+            4          22 a 621    A600      Regra de cálculo que será aplicada para o posto
+                                             artificial
+
+
+    Um posto pode ter regras diferentes ao longo dos meses, mas que valem para todos os anos do
+    estudo. Porém, existem situações em que as regras podem variar tanto ao longo dos meses
+    quanto ao longo dos anos. Neste caso, é necessário diferenciar os conjuntos de regras
+    utilizando o campo 3. A associação entre os conjuntos de regras e o ano do estudo é feita no
+    bloco 2 deste arquivo.
+    Caso o posto artificial possua a mesma regra em todos os anos de estudo não é necessário
+    preencher o campo 3.
+    Após o primeiro bloco de informações deve-se preencher o campo 1 com o número “9999”.
+    O segundo bloco de informações somente deverá ser preenchido caso haja ao menos um posto
+    artificial com regras variáveis ao longo dos anos de estudo. Ele é inicializado com 3 registros,
+    de caráter obrigatório, destinados a comentários.
+        Campo          Colunas    Formato                        Descrição
+            1            2a5        I4       Código do posto artificial a ser calculado
+            2             12        I1       Número da regra de cálculo que será aplicada ao
+                                             primeiro ano de estudo.
+            3             19        I1       Número da regra de cálculo que será aplicada ao
+                                             segundo ano de estudo.
+            ...            ...      ...
+            N                       I1       Número da regra de cálculo que será aplicada ao
+                                             último ano de estudo.
+
+
+    Existirão tantos campos do tipo 2 quanto for o número de anos considerados no estudo.
+    Ao final o campo 1 deverá ser preenchido com o número “9999”.
+    A sintaxe das regras de cálculo deverá estar correta, caso contrário, a execução será
+    interrompida. As regras de cálculo podem conter operações aritméticas usuais como soma (+),
+    subtração (-), multiplicação (*) e divisão (/), regras condicionais (SE), além de verificação de
+    de máximos (MAX) e mínimos (MIN). O separador de decimal utilizado é o ponto.
+    Para se referir a um posto de vazão natural será utilizada a seguinte sintaxe: VAZ(nº do posto)
+    A verificação de máximo e mínimo poderá comparar números específicos ou operações
+    envolvendo vazões de determinados postos. A seguinte sintaxe deverá ser seguida:
+    •   MAX(vazão nº 1; vazão nº 2); MIN(vazão nº 1; vazão nº 2);
+
+
+    F-CO-005 REV. 2, 04/03/2013                                                               14/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+    Exemplo 1: MAX(13900;VAZ(288)*1.2)
+    Neste exemplo, a regra de cálculo retornará para determinado mês o maior valor entre 13900
+    e a vazão do posto 288 multiplicado por 1.2.
+    A sintaxe da regra condicional “se” segue o seguinte padrão:
+    •   SE(condição a ser verificada;regra a ser considerada caso verdadeiro;regra a ser
+        considerada caso falso)
+    A condição a ser verificada pode conter os testes usuais como maior que (>), maior ou igual
+    que (>= ou ~),menor que (<), menor ou igual que (<= ou @), igual que (=), diferente que (<>
+    ou !), operador E (E ou &) e operador OU (OU ou |).
+    Exemplo 2: SE(VAZ(237)-100<=300;50;SE(VAZ(237)-100<=350;100;150))
+    Neste exemplo, será verificada se a vazão do posto 237, menos 100, é menor ou igual a 300.
+    Caso positivo será retornado o valor 50. Caso negativo será verificado se essa mesma codição
+    é menor que 350. Caso positivo retorna o valor 100, e caso negativo o valor 150.
+    As regras de cálculo podem possuir qualquer combinação de condições e operações
+    encadeadas. Qualquer erro de sintaxe, como por exemplo, falta de parênteses, será criticado
+    pelo programa, e o mesmo retornará uma mensagem de erro.
+    Pode ser definidas regras de cálculo para posto artificial que não estejam associados
+    diretamente a alguma usina.
+    Caso haja um posto artificial, e não exista a regra de cálculo para o mês em que está sendo
+    calculado, a execução do programa será interrompida.
+    Se uma regra de cálculo necessitar da vazão de um posto que não exista na configuração do
+    caso e/ou de um posto artificial que não esteja declarado no arquivo de regras, a execução do
+    programa será interrompida.
+    O arquivo de regras será lido se houver pelo menos um posto artificial associado a uma usina
+    pertencente à configuração (mnemônico NPOSNW, no caso DECOMP, ou campo 14 no
+    arquivo de configuração das usinas, nos demais casos). Neste caso, todas regras declaradas
+    serão calculadas.
+    3.11 Arquivo de licença
+    Arquivo contendo a licença de uso do programa tem nome fixo GEVAZP.LIC e será
+    fornecido pelo CEPEL às empresas com contrato de uso válido. Este arquivo é exclusivo para
+    cada empresa e deve ser colocado na mesma pasta onde se encontra o executável do programa
+    GEVAZP.
+    3.12 Arquivo de histórico do índice ONI (oni.dat)
+    O arquivo com o histórico do índice ONI fornecido pelo usuário contém os valores deste
+    índice, que será utilizado para a classificação dos estados do fenômeno El Niño – Oscilação
+    Sul. Este arquivo somente será lido caso o usuário indique a utilização de informações do
+    fenômeno El Niño – Oscilação Sul (ENOS) (opção 1 do registro 22 do arquivo 3.3, ou
+    registro 17 do arquivo 4.5 para casos de DECOMP). Este arquivo inicia-se por um conjunto
+    de dois registros destinados a comentários, cujo conteúdo é ignorado pelo programa. O
+    propósito destes registros, de existência obrigatória, é servir de orientação para o usuário no
+    preenchimento/modificação dos dados.
+    F-CO-005 REV. 2, 04/03/2013                                                              15/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+    Cada registro é composto por 13 campos descritos a seguir.
+        Campo          Colunas    Formato                        Descrição
+            1            1a4        I4      Ano do histórico
+            2           7 a 10     F4.1     Valor do índice ONI para o mês de janeiro para o
+                                            ano indicado no campo 1.
+            3          13 a 16     F4.1     Valor do índice ONI para o mês de fevereiro para
+                                            o ano indicado no campo 1.
+            4          19 a 22     F4.1     Valor do índice ONI para o mês de março para o
+                                            ano indicado no campo 1.
+                                                                 
+           13          73 a 76     F4.1     Valor do índice ONI para o mês de dezembro para
+                                            o ano indicado no campo 1.
+
+
+    Caso o ano inicial do histórico do índice ONI seja posterior ao ano inicial do histórico de
+    vazões naturais, o primeiro será utilizado como o ano inicial para ambos.
+    O arquivo deve ser finalizado com o valor ‘9999’ no campo 1.
+
+
+    3.13 Arquivo de previsões probabilísticas do índice ONI
+    (oniprev.dat)
+    O arquivo com as previsões do índice ONI, fornecido pelo usuário, contém a previsão
+    probabilística do índice classificado entre as condições de La Niña, Neutro e El Niño. Este
+    arquivo somente será lido caso o usuário indique a utilização de informações do fenômeno
+    ENOS. Este arquivo inicia-se por um conjunto de dois registros destinados a comentários,
+    cujo conteúdo é ignorado pelo programa. O propósito destes registros, de existência
+    obrigatória, é servir de orientação para o usuário no preenchimento/modificação dos dados.
+    Não há limite de registros para esse arquivo. O número de registros será igual ao número de
+    meses de previsão disponível
+    Cada registro é composto por 5 campos descritos a seguir.
+        Campo          Colunas    Formato                        Descrição
+            1            2a4        I3      Mês da previsão
+            2           7 a 10      I4      Ano da previsão
+            3          13 a 15      I3      Probabilidade de ocorrência da condição de La
+                                            Niña
+            4          18 a 20      I3      Probabilidade de ocorrência da condição Neutro
+            5          23 a 25      I3      Probabilidade de ocorrência da condição de El
+                                            Niño
+
+
+
+    F-CO-005 REV. 2, 04/03/2013                                                              16/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+
+    3.14 Arquivo de informações referentes ao MS-PAR(p) (mspar.dat)
+    O arquivo com as informações referentes ao MS-PAR(p) indica para quais UHEs em que mês
+    os estados de ENOS serão considerados. Esse arquivo somente será lido caso o usuário
+    indique a utilização de informações do fenômeno ENOS. O primeiro bloco de informações,
+    deve ser preenchido conforme indicado abaixo:
+        Registro       Colunas     Formato   Descrição
+            1          37 a 40       I4      Flag para consideração do MS-PAR(p)
+                                             0 = Todos os estados são considerados para todos
+                                             os meses e UHEs;
+                                             1 = Seleção manual pelo usuário
+                                             2 = Seleção automática
+            2          37 a 41      F5.2     Nível de significância para o procedimento de
+                                             identificação da influência do ENOS nas vazões
+                                             afuentes
+          3a5           1 a 55       A       Comentários gerais para orientação do usuário
+    O segundo bloco de informações só devera ser preenchido caso o usuário escolha a opção 1
+    (seleção manual). Caso contrário, ele será ignorado pelo programa. Para cada UHE existente
+    na configuração, um novo registro deverá ser inserido, conforme apresentado:
+        Campo          Colunas     Formato   Descrição
+            1            2a5         I4      Número do posto da UHE
+            2           7 a 18      A12      Nome da UHE
+         3 a 14       21, 24, 27     I1      Indicação mensal, de janeiro a dezembro, de
+                        ... 54               chaveamento dos parâmetros pelo estado do
+                                             ENOS.
+                                             0 = não chaveia
+                                             1 = La Niña / Neutro + El Niño
+                                             2 = El Niño / Neutro + La Niña
+                                             3 = La Niña / Neutro / El Niño
+
+
+    Cada um desses campos indica em base mensal qual dos estados será considerado no modelo.
+    Caso seja preenchido com o valor zero, os três estados de ENOS serão considerados como um
+    único, não havendo variação entre os parâmetros desse mês para os estados. Caso seja
+    preenchido com o valor um, será estimado um conjunto de parâmetros para o estado de La
+    Niña e os estados Neutro e El Niño irão possuir um mesmo conjunto de parâmetros. Caso seja
+    preenchido com o valor dois, será estimado um conjunto de parâmetros para o estado de El
+    Niño e os estados Neutro e La Niña irão possuir um mesmo conjunto de parâmetros. Caso seja
+    preenchido com o valor três, será estimado um conjunto de parâmetros para cada um dos três
+    estados.
+
+
+    F-CO-005 REV. 2, 04/03/2013                                                               17/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+    UHEs que estejam presentes na configuração do caso, porém sem registro nesse arquivo, terão
+    seus modelos ajustados sem chaveamento dos parâmetros entre os estados de ENOS.
+
+
+
+    4        Geração de cenários para o programa DECOMP
+    Para gerar cenários de vazões a serem utilizados no programa DECOMP, deverão estar
+    presentes todos os arquivos do deck básico do DECOMP, mais três arquivos exclusivos do
+    GEVAZP: CASO.DAT (diferente do caso.dat que vem junto com o deck do DECOMP),
+    ARQUIVOS.DAT e GEVAZP.DAT
+    4.1      Arquivo do caso
+    Arquivo: CASO.DAT, já descrito no item 3.
+    4.2      Lista de arquivos
+    Arquivo: ARQUIVOS.DAT, já descrito no item 3.2.
+    4.3      Arquivo de dados gerais do GEVAZP
+    Arquivo: GEVAZP.DAT, já descrito no item 3.3.
+    Para executar o programa GEVAZP a fim de gerar cenários de vazões para o DECOMP é
+    necessário informar a opção “99” no campo 2 deste arquivo.
+    4.4      Lista de arquivos
+    Arquivo: XXX.
+    É um arquivo que contém os dados (nomes dos arquivos) a serem utilizados pelo programa
+    GEVAZP e, posteriormente pelo programa DECOMP. O nome deste arquivo é fornecido pelo
+    usuário em tempo de execução. O arquivo com a lista de arquivos é composto por um
+    conjunto de 5 registros dispostos em ordem fixa. A ordem em que os registros são fornecidos
+    não pode ser modificada.
+
+
+        Registro     Colunas      Formato   Descrição
+        1            1 a 12       A12       Arquivo de dados gerais
+        2            1 a 12       A12       Arquivo de vazões geradas para DECOMP
+        3            1 a 12       A12       Arquivo de cadastro das usinas hidráulicas
+        4            1 a 12       A12       Arquivo com as MLT’s (somente para DECOMP)
+        5            1 a 12       A12       Arquivo de perdas (somente para DECOMP)
+
+    Os dois últimos registros são apenas necessários para a execução do programa DECOMP.
+    Eles são ignorados pelo programa GEVAZP.
+    4.5      Arquivo de dados gerais do DECOMP
+    Arquivo: DADGER.XXX
+
+
+    F-CO-005 REV. 2, 04/03/2013                                                          18/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+    A partir deste arquivo é obtida a configuração do parque hidráulico que compõe o estudo de
+    planejamento. Todos os arquivos serão montados com base nesta configuração, garantindo
+    desta maneira, a coerência entre os arquivos de vazões e os demais dados para o estudo.
+    Para a definição da configuração são consideradas as seguintes informações: usinas na
+    configuração e seu REE associado (registros UH) e alterações de postos de vazões (registros
+    AC, nmemônico NUMPOS, NUMJUS e NPOSNW).
+    O mnemônico “NPOSNW” é utilizado para associar um posto de vazão artificial a uma usina.
+    As vazões incrementais que serão passadas ao DECOMP para o cálculo da energia natural
+    afluente de acoplamento com a função de custos futuro do NEWAVE levam em consideração
+    os postos de vazão artificiais em detrimento do posto original da usina associada. Para usinas
+    que possuam um posto de vazão lateral associado, esse mesmo mnemônico deverá indicar o
+    posto de vazão total, o qual será utilizado para o cálculo da energia natural afluente de
+    acoplamento.
+    O mnemônico “& VAZOES” é utilizado para informar o início dos dados para definição da
+    estrutura da árvore de vazões. Estes dados são informados em linhas comentadas (&). Os
+    formatos dos registros seguintes ao “& VAZOES” são apresentados a seguir:
+       Registro      Colunas      Formato   Descrição
+       1             40 a 51      A12       Arquivo de vazões semanais previstas/observadas
+                                            para o mês de início do estudo
+       1             53 a 64      A12       Arquivos de vazões semanais observadas para o
+                                            mês anterior ao início de estudo
+       2             40 a 43      I4        Ano final do histórico de vazões (consolidado)
+       2             44 a 73      A30       Arquivo histórico de vazões
+       3             40 a 51      A12       Arquivo de postos
+       3             52 a 55      I4        Número de postos
+       4             40 a 43      I4        mês inicial de estudo
+       4             45 a 48      I4        ano inicial do estudo
+       5             40 a 43      I4        mês final de estudo
+       5             45 a 48      I4        ano final de estudo
+       6             40 a 43      I4        ano inicial de estudo
+       7             40 a 43      I4        Nº de semanas não observadas do mês inicial de
+                                            estudo
+       7             45 a 48      I4        Nº de semanas observadas do mês inicial de
+                                            estudo
+       8             40 a 43      I4        Nº. dias que devem ser excluídos do estágio
+                                            seguinte ao mês inicial decomposto em semanas
+       9             40 a 43      I4        Estrutura da árvore – 1º período estocástico
+                     45 a 48      I4                             – 2º período estocástico
+                     …            …
+                                                                –   …
+                     90 a 93      I4
+                                                                –   11º período estocástico
+
+
+    F-CO-005 REV. 2, 04/03/2013                                                               19/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+
+       Registro      Colunas      Formato   Descrição
+       10            40 a 41      A1        Opção pela agregação de cenários
+                                            N ou 1: não realiza agregação
+                                            S ou 2: agregação nos cenários de vazão
+                                            6: agregação nos vetores de ruídos normais
+       11            40 a 43      I4        Ordem máxima do modelo PARP
+       12            40 a 43      I4        Flag de utilização da regra de defasagem linear:
+                                            1 = não utiliza
+                                            2 = utiliza (default)
+       13            40 a 43      I4        Flag da matriz de correlação cruzada utilizada no
+                                            estudo:
+                                            0 = Anual
+                                            1 = Mensal
+       14            40 a 43      I4        Flag de ordenação automática das UHEs
+                                            0 = Não considera
+                                            1 = Considera
+       15            40 a 43      I4        Flag de escolha do objeto representante no
+                                            processo de agregação:
+                                            0 = Mais próximo
+                                            1 = Centróide
+       16            40 a 43      I4        Flag para ajuste de modelos estocásticos a todas as
+                                            UHEs
+                                            0 = Não considera
+                                            1 = Considera
+       17            40 a 43      I1        Flag para consideração de modelo MS-PAR(p)
+                                            0 = Não considera
+                                            1 = Considera
+       18            40 a 43      I4        Flag de realização de estudo prospectivo
+                                            0 = não utiliza
+                                            1 = estudo prospectivo determinístico
+                                            2 = estudo prospectivo estocástico
+       18            45 a 57      A12       Arquivo de estudo prospectivo
+       19            40 a 43      I4        Flag de impressão de arquivo de vazões semanais
+                                            baseado na média dos cenários gerados para o
+                                            último mês do estudo.
+                                            0 = não imprime
+                                            1= imprime
+       19            45 a 57      A12       Nome do arquivo de vazões semanais baseado na
+                                            média dos cenários gerados para o último mês do
+                                            estudo.
+
+
+
+    F-CO-005 REV. 2, 04/03/2013                                                             20/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+
+       Registro      Colunas      Formato   Descrição
+       20            40 a 43      I4        Flag de impressão de arquivo de tendência
+                                            hidrológica atualizado no final do estudo.
+                                            0 = não imprime
+                                            1= imprime
+       20            45 a 57      A12       Nome do arquivo de arquivo de tendência
+                                            hidrológica atualizado no final do estudo.
+       21            40 a 43      I4        Flag de leitura da tendência hidrológica através de
+                                            arquivo editável.
+                                            0 = não considera
+                                            1 = considera
+
+
+
+    Para manter compatibilidade com o formato já utilizado no arquivo DADGER foi necessário
+    duplicar a informação a respeito do ano inicial do estudo (campo 4 e campo 6). Desta forma, o
+    valor contido nestes dois campos deve ser o mesmo, caso contrário será feita uma crítica.
+    Caso seja preenchido o registro 18 com a opção número ‘1’, o estudo será tratado como um
+    estudo prospectivo do tipo determinístico, em que o número de aberturas é igual a ‘1’ para
+    todos os meses ao longo do horizonte definido para o estudo.
+    Caso seja preenchido o registro 18 com a opção número ‘2’, o estudo será tratado como um
+    estudo prospectivo do tipo estocástico, isto é, todos os meses do horizonte de estudo serão
+    determinísticos, exceto o último mês, onde o número de cenários a ser gerado pelo GEVAZP
+    será definido pelo usuário no registro 9.
+    O registro 19, caso preenchido com a opção 1, indica a impressão de um arquivo formatado
+    de vazões semanais baseado na média dos cenários gerados para o último mês de estudo.
+    O registro 20, caso preenchido com a opção 1, indica a impressão de um arquivo formatado
+    de tendência hidrológica atualizada com os valores de previsão de vazão semanal, e com a
+    média dos cenários gerados no horizonte de estudo.
+    O registro 21, caso preenchido com a opção 1, indica a utilização do arquivo formatado de
+    tendência hidrológica, com o nome indicado no registro 4 do item 3.2. Caso contrário, a
+    tendência hidrológica será lida no arquivo não formatado de vazões históricas.
+    Os valores de vazões utilizados para os meses determinísticos do estudo prospectivo seguirão
+    as regras descritas no arquivo de estudo prospectivo (item 4.12).
+    Caso o registro 14 seja preenchido com a opção 1, as UHEs serão ordenadas, de forma
+    crescente, pelo seus respectivos número.
+    A opção 1 do registro 15 (objeto representante do processo de agregação) só é válida caso seja
+    selecionada a agregação nos ruídos (opção 6 do registro 10)
+    Caso o usuário selecione a opção 1 no registro 17 (consideração de modelo MS-PAR(p)) os
+    modelos ajustados às UHEs irão considerar informações sobre o fenômeno El Niño –
+    Oscilação Sul. Para isso, o usuário deverá preencher corretamente os arquivos 3.12, 3.13 e
+    4.14.
+
+
+
+
+    F-CO-005 REV. 2, 04/03/2013                                                             21/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+
+    4.6      Arquivo de cadastro de usinas hidráulicas
+    Arquivo: HIDR.DAT
+    É um arquivo não formatado de acesso direto e de responsabilidade do ONS. Contém o
+    cadastro de usinas e serão consideradas as seguintes informações: usina a jusante e número do
+    posto de vazão no histórico de vazões.
+    Contém um registro para cada usina hidráulica usando como chave o próprio código da usina.
+    Dos dados constantes neste arquivo são utilizados para geração da estrutura da configuração
+    somente os campos demarcados na tabela abaixo:
+    Destaca-se que a informação do posto pode ser alterado pelos registros AC do arquivo de
+    dados gerais (DADGER.XXX), item 4.1.
+
+
+    4.7      Arquivo de vazões previstas
+    Arquivo: PREVS.XXX
+    O arquivo de vazões semanais previstas é fornecido pelo usuário e contém as vazões semanais
+    totais verificadas/previstas para todos os postos constantes do arquivo de dados gerais (item
+    4.1).
+    Devem ser fornecidas as vazões semanais verificadas/previstas para todas as semanas que
+    compõem o mês inicial de estudo. O número de semanas do mês é igual ao número de
+    semanas não observadas, fornecido no arquivo de dados gerais (DADGER.xxx), e o número
+    de semanas já observadas à medida que são realizadas as revisões no PMO, as vazões
+    semanais previstas irão sendo trocadas por vazões semanais verificadas.
+    Cada registro é composto por 8 campos descritos a seguir.
+
+
+       Campo         Colunas      Formato   Descrição
+       1             4a6          I3        Número da série
+       2             9 a 11       I3        Código do posto
+       3             13 a 21      I9        Vazão verificada/prevista para a 1ª semana do
+                                            mês inicial, em m3/s
+       4             23 a 31      I9        Vazão verificada /prevista para a 2ª semana do
+                                            mês inicial, em m3/s
+                                         
+       8             63 a 71      I9        Vazão prevista para a 6ª semana do mês inicial,
+                                            em m3/s
+
+    Após a leitura destas vazões, o modelo calcula a vazão média para cada posto, definindo
+    assim, a vazão mensal do mês inicial. Neste cálculo é levado em conta o número de dias do
+    mês em questão na primeira e na última semana. Para os meses anteriores, as vazões passadas
+    são obtidas a partir das informações do histórico de vazões atualizado (item 4.4).
+
+
+
+
+    F-CO-005 REV. 2, 04/03/2013                                                            22/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+    De acordo com os procedimentos atuais, o modelo considera explicitamente a possibilidade
+    de somar as vazões dos postos 34 e 43 para definição da vazão natural ao posto 44 (Ilha
+    Solteira Equivalente), se este estiver presente na configuração do parque hidráulico (item 4.1).
+    O primeiro campo de cada registro (número da série) é apenas informativo, sendo ignorado
+    pelo modelo. Deverão ser informadas até seis vazões semanais verificadas/previstas para o
+    mês inicial.
+    Se o estudo estiver considerando o primeiro mês sem divisão semanal (mês cheio), a previsão
+    de vazões a ser informada neste arquivo será a vazão prevista para o mês em questão.
+    Devem ser fornecidas no arquivo de vazões previstas as previsões semanais tanto para o posto
+    com registro de vazões laterais quanto para o posto com registro de vazões totais. As vazões
+    incrementais das usinas a jusante daquelas que utilizam postos com registro de vazões lateral
+    são calculadas considerando o posto de vazão total.
+    Para os postos artificiais utilizados no cálculo da energia natural afluente de acoplamento com
+    a função de custo futuro do NEWAVE, suas vazões semanais serão calculadas segundo às
+    regras regras específicas deste posto.
+    4.8 Arquivo de vazões semanais observadas para o mês anterior
+    ao início do estudo
+    Arquivo: VSEMPAST.XXX
+    Este arquivo só será lido se for escolhida a opção de propagação linear para o cálculo da
+    vazão total associada à usina afetada pelo tempo de viagem (registro 11 do item 4.5) e o
+    usuário optar por considerar a regra linear de defasagem no primeiro mês e nos meses
+    anteriores ao início do estudo (registro 11 e campo 2 do item 4.5).
+    Caso o usuário opte por não considerar a regra linear de defasagem efetuada pelo programa
+    para o primeiro mês e os meses anteriores ao início do estudo, este deverá fornecer os valores
+    de vazões semanais previstas e observadas, assim como as vazões mensais passadas, com a
+    consideração da propagação embutida.
+    O arquivo de vazões semanais observadas para o mês anterior ao início de estudo contém as
+    vazões semanais totais verificadas para os postos imediatamente a montante das usinas
+    afetadas pelo tempo de viagem. O fornecimento deste dado para as demais usinas da
+    configuração é opcional.
+    Cada registro é composto por 7 campos descritos a seguir.
+
+
+       Campo         Colunas      Formato    Descrição
+       1             4a6          I3         Número da série
+       2             9 a 11       I3         Código do posto
+       3             13 a 21      I9         Vazão verificada para a 1ª semana do mês anterior
+                                             ao mês inicial, em m3/s
+       4             23 a 31      I9         Vazão verificada para a 2ª semana do mês anterior
+                                             ao mês inicial, em m3/s
+                                          
+
+
+    F-CO-005 REV. 2, 04/03/2013                                                               23/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+
+       Campo         Colunas      Formato    Descrição
+       7             59 a 67      I9         Vazão verificada para a 5ª semana do mês anterior
+                                             ao mês inicial, em m3/s
+
+
+    4.9      Arquivo de histórico de vazão
+    Arquivo: VAZOES.DAT, já descrito no item 3.6.
+    4.10 Arquivo de postos
+    Arquivo: POSTOS.DAT, á descrito no item 3.7
+    4.11 Arquivo de modificações
+    Arquivo: MODIF.DAT
+    O arquivo de modificações na configuração hidroelétrica tem nome fixo e sua existência não é
+    obrigatória. Este arquivo inicia-se por um conjunto de dois registros destinados a comentários,
+    cujo conteúdo é ignorado pelo programa. Cada registro de dados inicia-se obrigatoriamente
+    com uma palavra-chave, escrita em maiúsculas ou em minúsculas, seguida do código de
+    identificação da usina no cadastro (número da usina). Cada registro deve conter os seguintes
+    campos:
+       Campo         Colunas      Formato    Conteúdo
+       1             2a7          A6         Palavra-chave que identifica a modificação
+       2             9 a 11       I3         Número da usina
+       3             13 a 15      I3         Novos valores a serem considerados
+       4             16 a 19      I3         Novos valores a serem considerados
+
+
+    A tabela abaixo apresenta as palavras-chave válidas, a descrição de seu significado e sua
+    utilização.
+       Campo 1                    Campo 2           Campo 3                Campo 4
+       Palavra-
+                Descrição         Conteúdo   Tipo   Conteúdo        Tipo Conteúdo         Tipo
+       chave
+       PARTIF       Usina sem Número da I3          Posto         I3       Usina       a I3
+       ou           registro de usina               associado à            jusante
+       partif       vazão                           usina                  (campo
+                    natural                         (campo                 informativo)
+                                                    informativo)
+       VINCR        Usina com Número da I3          Posto      da I3       Posto       da I3
+       ou           registro de usina               usina - vazão          usina        –
+       vincr        vazão                           lateral                vazão total
+                    lateral
+       9999         Indica fim de registro
+
+
+
+    F-CO-005 REV. 2, 04/03/2013                                                                24/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+    As usinas que pertencem à configuração inicial do estudo, mas que não têm registro de vazão
+    natural, identificadas pelo mnemônico PARTIF, serão consideradas na configuração utilizada
+    pelo modelo GEVAZP, porém terão suas vazões incrementais nulas nos meses estocásticos.
+    Para os meses observados, e para as vazões semanais previstas, o cálculo da vazão
+    incremental será feito de acordo com os valores fornecidos.
+    Usinas que estejam identificadas pelo mnemônico PARTIF, e estejam associadas ao posto
+    300, terão suas vazões incrementais iguais a zero para os meses observados e vazões
+    semanais.
+    Para o cálculo da energia natural afluente de acoplamento, essa mesma usina poderá ter uma
+    vazão artificial calculada, segundo uma regra de cálculo determinada pelo usuário. Para isso,
+    no arquivo de dados gerais do DECOMP (item 4.5), o usuário deverá indicar através do
+    mnêmonico NPOSNW o posto de vazão artificial a ser utilizado.
+    Usinas que utilizam postos com registro de vazão lateral no arquivo de dados gerais
+    (DADGER.XXX - item 4.1) devem ser incluídas no arquivo MODIF.DAT.
+    No Anexo B é fornecida uma tabela contendo a fonte de onde são provenientes as vazões
+    utilizadas para o cálculo do despacho da operação e para cálculo da ENA no programa
+    DECOMP.
+    4.12 Arquivo de estudos prospectivos
+    Arquivo: PROSPEC.DAT
+
+
+    Esta funcionalidade tem como objetivo permitir que o usuário crie de forma simples e
+    automática um cenário de vazões afluentes a todas as usinas da configuração para ser
+    utilizado em conjunto com o modelo DECOMP em estudos prospectivos.
+    O nome do arquivo de estudo prospectivo é fornecido pelo usuário e somente será lido caso a
+    opção de estudo prospectivo seja habilitada (registo 13 do item 4.5).
+    Um estudo prospectivo, em geral, é realizado de forma determinística, isto é, utilizando um
+    único cenário de afluências futuras ao longo do horizonte de estudo. Este cenário pode ser
+    definido pelo usuário de acordo com algum modelo de previsão, um determinado ano
+    histórico, um percentual da média de longo termo, etc.
+    Em algumas situações pode ser desejável considerar diversos cenários sintéticos ao final do
+    horizonte de estudo. Neste caso, a árvore será construída considerando uma abertura até o
+    penúltimo mês de estudo e, então, será um número de aberturas definido pelo usuário no
+    último mês. As opções para definição do cenário determinístico utilizado ao longo do
+    horizonte são descritas no registro 4. Esta opção é informada por REE e será válida para todas
+    as UHEs pertencentes ao REE.
+    Bloco 1
+       Registro      Colunas      Formato   Descrição
+       1             40 a 43      I4        Realização de estudo prospectivo para o mês
+                                            determinístico (1º mês de estudo)
+                                            0 = Não
+                                            1 = Sim
+
+    F-CO-005 REV. 2, 04/03/2013                                                             25/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+
+       Registro      Colunas      Formato     Descrição
+       2             1 a 70       A70         Linha de comentário – este registro é ignorado
+       3             1 a 70       A70         Linha de comentário – este registro é ignorado
+       4             2a5          I4          Número do REE
+       4             7 a 10       A4          Tipo da vazão a ser considerada no REE
+                                              VEC = valor esperado condicionado
+                                              MLT = percentual da média de longo termo
+                                              XXXX = XXXX representa um ano do histórico
+                                              de vazões
+                                              ESPC = valor específico a ser considerada
+       4             2a5          I4          Número do REE
+       4             12 a 16      F5.1        Valor percentual a ser considerado para tipo MLT
+
+    Caso o primeiro registro seja preenchido com o valor ‘1’, as vazões consideradas no primeiro
+    mês do caso seguirão as mesmas regras definidas pelo registro 4. Caso contrário, elas serão
+    obtidas através das previsões semanais fornecidas (item 4.7).
+    Vale ressaltar que quando for considerado estudo prospectivo para o primeiro mês do caso, o
+    mesmo deverá ser mês cheio, não podendo haver estágios semanais (registro 7 item 4.5). O
+    registro 4 deve se repetir tantas vezes quanto o número de REEs considerados no caso. Após o
+    preenchimento desse registo deve-se finalizar o primeiro bloco do arquivo com o valor ‘9999”
+    nas colunas 2 a 5.
+    A opção ‘VEC’ irá calcular o valor esperado condicionado dado pelo modelo PAR(p)
+    ajustado a cada UHE pertencente do REE para cada mês do caso. Este valor será utilizado no
+    cenário determinístico.
+    A opção ‘MLT’ irá calcular o percentual da média de longo termo dado a cada UHE
+    pertencente do REE para cada mês do caso, que irá compor o cenário determinístico.
+    Para qualquer ano histórico que pertença ao período considerado no registro histórico de
+    vazões, o cenário considerado para cada UHE pertencente do REE será exatamente igual à
+    vazão do ano selecionado.
+    Caso seja selecionado a opção ‘ESPC’, o cenário determinístico sera definido diretamente
+    pelo usuário. Se pelo menos um REE possuir essa opção, ela será considerada para todos os
+    outros REEs. Quando esta opção for selecionada, será necessário preencher o bloco 2 descrito
+    abaixo.
+    Bloco 2
+    Os seguintes registros do bloco 2 devem ser preenchidos após o fim do primeiro bloco, para
+    todas as usinas presentes no estudo.
+    Cada registro é composto por 14 campos descritos a seguir.
+        Campo          Colunas    Formato                         Descrição
+            1            2a5            I4    Código do posto
+            2           7 a 18         A12    Nome da usina associada ao posto
+            3          20 a 28         F9.2   Vazão para o mês de janeiro, em m3/s
+
+    F-CO-005 REV. 2, 04/03/2013                                                                26/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+
+        Campo          Colunas     Formato                            Descrição
+            4          30 a 38        F9.2         Vazão para o mês de fevereiro, em m3/s
+                                                                       
+           14         130 a 138       F9.2         Vazão para o mês de dezembro, em m3/s
+
+
+    5        Arquivos de saída
+    O modelo GEVAZP produz quatro tipos de arquivos de saída: relatório de acompanhamento
+    do programa, arquivos com as séries geradas, arquivos com as probabilidades associadas aos
+    cenários hidrológicos e arquivo com resultados de testes. Estes dois últimos arquivos serão
+    gerados se for escolhida a opção de geração de séries sintéticas no formato árvore. Caso seja
+    detectada alguma eventual inconsistência nos dados, será gerado um arquivo com as
+    mensagens de erros ocorridas (GEVAZP.ERR).
+    5.1      Relatório de acompanhamento do programa
+        É um arquivo formatado de acesso sequencial, contendo informações sobre o
+        processamento do estudo. É emitido no formato de 132 colunas e contém:
+                 *    relatório dos dados gerais
+                 *    relatório da configuração das usinas/subsistemas
+                 *    relatório de classificação das usinas/subsistemas
+                 *    relatório com as vazões/energias adotadas para a tendência hidrológica
+                 *    relatório com as séries históricas de vazões/energias incrementais afluentes,
+                      incluindo as correlações espaciais históricas
+                 *    relatório do processo PAR(p), incluindo as correlações espaciais sintéticas
+                 *    relatório com os momentos das séries totalizadas, incluindo as correlações
+                      espaciais históricas e sintéticas
+                 *    relatório dos testes de seqüência negativa.
+        Adicionalmente às séries históricas de vazões/energias incrementais afluentes, são
+        fornecidos os seguintes resultados:
+                 *    média, desvio padrão e função de autocorrelação histórica
+                 *    construção gráfica da função de autocorrelação
+                 *    função de autocorrelação parcial e a correspondente construção gráfica
+                 *    ordem escolhida do modelo PAR(p)
+                 *    parâmetros do modelo PAR(p)
+                 *    série de ruídos aleatórios resultante e estatísticas periódicas correspondentes.
+        O relatório dos testes de seqüência negativa das séries histórica e sintéticas apresenta os
+        seguintes resultados:
+
+    F-CO-005 REV. 2, 04/03/2013                                                                    27/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+                 *    o número de seqüências negativas do histórico e do gerado, e por série gerada
+                 *    avaliação da soma das seqüências negativas e teste de Kolmogorov-Smirnov
+                 *    divisão em classes dos comprimentos de seqüências negativas do histórico e do
+                      gerado
+                 *    avaliação do comprimento das seqüências negativas e teste do Qui-Quadrado
+                 *    avaliação da intensidade das seqüências negativas e teste de Kolmogorov -
+                      Smirnov
+                 *    máxima soma, comprimento e intensidade das seqüências negativas do
+                      histórico e do sintético
+                 *    máximo déficit das séries sintéticas, em relação à média do histórico
+                 *    comprimento do período crítico das séries sintéticas.
+    5.2      Arquivos de dados para interface gráfica
+    São arquivos não formatados de acesso direto, contendo informações sobre o processamento
+    do estudo. Esses arquivos serão utilizados pela interface gráfica para facilitar a visualização
+    dos dados de entrada e saída do modelo GEVAZP. Os arquivos são:
+        •    LEARQH.OUT
+        •    CORRELI.OUT
+        •    CORRELT.OUT
+        •    TESSEQ.OUT
+        •    TESARV.OUT
+        Os dois últimos arquivos estão relacionados aos testes aplicados às séries geradas no
+        padrão paralelo e árvore.
+    5.3      Arquivo com as séries de vazões geradas
+    5.3.1 Arquivo de séries sintéticas de vazões totais
+    O arquivo com as séries sintéticas de vazões totais, não formatado de acesso direto e com
+    nome definido pelo usuário no item 3.2, registro 8, pode ser produzido em dois formatos
+    distintos. Este formato pode ser escolhido pelo usuário (item 3.3, registro 2).
+    5.3.1.1 Formato para séries em paralelo
+    Se for especificado o formato para séries em paralelo (item 3.3, registro 2, opção 0), o arquivo
+    será aberto pelo seguinte comando:
+             OPEN(17,ACCESS=’DIRECT’,FORM=’UNFORMATTED’,RECL=ZPTS*8,FILE=NENGR)
+
+    onde ZPTS é a dimensão máxima do registro de vazão sintética (4000) e NENGR é o nome
+    do arquivo onde serão gravadas as vazões totais previstas (item 3.2 registo 8).
+    A gravação é feita segundo o seguinte comando:
+            I1 = 1
+            I2 = MSIS
+
+    F-CO-005 REV. 2, 04/03/2013                                                                28/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+           DO JREG = 1, IREG
+              IPERSG = IPERSG + 1
+              WRITE(IOENGS,REC=IPERSG) ((EG(IPEA,ISEG,ISIS),
+                                        ISEG= 1, NSEG), ISIS = I1, I2)
+              I1 = I2 + 1
+              I2 = MIN0 ((I2 + MSIS),NSIS)
+          ENDDO
+
+    onde NSEG    é o número de séries sintéticas e NSIS o número de usinas. A matriz EG é
+    indexada por um número seqüêncial conforme a ordem das usinas no arquivo de
+    configuração.
+    Assim, em cada registro, são gravados os valores gerados para todas as séries e para todas as
+    usinas especificadas no arquivo da configuração (item 3.4), para um determinado período. Se
+    o número de valores a serem gravados em cada registro (NSEG*I2) for maior que 4000, serão
+    gravados os valores em um número de registros (NREG) calculados como a seguir:
+          MSIS = 4000 / NSEG
+       NREG = (NSIS - 1) / MSIS + 1
+
+    Portanto, em cada registro serão gravados os valores de até I2 usinas, para todas as séries.
+    Observação: Caso não seja adotada a tendência hidrológica (item 3.3 registro 18), as vazões
+    previstas serão gravadas a partir do n-ésimo registro, onde n é o número máximo de meses
+    (passados) necessário para o modelo autorregressivo (MM), multiplicado pelo número de
+    registros (NREG).
+    5.3.1.2 Formato para séries em árvore
+    Se for especificado o formato para séries em árvore (item 3.3, registro 2, opção 1), o arquivo
+    será aberto pelo seguinte comando:
+             OPEN(17,ACCESS=’DIRECT’,FORM=’UNFORMATTED’,RECL=ZPOS*8,FILE=NENGR)
+
+    onde ZPOS = total de postos do arquivo de vazões históricas (320 ou 600) e NENGR é o
+    nome do arquivo onde serão gravadas as vazões totais previstas (item 3.2 registo 8)
+    Esta gravação é feita segundo o seguinte comando:
+              DO ISEG = 1, NSEG
+                 JREC = JREC + 1
+                 WRITE(IOENGS,REC=JREC) (EG(IPEA,ISEG,ISIS), ISIS = 1, NSIS )
+             ENDDO
+
+    onde NSEG é o número de séries sintéticas, NSIS é o número de usinas, e IPEA é o período a
+    que se referem as séries. A matriz EG é indexada por um número sequêncial conforme a
+    ordem das usinas no arquivo de configuração.
+    Assim, em cada registro, são gravados os valores gerados para todas as usinas especificadas
+    no arquivo da configuração (item 4), para uma determinada série e um determinado período.
+    Um arquivo de nome fixo igual a VAZOESTA.OUT, com formato idêntico ao descrito nos
+    itens 4.3.1.1 e 4.3.1.2, será criado contendo os cenários de vazões calculados considerando os
+    postos de vazões totais artificiais presentes na configuração.
+
+
+
+
+    F-CO-005 REV. 2, 04/03/2013                                                                29/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+    5.3.2 Arquivo de séries sintéticas de vazões incrementais
+    O arquivo com as séries sintéticas de vazões incrementais, não formatado de acesso direto e
+    com nome definido pelo usuário no item 3.2, registro 9, pode ser produzido em dois formatos
+    distintos. Este formato pode ser escolhido pelo usuário.
+    A abertura e a escrita deste arquivo são idênticas àquelas descritas no item 5.3.1.1 para o
+    formato de séries em paralelo, e àquelas descritas no item 5.3.1.2 para o formato de séries em
+    árvore. A observação feita no item 5.3.1.1 para séries em paralelo, também é válida para o
+    arquivo de gravação das séries sintéticas de vazões incrementais neste formato.
+    Um arquivo de nome fixo igual a VAZOESIA.OUT, com formato idêntico ao descrito nos
+    itens 4.3.1.1 e 4.3.1.2, será criado contendo os cenários de vazões incrementais calculados
+    considerando os postos de vazões artificiais presentes na configuração.
+    5.3.3 Arquivos de séries sintéticas de vazões formatados
+    Um arquivo formatado contendo as séries sintéticas de vazões totais será gerado caso seja
+    selecionado a opção imprimir relatório (item 3.3 registro 21). O nome deste arquivo é fixo:
+    VAZOEST.REL. Também será gerado um arquivo formatado contendo as séries sintéticas de
+    vazões incrementais, VAZOESI.REL. Também serão gerados os arquivos VAZOESTA.REL
+    e VAZOESIA.REL contendo os cenários calculados para os postos de vazões artificiais.
+    Também são gerados arquivos de texto com valores separados por vírgulas, nos quais o
+    caractere vírgula separa cada campo de texto (VAZOEST.CSV, VAZOESI.CSV,
+    VAZOESTA.CSV e VAZOESIA.CSV)
+    Estes arquivos são gerados para ambos os formatos de geração de séries sintéticas (paralelo
+    ou árvore).
+    5.3.4        Arquivo de vazões para utilização do programa DECOMP
+
+    Arquivo: VAZOES.XXX
+    É um arquivo de acesso direto que é dividido basicamente em 4 partes. A primeira parte é
+    dedicada a informações gerais sobre o caso; a segunda parte traz as informações sobre as
+    vazões incrementais semanais previstas e os cenários gerados de vazão incremental mensal,
+    que serão utilizados no cálculo da política de operação; a terceira parte tem o mesmo número
+    de registros da segunda, e corresponde às vazões incrementais semanais previstas e os
+    cenários calculados de vazão incremental mensal considerando postos artificiais, que serão
+    usados no cálculo da energia natural afluente de acoplamento; por último, serão passadas as
+    vazões incrementais semanais e mensais observadas.
+                Registro                               Descrição
+                   1              1. Total de postos considerados
+                                  2. N. de estágios considerados
+                                  3. N. de aberturas em cada estágio
+                     2        Código das usinas hidráulicas consideradas no estudo
+                     3        N. de semanas completas
+                              N. de dias que devem ser excluídos do estágio seguinte ao mês
+                              inicial decomposto em semanas
+                              Índice do mês inicial do estudo
+                              Ano do mês inicial do estudo
+                              Nº de postos
+                              Nº de semanas observadas
+                              Versão do modelo GEVAZP
+    F-CO-005 REV. 2, 04/03/2013                                                                30/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+
+                Registro                                Descrição
+                   4          Probabilidades associadas a cada nó da árvore
+                   5          Vazões incrementais semanais previstas
+                  …
+                   5          Vazões incrementais semanais previstas
+                   6          Vazões incrementais mensais geradas
+                  …
+                   6          Vazões incrementais mensais geradas
+                   7          Vazões incrementais semanais previstas considerando postos
+                              artificiais
+
+                    …
+                    7         Vazões incrementais semanais previstas considerando postos
+                              artificiais
+                     8        Vazões incrementais mensais calculadas considerando postos
+                              artificiais
+                    …
+                    8         Vazões incrementais mensais calculadas considerando postos
+                              artificiais
+                     9        Vazões incrementais mensais observadas
+                    10        Vazões incrementais semanais observadas
+
+
+    onde NREG é o número total de nós da estrutura de árvore dividido pelo número de postos,
+    que pode ser 320 ou 600 dependendo do caso. Se o resultado desta divisão não for exato então
+    NREG = NREG+1
+    O número de registros de vazões incrementais semanais e mensais, previstas e observadas,
+    varia de acordo com a configuração do caso.
+    Adicionalmente, as informações contidas neste arquivo são impressas em um arquivo formato
+    com nome fixo igual a VAZDCP.REL.
+    5.4      Arquivo das Probabilidades
+    O arquivo com as probabilidades associadas aos cenários hidrológicos é não formatado, de
+    acesso direto e com nome fixo PROBVAZ.DAT será aberto pelo seguinte comando:
+
+    OPEN ( UNIT = IOPROB, ACCESS = 'DIRECT', FORM = 'UNFORMATTED',
+           RECL = NPOS*4, STATUS = 'UNKNOWN', FILE = ‘PROBVAZ.DAT’ )
+
+    onde NPOS é o total de postos do arquivo de vazões históricas (320/600).
+    A gravação é feita segundo o seguinte comando:
+                 NREGP = NNOT/NPOS
+                 IF (MOD(NNOT,NPOS).GT.0) NREGP = NREGP + 1
+                 I1 = 1
+                 I2 = NPOS
+                 DO IREG = 1, NREGP
+                    IF (I2.GT.NNOT) I2=NNOT
+                    WRITE(IOPROB,REC=IREG)(PROBLEX(I),I=I1,I2)
+                    I1 = I2 + 1
+                    I2 = I1 + NPOS - 1
+    F-CO-005 REV. 2, 04/03/2013                                                            31/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+                END DO
+
+    onde NNOT é o número de nós existente na árvore. O vetor PROBLEX contém as
+    probabilidades dos nós já na ordem correta, isto é, da esquerda para direita e de cima para
+    baixo.
+    Se o número de valores a serem gravados em cada registro (NNOT) for maior que NPOS,
+    serão gravados os valores em um número de registros (NREGP) calculados como a seguir:
+
+                 NREGP = NNOT/NPOS
+                 IF (MOD(NNOT,NPOS).GT.0) NREGP = NREGP + 1
+
+    Portanto, em cada registro serão gravados até NPOS valores.
+    Um arquivo formatado (PROBVAZ.REL) com as probabilidades associadas a cada nó
+    também será gerado se for selecionado a opção impressão das vazões geradas (item 3.3
+    registro 21).
+    5.5      Arquivo de Testes
+    Estes dois arquivos contêm os resultados dos testes realizados no padrão árvore. Só serão
+    gerados caso seja escolhido a opção de geração no padrão árvore (item 3.2 registro 2) e o flag
+    para a realização de testes (item 3.3 registro 20) estiver habilitado.
+    O arquivo TESTES.REL contém os resultados dos testes de momentos condicionados, testes
+    de aderência, testes de regressão e sumário de todos os testes realizados por nó e por período.
+    O arquivo REGRES.CSV está no formato EXCEL (CSV) e contém os dados para os quais
+    foram realizadas as regressões.
+
+    6        Mensagens de erro
+    O programa critica os dados fornecidos pelo usuário. Eventuais inconsistências encontradas
+    são informadas através de mensagens de erro e a execução do programa pode ser
+    interrompida. Nesse caso, o usuário deve então se reportar ao relatório de saída onde as
+    mensagens informam o nome da rotina onde ocorreu o erro e a descrição do mesmo. Os erros
+    também serão listados em um arquivo de erros GEVAZP.ERR.
+
+    7        Capacidade do programa
+    A capacidade do programa é definida através de um arquivo de parâmetros que facilita o seu
+    redimensionamento de acordo com as necessidades e instalações computacionais específicas
+    de cada usuário. A capacidade do programa na sua versão atual é dada pela tabela abaixo.
+                                  Parâmetros                            Valor
+                 Nº máximo de anos de estudo                            100
+                 Total de períodos do ano                                12
+                 Ordem máxima para o modelo par(p)                       11
+                 Ordem máxima para FAC do modelo par(p)                  11
+                 Nº máximo de usinas a montante                          10
+
+    F-CO-005 REV. 2, 04/03/2013                                                              32/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+
+                                  Parâmetros                             Valor
+                 Dimensão máxima do registro do arquivo de               4.000
+                 vazões/energias sintéticas
+                 Dimensão máxima do registro do arquivo de               1200
+                 vazões/energias históricas
+                 Total de subsistemas ou usinas                           230
+                 Total de anos do registro histórico de                   100
+                 vazões/energias
+                 Total de segmentos gerados para a                       5000
+                 simulação final
+                 Nº de séries que serão agrupadas                1000 (agregação nas
+                                                                  vazões) ou 100000
+                                                                (agregação no ruídos)
+                 Nº máximo de aberturas por período                      1000
+                 Nº máximo de nós da árvore gerada                      55000
+                 Total de postos/subsistemas do arquivo de             320/600
+                 vazões/energias históricas
+                 Nº máximo de classes de déficit para as                 1.000
+                 seqüências negativas
+                 Nº máximo de seqüências negativas nas                 150.000
+                 séries sintéticas
+                 Nº máximo de seqüências negativas no                     300
+                 histórico
+                 Nº máximo de séries históricas                            1
+
+
+
+    8        Referências
+    [1] Maceira, M.E.P.; Bezerra,C.M.B. – “Modelo de Geração de Séries Sintéticas de Energias
+        e Vazões (Gevazp) - Manual de Metodologia”, Relatório Técnico CEPEL nº DPP/PEN –
+        083/2000.
+    [2] Aldenderfer, M., Blashfield, R., “Cluster Analysis”, Sage Publication,1984
+
+    9        Alterações
+        •    Versão 3.11
+                 1. Geração de cenários de energias a partir de arquivos com as séries históricas de
+                    energias produzidas pelo modelo Newave para a primeira configuração.
+                    (funcionalidade não operacional versão 5.1);
+                 2. Alteração no número máximo de séries (5000);
+                 3. Correção/crítica de divisão por zero em rotinas internas;
+    F-CO-005 REV. 2, 04/03/2013                                                               33/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+                 4. Alteração do tamanho da variável Título;
+                 5. Alteração nos tamanhos das variáveis com os nomes dos arquivos de saída;
+                 6. Impressão de uma tabela com a listagem dos testes rejeitados por usina
+                    (formato árvore, arquivo TESTES.REL) ;
+                 7. Crítica para usina/sistema/posto com número igual a zero.
+        •    Versão 3.12
+                 1. Compatibilização com o programa Suishi. Inclusão de um registro contendo a
+                    listagem dos postos com registro de vazão não natural, no arquivo de séries
+                    sintéticas de vazões totais geradas (VAZTOTGD.dat);
+                 2. Inclusão de mensagens de erro na ocorrência de operações ilegais (por
+                    exemplo, divisão por zero);
+                 3. Alteração na impressão das tabelas de correlação espacial (arquivo
+                    GEVAZP.REL).
+        •    Versão 3.13
+                 1. Compatibilização como o programa Suishi-o. Inclusão de um registro contendo
+                    a listagem dos postos com registro de vazão não natural, no arquivo de séries
+                    sintéticas de vazões totais geradas (VAZTOTGD.dat);
+                 2. Possibilidade de ordenação automática das                 usinas   hidroelétricas
+                    (funcionalidade não operacional na versão 5.1);
+                 3. Inclusão de mensagens de erro na ocorrência de operações ilegais;
+                 4. Consideração do tempo de viagem das usinas informado pelo usuário;
+                 5. Possibilidade da escolha do tamanho do registro do arquivo de vazões
+                    históricas;
+                 6. Inclusão de limpeza de variável na rotina de cálculo de distância para o
+                    processo de agregação;
+                 7. Troca da rotina de ordenação;
+                 8. Impressão de arquivos binários necessários à interface gráfica;
+                 9. Alteração na impressão das tabelas de correlação;
+                 10. Acréscimo no número máximo de seqüências negativas no histórico.
+        •    Versão 3.14
+                 1. Possibilidade de utilizar registros de vazões incrementais;
+                 2. Inclusão de verificação do número máximo de usinas a montante;
+                 3. Crítica quando houver usinas repetidas na configuração;
+                 4. Crítica quando houver loop na configuração das usinas;
+                 5. Ajuste no algoritmo de classificação de postos de forma que a ordem de
+                    entrada das usinas no arquivo de configuração não influencie na classificação;
+
+    F-CO-005 REV. 2, 04/03/2013                                                                34/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+                 6. Alteração no campo relativo ao tempo de viagem. O tempo de viagem passa a
+                    ser considerado entre a usina/subsistema e sua jusante, e é dado em horas.
+        •    Versão 3.15
+                 1. Inclusão dos procedimentos do Montador de Vazões como uma opção de
+                    geração do Gevazp;
+                 2. Possibilidade de geração de séries de vazões “históricas condicionadas”
+                    (funcionalidade não operacional na versão 5.1);
+                 3. Acréscimo no número máximo de usinas a montante (10).
+        •    Versão 3.16
+                 1. Possibilidade de escolha do limite inferior da distribuição da série gerada. O
+                    limite inferior é escolhido como sendo um percentual do valor mínimo
+                    observado no histórico. Essa funcionalidade está disponível apenas na opção
+                    “Procedimento Operativo”. A funcionalidade “Procedimento Operativo” não
+                    está operacional na versão 5.1.
+        •    Versão 3.16a
+                 1. Correção na geração das vazões históricas condicionadas ao passado recente,
+                    durante o cálculo do ruído normal associado ao valor histórico.
+        •    Versão 3.16b
+                 1. Correção na geração das vazões históricas condicionadas ao passado recente,
+                    durante o cálculo do ruído lognormal 3 parâmetros condicionado.
+        •    Versão 4.7
+                 1. Incorporação de uma nova tela para a apresentação das energias naturais
+                    afluentes de cada subsistema e semana.
+        •    Versão 4.8
+                 1. Interface gráfica: Retirada de uma crítica indevida referente a não existência do
+                    arquivo de energias naturais afluentes.
+        •    Versão 4.9
+                 1. Ajuste na leitura do registro ES, que contém os valores de energias semanais
+                    observadas, no arquivo de dados gerais do DECOMP. Esse registro passa a ser
+                    lido em ordem semanal decrescente.
+                 2. Alteração da leitura do registro ES do arquivo de dados gerais do DECOMP,
+                    de modo a considerar valores decimais.
+                 3. Mudança de compilador (Watcom para Intel).
+        •    Versão 5.0
+                 1. Alteração no número de casas decimais na impressão das variáveis coeficiente
+                    do modelo autorregressivo, média e desvio padrão da série de afluência
+                    histórica e da série de ruídos históricos;
+
+
+    F-CO-005 REV. 2, 04/03/2013                                                                35/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+                 2. Acréscimo no período de estudo da opção Procedimento Operativo (24 meses)
+                    e adaptação da opção Procedimentos Operativos para que o primeiro mês do
+                    estudo seja determinístico;
+                 3. Impressão de um arquivo contendo as séries de vazões incrementais geradas
+                    para as usinas com postos classificados como principais. Esse arquivo será
+                    impresso somente para a opção Procedimentos Operativos;
+                 4. Possibilidade de consideração de vazões semanais para o primeiro mês de
+                    estudo para a opção Procedimentos Operativos;
+                 5. Impressão de um arquivo auxiliar (MLT.TXT) contendo as médias mensais
+                    históricas das vazões totais de todas as usinas da configuração;
+                 6. Impressão do número           do   posto   nos   arquivos   VAZOEST.REL        e
+                    VAZOESI.REL;
+                 7. Troca do algoritmo de classificação das usinas. O algoritmo anterior foi
+                    substituído por aquele utilizado na versão 3.10 do programa GEVAZP;
+                 8. Interface Gráfica: Disponibilização de novas saídas gráficas;
+                 9. Possibilidade de considerar a compensação              da   correlação   cruzada
+                    (funcionalidade não operacional na versão 5.1);
+                 10. Correção na rotina de agregação para casos com número de aberturas igual a 1;
+                 11. Impressão do arquivo contendo as estatísticas das séries geradas;
+                 12. Possibilidade de geração de cenários no formato árvore utilizando técnicas de
+                     redução de cenários. Opção “Árvore/Redução local” (funcionalidade não
+                     operacional na versão 5.1);
+        •    Versão 5.1
+                 1. Reformulação da entrada de dados: compatibilização com os demais modelos
+                    da cadeia (ex: caso.dat, arquivos.dat, etc).
+                 2.    Incorporação total do procedimento MONTADOR DE VAZÕES: a entrada de
+                      dados passa a ser feita diretamente pelo deck do DECOMP, sem passos
+                      intermediários;
+                 3. Possibilidade de ajuste de modelo AR(0) ;
+                 4.   Geração compatibilizada entre postos de vazão total e lateral;
+                 5.    Geração para postos altamente correlacionados, localizados em cascatas
+                      diferentes, porém na mesma região hidrográfica;
+                 6. Possibilidade de utilizar correlação espacial mensal (opção não operacional
+                    nesta versão)
+                 7. Novos tipos de geração (opções não operacionais nesta versão)
+                       ▪ Pente com agregação de ruídos
+                       ▪ Árvore com ruídos simétricos
+                       ▪ Árvore com agregação de ruídos simétricos
+
+
+    F-CO-005 REV. 2, 04/03/2013                                                                36/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+                 8. Inclusão de opção para cálculo da severidade e similaridade do passado recente
+                    frente ao histórico de vazões (opção não operacional nesta versão).
+        •    Versão 5.2
+                 1. Possibilidade de utilização de regra de propagação linear para o cálculo das
+                    vazões totais associadas a uma usina afetada pela defasagem por tempo de
+                    viagem.
+        •    Versão 5.3
+                 1. Possibilidade de geração de vazões para postos artificiais, seguindo a regra de
+                    cálculo dos mesmos, para casos do tipo DECOMP. Esses postos serão
+                    utilizados no cálculo da ENA de acoplamento pelo programa DECOMP.
+        •    Versão 5.3.1
+                 1. Correção na impressão das previsões semanais para os postos artificiais.
+        •    Versão 5.3.2
+                 1. Modificação da regra para os postos artificiais 292 e 302, referentes à usina de
+                    Belo Monte.
+        •    Versão 5.3.3
+                 1. Impressão de arquivo necessário para interface gerar gráficos de evolução
+                    temporal para casos sem tendência hidrológica.
+                 2. Criação de relatórios de vazões incrementais e totais considerando postos
+                    artificiais.
+                 3. Ajuste do cálculo das previsões semanais para o posto artificial relativo à usina
+                    Belo Monte.
+                 4. Impressão de arquivo formatado contendo as informações enviadas para o
+                    DECOMP no arquivo binário VAZOES.XXX.
+                 5. Impressão das vazões semanais observadas para os postos artificiais no arquivo
+                    de vazões de enviado para o DECOMP (VAZOES.XXX).
+                 6. Impressão coeficientes utilizados para o cálculo dos cenários de vazões dos
+                    postos satélites no relatório de saída.
+        •    Versão 5.3.4
+                 1. Inclusão de crítica para os dados da coluna bacia hidrográfica do arquivo de
+                    configuração hidráulica.
+                 2. Impressão do coeficiente utilizado para o cálculo dos cenários de vazão de
+                    postos laterais.
+                 3. Ajuste no cálculo da vazão incremental considerando postos artificiais para
+                    usinas imediatamente à justante de usinas artificiais originalmente retiradas da
+                    configuração hidráulica.
+                 4. Impressão de arquivo temporário para o processo de validação, contendo as
+                    vazões incrementais geradas para os postos principais sem a consideração dos
+                    postos satélites (VAZOESI_GERADAS.DAT).
+    F-CO-005 REV. 2, 04/03/2013                                                                37/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+
+        •    Versão 5.4
+                 1. Ajuste de modelo PARP para postos laterais independente da classificação da
+                    usina associada a este posto;
+                 2. Leitura das regras utilizadas para cálculo dos postos artificiais;
+                 3. Inclusão de campo para leitura do número de semanas observadas no bloco de
+                    dados &VAZOES;
+                 4. Possibilidade de escolher a opção de uso da propagação linear no bloco de
+                    dados &VAZOES;
+                 5. Arredondamento dos valores de vazão incremental fornecidos ao DECOMP
+                 6. Impressão da previsão semanal incremental para uso na operação e cálculo da
+                    ENA de acoplamento por posto.
+        •    Versão 5.4.1
+                 1. Inclusão de crítica para declaração de usina não existente no cadastro de
+                    usinas;
+                 2. Ajuste no dimensionamento da variável probabilidade dos cenários;
+                 3. Ajuste em mensagens relativas ao cálculo de postos artificiais quando não
+                    posto utilizado na regra não fizer parte da configuração;
+                 4. Redimensionamento do tamanho máximo da regra para postos artificiais (600
+                    caracteres);
+                 5. Possibilidade da regra de um posto artificial ser função de outro posto artificial
+                    e inclusão do ponto como separador de decimal nas regras de cálculo;
+                 6. Ajuste no cálculo da inversa da matriz de correlação utilizada para geração dos
+                    cenários dos postos laterais;
+                 7. Modificação no cálculo dos valores incrementais das previsões semanais e
+                    vazões mensais observadas para usinas com postos nulos (postos declarados no
+                    arquivo MODIF.DAT com a palavra-chave PARTIF). A incremental destas
+                    usinas é igual a zero;
+                 8. Correção na mensagem de erro relativa ao número de dias da primeira semana,
+                    para casos do tipo DECOMP.
+        •    Versão 5.4.2
+                 1. Possibilidade de considerar postos artificiais sem vínculo com usinas
+                    pertecentes à configuração para fins de uso nas regras de cálculo;
+                 2. Inclusão de crítica para regras utilizadas para cálculo de postos artificiais que
+                    possuam referência circular;
+                 3. Criação de arquivo específico para mensagens de alerta (gevazp.alt);
+                 4. Impressão dos postos de montante para as usinas consideradas na configuração
+                    do DECOMP;
+
+
+    F-CO-005 REV. 2, 04/03/2013                                                                 38/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+                 5. Ajuste no cálculo da inversa da matriz de correlação utilizada para geração dos
+                    cenários dos postos laterais (problema inserido na versão 5.4.1);
+                 6. Ajuste no cálculo das vazões semanais artificiais para postos que possuam
+                    regras de cálculo distintas para cada mês;
+                 7. Ajuste na crítica quando for fornecido um ano inicial do histórico inválido no
+                    arquivo de entrada do DECOMP.
+        •    Versão 5.4.3
+                 1. Impressão do número externo dos postos de montante para usinas consideradas
+                    na configuração do DECOMP ao invés do número interno;
+                 2. Impressão somente dos postos pertencentes à configuração do DECOMP no
+                    arquivo vazoes.xxx no bloco de vazões semanais e vazões mensais passadas;
+                 3. Impressão dos relatórios de saída contendo os valores de vazões naturais
+                    geradas e artificiais calculadas com duas casas decimais (arquivos: VAZOESI,
+                    VAZOEST, VAZOESIA, VAZOESTA);
+                 4. Consideração da matriz de correlação espacial entre vazões incrementais no
+                    cálculo dos ruídos para postos laterais (estava sendo utilizada a matriz de
+                    correlação espacial entre vazões totais);
+                 5. Ajuste na impressão das vazões mensais observadas para postos nulos
+                    pertencentes à configuração do DECOMP no arquivo vazoes.xxx.
+        •    Versão 5.4.4
+                 1. Atualização do cálculo das vazões observadas do posto de vazão lateral quando
+                    for utilizada a opção de propagação/defasagem (alternativa 2);
+                 2. Inclusão de arquivo contendo as vazões semanais passadas para o mês anterior
+                    ao estudo, para as usinas imediatamente a montante da usina com posto de
+                    vazão lateral quando for utilizada a opção de propagação/defasagem
+                    (alternativa 2);
+                 3. Ajuste na mensagem de erro quando o arquivo de regras para postos artificiais
+                    não tiver o marcador de fim de arquivo;
+                 4. Impressão na tela da mensagem de erro quando houver regras inconsistentes no
+                    arquivo de regras (a mensagem já estava sendo impressa no arquivo de erros).
+        •    Versão 5.5
+                 1. Opção para desconsiderar o cálculo da propagação linear para vazões semanais
+                    observadas e previstas e mensais passadas. Esses valores serão fornecidos
+                    propagados no próprio arquivo de histórico de vazões mensais e no arquivo
+                    PREVS.RVx;
+                 2. Inclusão de mensagem de alerta quando informado ano inicial distinto nos
+                    campos do arquivo DADGER.RVx em casos do tipo DECOMP;
+                 3. Alteração no cálculo das vazões incrementais de postos nulos. Para os valores
+                    observados e previstos, será feito o cálculo das vazões incrementais com os
+                    valores fornecidos no histórico de vazões e no arquivo de vazões semanais
+
+    F-CO-005 REV. 2, 04/03/2013                                                              39/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+                      previstas. Para as vazões mensais dos meses estocásticos esses valores serão
+                      iguais a zero.
+        •    Versão 5.5.1 e Versão 6
+                 1. Consideração de vazão incremental nula para o primeiro mês e para os meses
+                    anteriores ao início de estudo para usinas declaradas no arquivo MODIF.DAT
+                    com mnemônico PARTIF e com posto igual a 300.
+                 2.    Substituição do valor default para opção sobre a utilização de uma regra de
+                      propagação linear para usinas afetadas pelo tempo de viagem. Adicionalmente,
+                      a opção para considerar a defasagem linear passou de 1 para 2 e opção para
+                      não considerar a defasagem linear passou de 0 para 1.
+        •    Versão 6.1
+                 1. Possibilidade de consideração de diferentes regras ao longo dos anos para
+                    postos artificiais.
+
+
+        •    Versão 6.2
+                 1. Ajuste de modelo autorregressivos periódicos a todas as UHEs;
+                 2. Possibilidade de realização de estudos prospectivos determinísticos e
+                    estocásticos para casos do tipo DECOMP com quatro possibilidades de
+                    cenários: seguindo um ano do histórico, percentual da MLT, VEC ou valores
+                    especificados pelo usuário
+        •    Versão 6.0.1 e 7.0
+                 1. Ajuste na inicialização da variável associada à usina Ilha Solteira
+                    Equivalentenos para casos em que esta não esteja presente na configuração
+                    hidroelétrica.
+        •    Versão 7.1
+                 1. Possibilidade de escolha do representante da agregação, caso o processo de
+                    agregação seja aplicado aos ruídos;
+                 2. Aumento do número de objetos da amostra original do processo de agregação
+                    dos ruídos de 1000 para 50000;
+                 3. Possibilidade de escolha entre a matriz de correlação espacial anual ou mensal
+                    para correlacionar os cenários gerados;
+                 4. Alteração do formato do arquivo de licença (gevazp.lic).
+                 5. Possibilidade de impressão de arquivo de previsão de vazão semanal
+                    atualizado com a média dos cenários gerados do último mês em estudos de
+                    DECOMP.
+                 6. Possibilidade de impressão de arquivo de tendência hidrológica atualizado com
+                    a média da previsão de vazão semanal e a média dos cenários gerados no
+                    estudo de DECOMP.
+
+
+    F-CO-005 REV. 2, 04/03/2013                                                             40/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+                 7. Possibilidade de leitura da tendência hidrológica por meio de arquivo editável
+                    em estudos de DECOMP.
+
+
+        •    Versão 7.2
+                 1. Possibilidade de ajuste de modelo MS-PAR(p), para a consideração do
+                      fenômeno El Niño – Oscilação Sul no processo de geração de cenários
+                      sintéticos de afluências;
+                 2. Possibilidade de ajuste de modelos estocásticos a todas UHEs;
+                 3. Correção da ordenação automática das UHEs, em ordem crescente, pelos
+                      respectivos números externos;
+                 4. Possibilidade de realização de estudos prospectivos;
+                 5. Utilização da decomposição espectral para o cálculo da matriz de carga,
+                      quando esta for mensal;
+                 6. Possibilidade de consideração de mais de um conjunto de regras para postos
+                      artificiais.
+        •    Versão 7.2.1
+                 1. Ajuste nas mensagens de erro para funcionalidades não operacionais;
+                 2. Ajuste no limite inferior para a geração de cenários de UHEs com vazões
+                      incrementais negativas;
+                 3. Correção da escrita do número de objetos da amostra original no relatório de
+                      testes.
+        •    Versão 7.2.2
+                 1. Ajuste na geração de ruídos para postos laterais que apresentem correlação
+                    espacial igual a 1 com o posto de vazão total e se os mesmos forem
+                    classificados como principais.
+
+
+
+
+    F-CO-005 REV. 2, 04/03/2013                                                             41/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+
+                 3. Anexo A - Sistema computacional GEVAZP
+    A.1 - Instalação
+    O modelo GEVAZP requer um micro-computador 2.0 Ghz Intel Dual Core com sistema
+    operacional Windows (versão XP ou mais recente), com no mínimo 4Gb de memória RAM e
+    no mínimo 1 Gb de espaço livre no disco rígido em que será instalado.
+    A.2 - Arquivos utilizados
+    O relacionamento entre o modelo e o usuário é feito através de arquivos de dados de entrada e
+    relatórios de saída. A Figura 3 a seguir apresenta de forma simplificada este relacionamento.
+
+
+                                                                     RELATÓRIO DE
+                                                                   ACOMPANHAMENTO
+                                                                     DO PROGRAMA
+
+                      CONSOLE
+
+                                                                   RELATÓRIO COM AS
+                                                                   SÉRIES SINTÉTICAS
+                                                                   DE VAZÕES TOTAIS
+                     ARQUIVO DE
+                    DADOS GERAIS
+                                                                   RELATÓRIO COM AS
+                                                                   SÉRIES SINTÉTICAS
+                                                                       DE VAZÕES
+                                                                     INCREMENTAIS
+                    ARQUIVO DE
+                   CONFIGURAÇÃO
+
+                                                                   RELATÓRIO COM AS
+                                              GEVAZP                PROBABILIDADES
+                     ARQUIVO DE
+                       VAZÕES
+                      NATURAIS
+                     HISTÓRICAS                                     ARQUIVO COM AS
+                                                                   SÉRIES SINTÉTICAS
+                                                                       DE VAZÕES
+                     ARQUIVO DE                                      INCREMENTAIS
+                    ANOS INICIAL E
+                      FINAL DO
+                    HISTÓRICO DE                                    ARQUIVO COM AS
+                       VAZÕES                                      SÉRIES SINTÉTICAS
+                                                                   DE VAZÕES TOTAIS
+
+                    ARQUIVO COM
+                     AS VAZÕES
+                       PARA A                                       ARQUIVO COM AS
+                     TENDÊNCIA                                      PROBABILIDADES
+                    HIDROLÓGICA
+
+
+
+                                                                    ARQUIVO COM AS
+                                                                  MENSAGENS DE ERRO
+
+
+
+                        Figura 3 - Arquivos de entrada e saída do modelo GEVAZP.
+
+
+
+    F-CO-005 REV. 2, 04/03/2013                                                            42/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+
+    A.3 - Instalação da licença do programa GEVAZP
+    Para a utilização do programa GEVAZP a partir da versão 5.1, é necessário obter um arquivo
+    de licença disponibilizado pelo CEPEL. O arquivo de licença (GEVAZP.LIC) é personalizado
+    para cada empresa e deve ser colocado no mesmo diretório que o executável do programa
+    GEVAZP.
+    A.4 - Atendimento ao Usuário
+    Qualquer pedido de esclarecimento a cerca do progama computacional GEVAZP pode ser
+    efetuado através do telefone (21)2598-6471, ou encaminhado ao seguinte endereço
+    gevazp@cepel.br.
+
+
+
+
+    F-CO-005 REV. 2, 04/03/2013                                                         43/44
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 6646 / 2019_a
+
+
+    Anexo B – Vazões para Operação e Cálculo de ENA
+    Na tabela abaixo são listadas as fontes de onde são provenientes as vazões utilizadas para o despacho da operação e para cálculo da ENA,
+    fornecidas pelo programa GEVAZP para o programa DECOMP, considerando as diversas possibilidades de representação das usinas
+    existentes na configuração (itens 4.5 e 4.11).
+                                   VAZÃO PARA OPERAÇÃO                                        VAZÃO PARA CÁLCULO DA ENA
+                                         Vazão natural                                              Vazão artificial
+    REPRESENTAÇÃO
+                          ESTÁGIO SEMANAL         ESTÁGIO MENSAL        ESTÁGIO SEMANAL           ESTÁGIO MENSAL         MESES OBSERVADOS
+         USINA
+      sem PARTIF e           proveniente do
+                                                vazão gerada GEVAZP    proveniente do PREVS*     vazão gerada GEVAZP    proveniente do histórico
+     sem NPOSNW                 PREVS*
+
+                             proveniente do                               vazão calculada          vazão calculada      vazão calculada segundo
+     com NPOSNW                                 vazão gerada GEVAZP
+                                PREVS*                                     segundo regra            segundo regra                 regra
+                             proveniente do      atribuição de vazão                              atribuição de vazão
+      com PARTIF                                                       proveniente do PREVS*                            proveniente do histórico
+                                PREVS*            incremental nula                                 incremental nula
+     com PARTIF e            proveniente do      atribuição de vazão      vazão calculada          vazão calculada      vazão calculada segundo
+       NPOSNW                   PREVS*            incremental nula         segundo regra            segundo regra                 regra
+     com PARTIF e         atribuição de vazão    atribuição de vazão    atribuição de vazão       atribuição de vazão     atribuição de vazão
+       posto 300           incremental nula       incremental nula       incremental nula          incremental nula        incremental nula
+      com PARTIF,
+                          atribuição de vazão    atribuição de vazão      vazão calculada          vazão calculada      vazão calculada segundo
+       NPOSNW,
+                           incremental nula       incremental nula         segundo regra            segundo regra                 regra
+       posto 300
+
+
+    (*) Para usinas afetadas por tempo de viagem, quando for selecionada a alternativa de defasagem linear para o primeiro mês, os estágios
+    semanais serão provenientes de uma combinação entre o valor fornecido nos arquivos PREVS (item 4.7) e VSEMPAST (item 4.8).
+    F-CO-005 REV. 2, 04/03/2013                                                                   44/44
+

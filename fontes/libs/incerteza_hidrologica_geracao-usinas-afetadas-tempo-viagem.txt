@@ -1,0 +1,21 @@
+Fonte: https://see.cepel.br/manual/libs/latest/incerteza_hidrologica/geracao-usinas-afetadas-tempo-viagem.html (baixado em 26/10/2026)
+
+itemprop="articleBody">
+Geração das Séries Sintéticas de Usinas com Vazões afetadas por Tempo de Viagem¶
+Primeiramente, precisamos introduzir o conceito de vazão lateral, que difere do conceito de vazão incremental por considerar o tempo de viagem da água.
+Vazão incremental: Como introduzido na seção a vazão incremental é a diferença entre a vazão total em um posto de medição num dado mês e a soma das vazões totais de todos os postos imediatamente a montante deste no mesmo mês, sem considerar se a água teve tempo de chegar dos postos à montante até o posto de medição;
+Vazão lateral: é utilizado para se referir à diferença entre a vazão total no posto de medição num dado mês e a soma das vazões propagadas de todos os postos imediatamente a montante que afluem ao posto de medição no mesmo mês, ou seja, as vazões dos postos à montante são apenas consideradas se o tempo de viagem for inferior a um mês;
+Para a maioria dos postos representados no SIN, a vazão lateral é idêntica à vazão incremental em escala mensal, quando se admite que o tempo de viagem da água de uma dada usina hidrelétrica até a próxima usina a jusante é nulo. Porém, quando existe um tempo de viagem elevado entre dois ou mais aproveitamentos adjacentes, essa igualdade passa a não ser verificada e é importante modelar tanto o posto de vazão total/incremental quanto o posto de vazão lateral.
+No programa GEVAZP é possível gerar cenários de vazões laterais e vazões incrementais para uma usina hidrelétrica afetada pela propagação da vazão das usinas de montante. Desta forma, se faz necessário fornecer registros históricos de vazões naturais totais e laterais para todas as usinas afetadas pela propagação das vazões dos postos de montante.
+Geração de cenários de vazões laterais¶
+O procedimento utilizado na geração dos cenários de vazão incremental e lateral depende da classificação da usina (principal ou satélite).
+No caso da geração de cenários de vazão lateral, será ajustado um modelo autorregressivo periódico baseado no histórico de vazões laterais, conforme descrito em Modelo Autorregressivo Periódico - Par(p).
+A geração dos ruídos \(\text{W}_t\) dos postos de vazão lateral é feita após a obtenção dos ruídos dos cenários de vazões incrementais dos postos principais, conforme seções Cálculo dos Resíduos Históricos, Distribuição Lognormal 3 parâmetros e Correlação Espacial.
+(55)¶\[W_i = \rho_{i,j} {\rho_{j,j}}^{-1} W_j + Ea_i\]
+(56)¶\[EE^T = 1 - \rho_{i,j} {\rho_{j,j}}^{-1} \rho_{i,j}^T\]
+        © Copyright 2026, Cepel - Centro de Pesquisas de Energia Elétrica
+.
+        Última actualização em 30 de setembro de 2026.
+    Built with Sphinx using a
+    theme
+    provided by Read the Docs. 
