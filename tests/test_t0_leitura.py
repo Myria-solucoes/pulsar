@@ -69,7 +69,8 @@ class TestDecksCompletos(unittest.TestCase):
                 d = deck(nome, dadger)
                 cfg = configuracao(nome, dadger)
                 tabela = rel.previsoes_semanais(rel.linhas_rel(DECKS / nome / "GEVAZP.REL"))
-                # Na versão 9_L o REL lista também o posto lateral (status PL).
+                # P-REL-03: em 202201–202207 e 202507–202509 o REL lista também
+                # o posto lateral (status PL).
                 tabela = [r for r in tabela if r[3] != "PL"]
                 self.assertEqual(len(tabela), len(cfg.usinas))
                 n = 0

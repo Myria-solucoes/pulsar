@@ -131,7 +131,7 @@ def test_semanas_iguais_a_tabela_de_previsoes_do_rel(pacote):
     nobs = v.calendario.semanas_observadas
     for p in previsoes_rel(pacote.nome):
         u = cfg[p.nint]
-        if p.posto != u.posto:  # linha PL do posto lateral (REL do 9_L)
+        if p.posto != u.posto:  # linha PL do posto lateral (P-REL-03)
             continue
         for w in range(v.prevista_semanal.shape[0]):
             assert v.prevista_semanal[w, u.posto - 1] == p.incremental[nobs + w], u.nome

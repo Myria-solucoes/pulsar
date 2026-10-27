@@ -163,8 +163,9 @@ def test_correlt_correlacoes(pacote):
     c = correlt(pacote.nome)
     for tabela, obter in [("hist_todos", c.correlacao_historica), ("sint_todos", c.correlacao_sintetica)]:
         rel = correlacoes_rel(pacote.nome, tabela)
-        # o REL da versão 10.0.0 lista só 153 das 170 séries do correlt (sem
-        # JIRAU, BELO MONTE, ...); os pares entre as listadas estão todos lá
+        # P-REL-04: o REL da versão 10.0.0 lista só 153 das 170 séries do
+        # correlt (sem JIRAU, BELO MONTE, ...); os pares entre as listadas
+        # estão todos lá
         listadas = {n for par in rel for n in par}
         assert listadas <= {u.nome for u in apoio.config(pacote.nome) if u.nint in c.indice}
         assert len(rel) == len(listadas) * (len(listadas) - 1) // 2
