@@ -64,6 +64,9 @@ class OpcoesGeracao:
     correlacao_lateral: str = "mensal"
     # P-LAT-04: ruído próprio do lateral.
     ruido_lateral: str = "nenhum"
+    # P-AGR-07: componente do lateral no vetor agregado (sorteada e agregada
+    # mesmo quando o ruído próprio não entra no W, versão 11).
+    lateral_na_agregacao: bool = True
     # Parâmetros da F4 (P-ESP-05, P-ESP-07, P-ESP-08).
     laterais_na_carga: str = "fora"
     nao_positivos: str = "zero"
@@ -78,6 +81,8 @@ class OpcoesGeracao:
             raise ValueError(self.correlacao_lateral)
         if self.ruido_lateral not in RUIDOS_LATERAL:
             raise ValueError(self.ruido_lateral)
+        if self.ruido_lateral == "proprio" and not self.lateral_na_agregacao:
+            raise ValueError("ruido_lateral='proprio' exige lateral_na_agregacao")
 
 
 @dataclass(frozen=True)
@@ -196,13 +201,14 @@ class Preparo:
     laterais: list  # postos laterais fora da carga
     cond: dict  # id(lateral) -> (índices dos principais na carga, Σ12 Σ22⁻¹, E)
     ruido_lateral: str = "nenhum"
+    lateral_na_agregacao: bool = True
 
     @property
     def postos(self) -> list[int]:
-        """P-AGR-07: componentes do vetor agregado = séries da carga; com
-        ``ruido_lateral="proprio"``, depois um ruído próprio por posto
-        lateral, cada um com a chave do seu posto."""
-        lat = [s.posto for s in self.laterais] if self.ruido_lateral == "proprio" else []
+        """P-AGR-07: componentes do vetor agregado = séries da carga e, com
+        ``lateral_na_agregacao``, depois um ruído por posto lateral, cada um
+        com a chave do seu posto (usado no W só com ruido_lateral="proprio")."""
+        lat = [s.posto for s in self.laterais] if self.lateral_na_agregacao else []
         return [s.posto for s in self.carga] + lat
 
 
@@ -246,7 +252,7 @@ def preparar(deck, cfg: Configuracao | None = None, opcoes: OpcoesGeracao | None
         g, e = condicional_lateral(mat[0, 1:], mat[1:, 1:])
         cond[id(s)] = ([na_carga[id(t)] for t in principal], g, e)
     return Preparo(cfg, v.aberturas[0], mes, ano_estudo, todas, indice, aj_por, carga, d, laterais, cond,
-                   op.ruido_lateral)
+                   op.ruido_lateral, op.lateral_na_agregacao)
 
 
 def gerar(deck, cfg: Configuracao | None = None, opcoes: OpcoesGeracao | None = None,
