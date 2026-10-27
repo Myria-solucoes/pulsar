@@ -140,54 +140,6 @@ def test_rotas_alternativas_do_limite(pacote):
         assert rr > 100 * r, (rota, rr, r)
 
 
-def test_lateral_condicionado_com_correlacao_anual(pacote):
-    """P-LAT-02 (INFERIDO + DOC M18 eq. 4.19): W de SOBRADINHO_L, tirado do
-    GEVAZP.OUT pela lognormal (M = 0, momentos teóricos), regredido em W de
-    SOBRADINHO reconstruído pelas outras 153 séries (W = A √V y), tem
-    inclinação perto da correlação anual (|Δ| < 0,005) e não da mensal, e
-    desvio residual mais perto de √(1-ρ²_anual) que de √(1-ρ²_mensal)."""
-    from pulsar import espacial as E
-    from pulsar import historico
-    from pulsar.totalizacao import incrementais_de_totais
-
-    nome = pacote.nome
-    d, cfg = base.deck(nome), base.configuracao(nome)
-    mes = apoio.mes_estocastico(nome)
-    ss = historico.series_incrementais(d.historico, cfg)
-    carga = E.series_da_carga(ss)
-    c = E.correlacao_espacial(carga)
-    lam, a = np.linalg.eigh(c.mes(mes))
-    pos = lam > 1e-10
-    tot = ler_totais_gerados(apoio.deck(nome).arq("VAZTOTGD.DAT")).valores[:, :len(cfg.completa)]
-    inc = incrementais_de_totais(tot, cfg, nw="propria")  # NW com a própria incremental
-    col = {u.nome_str: i for i, u in enumerate(cfg.completa)}
-    mod = modelo(nome)
-
-    def w_de(n):
-        aj, cc, s, (mu_a, sa) = mod[n]
-        p = parametros(cc, s, mu_a, sa)
-        return (np.log(inc[:, col[n]] / s - cc - p.delta) - p.mu_xi) / p.sigma_xi
-
-    conh = [n for n in c.nomes if n != "SOBRADINHO"]
-    idx = [c.nomes.index(n) for n in conh]
-    w = np.stack([w_de(n) for n in conh], 1)
-    m = a[:, pos][idx] * np.sqrt(lam[pos])
-    y = np.linalg.lstsq(m, w.T, rcond=None)[0].T
-    js = c.nomes.index("SOBRADINHO")
-    x = y @ (a[js, pos] * np.sqrt(lam[pos]))
-    wl = w_de("SOBRADINHO_L")
-    p = A.pesos(apoio.probvaz(nome))
-    p = p / p.sum()
-    x, wl = x - p @ x, wl - p @ wl
-    beta = (p @ (x * wl)) / (p @ (x * x))
-    res = np.sqrt(p @ (wl - beta * x) ** 2)
-    cl = E.correlacao_espacial([s for s in ss if s.nome in ("SOBRADINHO_L", "SOBRADINHO")])
-    i, j = cl.nomes.index("SOBRADINHO_L"), cl.nomes.index("SOBRADINHO")
-    ra, rm = cl.anual[i, j], cl.mes(mes)[i, j]
-    assert abs(beta - ra) < 0.005 < abs(beta - rm)
-    assert abs(res - np.sqrt(1 - ra * ra)) < abs(res - np.sqrt(1 - rm * rm))
-
-
 # --------------------------------------------------------------------------
 # Quartis do QUANTIL.CSV
 

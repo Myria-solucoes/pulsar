@@ -8,14 +8,15 @@ Cadeia (R1416 cap. 4; R3383 Figura 2.4; L-RUID):
    (``agregacao``);
 2. correlação espacial ``W = D b`` com a matriz de carga da F4
    (``pulsar.espacial``; M18 eq. 4.16);
-3. ruído dos postos laterais condicionado aos principais (M18 eq. 4.19–4.20);
+3. ruído dos postos laterais condicionado aos principais (M18 eq. 4.19–4.20,
+   sem o ruído próprio E b1 por padrão, P-LAT-04);
 4. lognormal de três parâmetros (``lognormal``) e recorrência PAR(p)-A com
    a tendência hidrológica da F5 (M18 eq. 4.9a);
 5. totalização, postos artificiais e incrementais recalculadas pela F6
    (``pulsar.totalizacao``), que dão GEVAZP.OUT, VAZTOTGD.DAT, vazoesta.out e
    vazoesia.out, e probabilidades contagem/N para o PROBVAZ.DAT (F7).
 
-Proveniência: P-GER-01..09, P-LAT-01..03, P-AGR-*, P-LN3-* em PROVENIENCIA.md.
+Proveniência: P-GER-01..09, P-LAT-01..04, P-AGR-*, P-LN3-* em PROVENIENCIA.md.
 """
 
 from __future__ import annotations
@@ -36,7 +37,9 @@ from .lognormal import MOMENTOS, ROTAS, ParametrosLN3, RegraLimite, limite_infer
 MESES = 12
 # P-GER-01 (ESCOLHA, lacuna L6): semente padrão (configurável).
 SEMENTE_PADRAO = 0
-CORRELACOES_LATERAL = ("anual", "mensal")
+CORRELACOES_LATERAL = ("mensal", "anual")
+# P-LAT-04: "nenhum" = W1 = Σ12 Σ22⁻¹ W2 (INFERIDO); "proprio" = + E b1 (M18 eq. 4.19).
+RUIDOS_LATERAL = ("nenhum", "proprio")
 
 
 class ErroGeracao(ValueError):
@@ -56,8 +59,11 @@ class OpcoesGeracao:
     momentos: str = "historicos"
     # P-LN3-06: μ_a - Δ ≤ 0.
     sem_lognormal: str = "quadrado"
-    # P-LAT-02 (DOC M18 eq. 4.19: correlações anuais; variante "mensal").
-    correlacao_lateral: str = "anual"
+    # P-LAT-02: correlação do lateral com o principal, "mensal" (do mês
+    # estocástico, INFERIDO) ou "anual" (M18 §4.3.3.1).
+    correlacao_lateral: str = "mensal"
+    # P-LAT-04: ruído próprio do lateral.
+    ruido_lateral: str = "nenhum"
     # Parâmetros da F4 (P-ESP-05, P-ESP-07, P-ESP-08).
     laterais_na_carga: str = "fora"
     nao_positivos: str = "zero"
@@ -70,6 +76,8 @@ class OpcoesGeracao:
             raise ValueError(self.momentos)
         if self.correlacao_lateral not in CORRELACOES_LATERAL:
             raise ValueError(self.correlacao_lateral)
+        if self.ruido_lateral not in RUIDOS_LATERAL:
+            raise ValueError(self.ruido_lateral)
 
 
 @dataclass(frozen=True)
@@ -187,12 +195,15 @@ class Preparo:
     d: np.ndarray  # matriz de carga
     laterais: list  # postos laterais fora da carga
     cond: dict  # id(lateral) -> (índices dos principais na carga, Σ12 Σ22⁻¹, E)
+    ruido_lateral: str = "nenhum"
 
     @property
     def postos(self) -> list[int]:
-        """P-AGR-07: componentes do vetor agregado = séries da carga, depois
-        um ruído próprio por posto lateral, cada um com a chave do seu posto."""
-        return [s.posto for s in self.carga] + [s.posto for s in self.laterais]
+        """P-AGR-07: componentes do vetor agregado = séries da carga; com
+        ``ruido_lateral="proprio"``, depois um ruído próprio por posto
+        lateral, cada um com a chave do seu posto."""
+        lat = [s.posto for s in self.laterais] if self.ruido_lateral == "proprio" else []
+        return [s.posto for s in self.carga] + lat
 
 
 def preparar(deck, cfg: Configuracao | None = None, opcoes: OpcoesGeracao | None = None,
@@ -221,8 +232,7 @@ def preparar(deck, cfg: Configuracao | None = None, opcoes: OpcoesGeracao | None
     u = espacial.matriz_do_estudo(corr_carga, mes, v.matriz_mensal)
     d = espacial.matriz_de_carga(u, corr_carga.numeros, op.nao_positivos, soma_produto=op.soma_produto).d
 
-    # Laterais fora da carga: ruído próprio, condicionado ao principal
-    # (P-LAT-01..03).
+    # Laterais fora da carga: condicionados ao principal (P-LAT-01..04).
     na_carga = {id(t): j for j, t in enumerate(carga)}
     laterais = [s for s in todas if s.status == LATERAL and not s.nula and id(s) not in na_carga]
     cond = {}
@@ -235,7 +245,8 @@ def preparar(deck, cfg: Configuracao | None = None, opcoes: OpcoesGeracao | None
         mat = cl.anual if op.correlacao_lateral == "anual" else cl.mes(mes)
         g, e = condicional_lateral(mat[0, 1:], mat[1:, 1:])
         cond[id(s)] = ([na_carga[id(t)] for t in principal], g, e)
-    return Preparo(cfg, v.aberturas[0], mes, ano_estudo, todas, indice, aj_por, carga, d, laterais, cond)
+    return Preparo(cfg, v.aberturas[0], mes, ano_estudo, todas, indice, aj_por, carga, d, laterais, cond,
+                   op.ruido_lateral)
 
 
 def gerar(deck, cfg: Configuracao | None = None, opcoes: OpcoesGeracao | None = None,
@@ -257,14 +268,17 @@ def gerar(deck, cfg: Configuracao | None = None, opcoes: OpcoesGeracao | None = 
             raise ErroGeracao("agregação reaproveitada com outros postos ou outro número de aberturas")
         ag = compensar(agregacao, op.agregacao.desvio, op.agregacao.aplicacao)
 
-    # Correlação espacial W = D b (M18 eq. 4.16) e laterais (eq. 4.19).
+    # Correlação espacial W = D b (M18 eq. 4.16) e laterais (eq. 4.19;
+    # sem E b1 com ruido_lateral="nenhum", P-LAT-04).
     b = ag.ruidos
     n = len(pr.carga)
     w_carga = b[:, :n] @ pr.d.T
     w = {id(s): w_carga[:, j] for j, s in enumerate(pr.carga)}
     for j, s in enumerate(pr.laterais):
         idx, g, e = pr.cond[id(s)]
-        w[id(s)] = w_carga[:, idx] @ g + e * b[:, n + j]
+        w[id(s)] = w_carga[:, idx] @ g
+        if pr.ruido_lateral == "proprio":
+            w[id(s)] = w[id(s)] + e * b[:, n + j]
 
     # Lognormal e recorrência (F5: tendência).
     tend = tendencia(deck, cfg)
