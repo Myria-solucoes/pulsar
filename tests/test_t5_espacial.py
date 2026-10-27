@@ -57,7 +57,10 @@ def test_correlacao_bit_a_bit_com_o_correli(pacote):
                 continue
             total += 1
             iguais += np.array_equal(c.matriz[:, a, b], ref)
-    assert perdidos == 2 * len(num) - 4  # pares com as 2 últimas de H, fora da diagonal delas
+    # pares com as k = NH - N últimas de H (sobrescritas, F2-CI-07), fora da
+    # diagonal delas: k·NH - k² (2026: k = 2; 2022: k = 1)
+    k = len(num) - len(ci.indice)
+    assert perdidos == k * len(num) - k * k
     assert iguais == total
 
 
@@ -78,7 +81,7 @@ def test_diagonal_simetria_e_series_nulas(pacote):
     série de incremental nula (ITUTINGA, PARANAPANEMA) valem 0."""
     c = correlacao(pacote.nome)
     nulas = [k for k, s in enumerate(series(pacote.nome)) if s.nula]
-    assert len(nulas) == 2
+    assert nulas  # 2026: ITUTINGA e PARANAPANEMA; 2022: só ITUTINGA
     for m in range(13):
         u = c.matriz[m]
         assert np.array_equal(np.diag(u), np.ones(len(u)))
@@ -173,6 +176,19 @@ def test_dd_reproduz_u_nas_direcoes_positivas(pacote):
 # Evidência nos cenários publicados (GEVAZP.OUT)
 
 
+def _fora_do_nucleo(nome) -> set[str]:
+    """Colunas do GEVAZP.OUT que não são a incremental gerada da própria
+    série: as usinas NW, as jusantes que recebem a NW e as usinas com posto
+    lateral (2026: FOZ DO PRATA, ESTRELA, MONTE CLARO, SALTO, SOBRADINHO)."""
+    cfg = base.configuracao(nome)
+    por = cfg.por_numero()
+    nw = [u for u in cfg.usinas if u.status == "NW"]
+    out = {u.nome_str for u in nw}
+    out |= {por[u.jusante].nome_str for u in nw if u.jusante in por}
+    out |= {u.nome_str for u in cfg.usinas if u.posto_lateral}
+    return out
+
+
 def _residuo_no_nucleo(nome, u, nomes, valores=None, transf=np.log):
     """Menor valor singular do operador q -> L diag(q) K, com L = transf(Z)
     dos cenários (por padrão os do GEVAZP.OUT), centrado e normalizado com as
@@ -182,7 +198,7 @@ def _residuo_no_nucleo(nome, u, nomes, valores=None, transf=np.log):
     cada coluna W_i = (L_i - c_i)/s_i e cada W_k está na imagem de U."""
     nint = apoio.nint_por_nome(nome)
     num = [nint[n] for n in nomes]
-    fora = {nint[n] for n in ("FOZ DO PRATA", "ESTRELA", "MONTE CLARO", "SALTO", "SOBRADINHO")}
+    fora = {nint[n] for n in _fora_do_nucleo(nome) if n in nint}
     ei = [k for k, n in enumerate(num) if n in fora]
     ui = [k for k, n in enumerate(num) if n not in fora]
     lam, a = np.linalg.eigh(u)
@@ -274,10 +290,10 @@ def test_variantes_da_correlacao(pacote):
     fora = ~np.eye(len(num), dtype=bool) & ~np.isnan(ref)
     taxa = {k: np.mean(v[fora] == ref[fora]) for k, v in variantes.items()}
     assert taxa["escolhida"] == 1.0
-    faixas = {"padronizadas": (0.15, 0.16), "n_sigma_sigma": (0.64, 0.66),
-              "sigma_i_depois_sigma_j": (0.64, 0.66), "reversa": (0.19, 0.20)}
-    for k, (lo, hi) in faixas.items():
-        assert lo <= taxa[k] <= hi, (k, taxa[k])
+    # 2026 (mês 10/11): 0,15, 0,65, 0,65 e 0,19; nos outros pacotes as taxas
+    # mudam com o mês e o histórico, mas nenhuma variante chega perto de 1.
+    for k in ("padronizadas", "n_sigma_sigma", "sigma_i_depois_sigma_j", "reversa"):
+        assert taxa[k] < 0.8, (k, taxa[k])
     k0 = [c.nomes.index(s.nome) for s in ss]
     assert np.array_equal(c.matriz[m][np.ix_(k0, k0)][fora], variantes["escolhida"][fora])
 

@@ -18,11 +18,12 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+import apoio
 from base import COMPLETOS, DECKS, configuracao, deck
 from pulsar import oraculos as O
 from pulsar.configuracao import NEWAVE
 from pulsar.empacotamento import montar_arvore, nint, serializar_vazoes_rvx
-from pulsar.entradas.regras import analisar
+from pulsar.entradas.regras import analisar, postos_referenciados
 from pulsar.totalizacao import (
     ErroRegra,
     OpcoesArtificiais,
@@ -116,7 +117,8 @@ def test_nw_absorvida_no_gevazp_out_e_propria_no_vazoesia(nome):
     cfg = configuracao(nome)
     of = _oficiais(nome)
     nw = [i for i, u in enumerate(cfg.completa) if u.status == NEWAVE]
-    assert nw
+    if not nw:
+        pytest.skip("configuração sem usina NW")
     inc_p = incrementais_de_totais(of["totais"], cfg, nw="propria")
     assert not (inc_p == of["incrementais"]).all(0)[nw].any()
     ia_a = incrementais_de_totais(of["totais_artificiais"], cfg, nw="absorve")
@@ -133,16 +135,20 @@ def test_precisao_das_regras(nome):
     resultado em float64. As variantes vizinhas erram colunas inteiras."""
     of = _oficiais(nome)["totais_artificiais"]
     cols = _colunas_artificiais(nome)
-    assert len(cols) == 26
+    originais = nome in ("202609", "202610")
+    assert cols and (not originais or len(cols) == 26)
     f32 = lambda x: float(np.float32(x))
 
     def colunas_iguais(op):
         ta = _dos_totais(nome, opcoes_artificiais=op).totais_artificiais
         return int((ta == of).all(0)[cols].sum())
 
-    assert colunas_iguais(OpcoesArtificiais()) == 26
-    assert colunas_iguais(OpcoesArtificiais(ler_vaz=None)) == 6  # tudo em float64
-    assert colunas_iguais(OpcoesArtificiais(arredondar=f32)) == 9  # operações em float32
+    assert colunas_iguais(OpcoesArtificiais()) == len(cols)
+    em_64 = colunas_iguais(OpcoesArtificiais(ler_vaz=None))  # tudo em float64
+    em_32 = colunas_iguais(OpcoesArtificiais(arredondar=f32))  # operações em float32
+    assert em_64 < len(cols) and em_32 < len(cols)
+    if originais:
+        assert (em_64, em_32) == (6, 9)
     # artificiais referenciados por outra regra em float64 (só naturais em float32)
     mes, ano = _mes(nome)
     cfg = configuracao(nome)
@@ -157,8 +163,13 @@ def test_precisao_das_regras(nome):
             iguais += 1
         else:
             falham.add(p)
-    assert iguais == 20
-    assert falham == {318, 126, 299, 131, 306, 303}  # as que usam outro artificial
+    # as que falham usam outro artificial (2026: 318, 126, 299, 131, 306, 303)
+    com_artificial = {cfg.completa[i].posto_artificial for i in cols
+                      if postos_referenciados(regras.regra(cfg.completa[i].posto_artificial, mes, ano).expressao)
+                      & regras.postos()}
+    assert falham and falham <= com_artificial
+    if originais:
+        assert iguais == 20 and falham == {318, 126, 299, 131, 306, 303}
 
 
 def _hibrido(linha, colunas, regras, mes, ano, p):
@@ -197,6 +208,12 @@ def test_regra_do_mes_estocastico(nome):
 # ------------------------------------------------- defasagem linear (eq. 4.21)
 
 
+def _dias_do_mes_seguinte(mes, ano):
+    """Calendário gregoriano da biblioteca padrão (controle independente)."""
+    import calendar
+    return calendar.monthrange(ano + (mes == 12), mes % 12 + 1)[1]
+
+
 @pytest.mark.parametrize("nome", NOMES)
 def test_defasagem_linear_de_sobradinho(nome):
     """F6-DEF-01..03: o total de SOBRADINHO menos a lateral é exatamente
@@ -214,7 +231,7 @@ def test_defasagem_linear_de_sobradinho(nome):
     (incl, inter), res, *_ = np.linalg.lstsq(np.vstack([s, np.ones_like(s)]).T, y, rcond=None)
     assert res[0] < 1e-20 * float(y @ y)  # afim, sem resíduo além do arredondamento
     ndmes = dias_do_estagio_estocastico(v.mes_inicial, v.ano_inicial, v.dias_excluidos)
-    assert ndmes == {"202609": 31 - 2, "202610": 30 - 6}[nome]
+    assert ndmes == _dias_do_mes_seguinte(v.mes_inicial, v.ano_inicial) - v.dias_excluidos  # 202609: 31 - 2
     beta = 15 / ndmes
     assert abs((1 - incl) - beta) < 1e-12
     anterior = (soma_janela(dk.prevs[156].semanas, 15) + soma_janela(dk.prevs[158].semanas, 15)) / 15
@@ -309,6 +326,7 @@ def test_t8_blocos_mensais_do_vazoes_rvx(nome):
         s.incrementais, s.incrementais_artificiais,
         O.ler_probvaz(DECKS / nome / "PROBVAZ.DAT"),
         deterministicos_do_vazdcp(DECKS / nome / "VAZDCP.REL"), NPOS,
+        apoio.opcoes_empacotamento(nome, rev),
     )
     gerado = serializar_vazoes_rvx(a)
     oficial = (DECKS / nome / f"VAZOES.{rev}").read_bytes()
@@ -423,7 +441,8 @@ def test_dias_do_estagio_parametrizavel(nome):
 
     cfg = configuracao(nome)
     dk = deck(nome)
-    assert dados_defasagem(dk, cfg)[169][0].dias_estagio == {"202609": 29, "202610": 24}[nome]
+    v = dk.dadger.vazoes
+    assert dados_defasagem(dk, cfg)[169][0].dias_estagio == _dias_do_mes_seguinte(v.mes_inicial, v.ano_inicial) - v.dias_excluidos
     assert dados_defasagem(dk, cfg, dias_estagio=20)[169][0].dias_estagio == 20
     sem_ano = replace(dk, dadger=replace(dk.dadger, vazoes=replace(dk.dadger.vazoes, ano_inicial=None, ano_inicial_estudo=None)))
     with pytest.raises(ValueError):

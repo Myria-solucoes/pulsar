@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import functools
 import os
-from pathlib import Path
+from pathlib import Path, PosixPath
 
 RAIZ = Path(__file__).resolve().parents[1]
 ORIGINAIS = RAIZ / "decks" / "ons-pacote-gevazp"
@@ -55,9 +55,24 @@ def selecionados() -> list[str]:
     return [n for n in nomes if n in t]
 
 
+class PastaPacote(PosixPath):
+    """Pasta de um pacote: ``pasta / "VAZOES.RV0"`` acha o arquivo sem
+    diferenciar maiúsculas, como a leitura das entradas (P-TXT-03); alguns
+    pacotes gravam ``vazoes.rv0`` ou ``vazdcp.rel``."""
+
+    def __truediv__(self, nome):
+        p = Path(super().__truediv__(nome))
+        if not p.exists():
+            alvo = str(nome).lower()
+            alt = next((q for q in Path(self).iterdir() if q.name.lower() == alvo), None)
+            if alt is not None:
+                return alt
+        return p
+
+
 def pasta(nome: str) -> Path:
     try:
-        return todos()[nome]
+        return PastaPacote(todos()[nome])
     except KeyError:
         raise KeyError(f"pacote {nome!r} não está em decks/") from None
 

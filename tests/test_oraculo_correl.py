@@ -147,7 +147,7 @@ def test_correlt_estatisticas(pacote):
     """Linhas HIST/GER de 'RESULTADOS PARA VAZOES TOTALIZADAS' (1 casa)."""
     c = correlt(pacote.nome)
     rel = estat_geradas_rel(pacote.nome, "RESULTADOS PARA VAZOES TOTALIZADAS")
-    assert len(rel) > 150
+    assert len(rel) > 140
     for nome, r in rel.items():
         s = c.serie(_nint(pacote.nome, nome))
         assert np.all(np.abs(s.media - r["media_hist"]) <= TOL1), nome

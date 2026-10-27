@@ -54,7 +54,7 @@ def test_amostra_contra_rel_media_gerada_totais(pacote):
         media = float(p @ s.usina(u.nint))
         assert abs(media - rel[u.nome]["media_ger"][mes - 1]) <= 0.05 + 1e-9, u.nome
         n += 1
-    assert n >= 150
+    assert n >= 140
 
 
 def test_nomes_dos_arquivos_artificiais_em_minusculas(pacote):

@@ -82,6 +82,29 @@ def gevazp_out(nome):
     return O.ler_incrementais_geradas(deck(nome).arq("GEVAZP.OUT"))
 
 
+@functools.lru_cache(maxsize=None)
+def versao_emulada(nome, rev=None) -> str:
+    """Versão do GEVAZP que gravou o VAZOES.RVx do pacote ("8.1.6" no 9_L,
+    "10.0.0", "11.0.0", "11.0.2"), decodificada do registro 3 oficial pela
+    F2-VZ-04b. A versão gravada é parâmetro do Pulsar (P-VZD-04, F7-VZ-03):
+    é a identidade do programa, não sai das entradas; os testes byte a byte
+    emulam a do pacote (P-VZD-09)."""
+    d = deck(nome)
+    v = O.ler_vazoes_decomp(d.vazoes if rev is None else d.arq(f"VAZOES.{rev}"))
+    c = v.calendario.versao_codigo
+    return f"{c // 10000}.{c // 100 % 100}.{c % 100}"
+
+
+def opcoes_empacotamento(nome, rev=None, **kw):
+    from pulsar.empacotamento import OpcoesEmpacotamento
+    return OpcoesEmpacotamento(versao=versao_emulada(nome, rev), **kw)
+
+
+def opcoes_vazoes(nome, rev=None, **kw):
+    from pulsar import vazoes_deterministicos as VD
+    return VD.OpcoesVazoes(versao=tuple(int(x) for x in versao_emulada(nome, rev).split(".")), **kw)
+
+
 def mes_estocastico(nome) -> int:
     """Mês do calendário do período estocástico (o seguinte ao mês inicial)."""
     return vazoes(nome).calendario.mes_inicial % 12 + 1

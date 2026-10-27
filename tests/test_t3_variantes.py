@@ -9,6 +9,7 @@ Proveniência: P-EST-02, P-EST-04, P-ANU-01, P-ANU-03, P-FACP-01, P-LIN-01.
 import math
 
 import numpy as np
+import pytest
 
 from apoio_parp import ajustes, correli_da_serie
 from pulsar import parp
@@ -158,6 +159,8 @@ def test_componente_anual_variantes(pacote):
     """P-ANU-01: Σ·(1/12) e Σ(z/12); P-ANU-03: forma de covariância e forma
     padronizada com soma do 2º ao último ano (a escolhida soma do último ao
     2º)."""
+    if not ajustes(pacote.nome) or not next(iter(ajustes(pacote.nome).values())).opcoes.anual:
+        pytest.skip("variante do PAR(p)-A; no ramo PAR(p) ver test_t4_parp.py::test_solver_do_ramo_parp e P-FACP-02")
     ok = {k: [] for k in ("escolhida", "vezes_1/12", "termo_a_termo", "covariancia", "padronizada_direta")}
     for aj in _amostra(pacote.nome):
         alvo = correli_da_serie(pacote.nome, aj.serie.nome).facp[0]
@@ -177,6 +180,8 @@ def test_componente_anual_variantes(pacote):
 def test_facp_definicoes_alternativas_erram_alem_do_rel(pacote):
     """φ_kk do Yule-Walker aumentado e correlação parcial sem A erram mais de
     0,1 em alguma série (o REL imprime 5 casas)."""
+    if not ajustes(pacote.nome) or not next(iter(ajustes(pacote.nome).values())).opcoes.anual:
+        pytest.skip("variante do PAR(p)-A; no ramo PAR(p) ver test_t4_parp.py::test_solver_do_ramo_parp e P-FACP-02")
     for aj in _amostra(pacote.nome, 5):
         alvo = correli_da_serie(pacote.nome, aj.serie.nome).facp
         yw = np.array([[parp.yule_walker(aj.est, aj.anual, m, k)[0][-1] for m in range(12)] for k in range(1, 12)])
@@ -187,6 +192,8 @@ def test_facp_definicoes_alternativas_erram_alem_do_rel(pacote):
 
 def test_facp_arranjos_alternativos(pacote):
     """Σ12 (Σ22⁻¹ Σ21) e sqrt(Σ̄11·Σ̄22), nos lags k ≥ 2."""
+    if not ajustes(pacote.nome) or not next(iter(ajustes(pacote.nome).values())).opcoes.anual:
+        pytest.skip("variante do PAR(p)-A; no ramo PAR(p) ver test_t4_parp.py::test_solver_do_ramo_parp e P-FACP-02")
     ok = {k: [] for k in ("escolhida", "S12(invS21)", "sqrt(produto)")}
     prod = parp._produto
     for aj in _amostra(pacote.nome, 10):
@@ -281,6 +288,8 @@ def test_solucao_variantes(pacote):
     A⁻¹b em soma direta reproduz todos os bits de φ; o Cholesky do
     Numerical Recipes (k crescente ou decrescente), o LAPACK e o Cholesky do
     NumPy ficam abaixo de 30%."""
+    if not ajustes(pacote.nome) or not next(iter(ajustes(pacote.nome).values())).opcoes.anual:
+        pytest.skip("variante do PAR(p)-A; no ramo PAR(p) ver test_t4_parp.py::test_solver_do_ramo_parp e P-FACP-02")
     ok = {k: [] for k in ("escolhida", "gj_pivo_total", "gj_multiplica", "inv_b_reversa",
                           "chol_nr_desc", "chol_nr_asc", "lapack", "chol_numpy")}
     for aj in ajustes(pacote.nome).values():

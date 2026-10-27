@@ -8,6 +8,7 @@ Proveniência: P-RES-01..03, P-NEG-03, P-ORD-02, P-ORD-03.
 import math
 
 import numpy as np
+import pytest
 
 from apoio_parp import ajustes, confere_3_algarismos, residuos, residuos_rel
 from pulsar import parp
@@ -21,6 +22,8 @@ def _frac(v):
 def test_residuo_com_a_nula_no_primeiro_ano_erra(pacote):
     """P-RES-01: usar A = 0 (em vez de omitir o termo anual) no 1º ano erra
     mais de 100% em algum resíduo; a escolhida confere com 3 algarismos."""
+    if not ajustes(pacote.nome) or not next(iter(ajustes(pacote.nome).values())).opcoes.anual:
+        pytest.skip("variante do PAR(p)-A; no ramo PAR(p) ver test_t4_parp.py::test_solver_do_ramo_parp e P-FACP-02")
     rel = residuos_rel(pacote.nome)
     pior = 0.0
     for nome, aj in ajustes(pacote.nome).items():
@@ -97,6 +100,8 @@ def test_separacao_do_coeficiente_combinado(pacote):
     em ordem 1. ρ_1 dos dois grupos se sobrepõe. O sinal da FACP_1 não separa
     (há meses que ficam em ordem 1 com FACP_1 < 0); a FACP_1 só separaria nos
     pacotes com um limiar ad hoc entre -0,042 e -0,032, sem apoio em fonte."""
+    if not ajustes(pacote.nome) or not next(iter(ajustes(pacote.nome).values())).opcoes.anual:
+        pytest.skip("variante do PAR(p)-A; no ramo PAR(p) ver test_t4_parp.py::test_solver_do_ramo_parp e P-FACP-02")
     zero, um, facp_um, rho_zero, rho_um = [], [], [], [], []
     for aj in ajustes(pacote.nome).values():
         for it in aj.iteracoes:
@@ -123,10 +128,14 @@ def test_folga_do_limiar(pacote):
     for aj in ajustes(pacote.nome).values():
         folgas.append(np.abs(np.abs(aj.facp) - aj.limiar).min())
         lim2 = parp.limiar_significancia(aj.est.n_anos, 1.959964)
+        corta = aj.opcoes.facp_maior_que_1 == "corta"  # P-ORD-04
         for m in range(12):
             for it in aj.iteracoes:
-                assert parp.identificar(aj.facp[:, m], it.limites[m], lim2) == it.identificadas[m]
-    assert 5e-6 < min(folgas) < 1e-5
+                assert parp.identificar(aj.facp[:, m], it.limites[m], lim2, aj.opcoes.ordem_minima, corta) \
+                    == it.identificadas[m]
+    assert min(folgas) > 0
+    if pacote.nome in ("202609", "202610"):
+        assert 5e-6 < min(folgas) < 1e-5
 
 
 def test_sem_lag_significativo_a_ordem_e_1(pacote):
@@ -136,7 +145,7 @@ def test_sem_lag_significativo_a_ordem_e_1(pacote):
     for aj in ajustes(pacote.nome).values():
         for it in aj.iteracoes:
             for m in range(12):
-                lim = it.limites[m]
+                lim = parp.limite_valido(aj.facp[:, m], it.limites[m])  # P-ORD-04
                 if lim and not np.any(np.abs(aj.facp[:lim, m]) > aj.limiar):
                     assert it.identificadas[m] == 1
                     n += 1

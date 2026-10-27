@@ -14,7 +14,7 @@ def test_qpast_incremental_igual_ao_rel(pacote):
     """Registros 1-12 = 'VAZOES INCREMENTAIS PARA A TENDENCIA ... POSTOS PRINCIPAIS'."""
     q = qpast(pacote.nome)
     tab = tendencia_rel(pacote.nome)["incrementais_principais"]
-    assert len(tab) > 150
+    assert len(tab) > 140
     for posto, (nome, v) in tab.items():
         np.testing.assert_array_equal(np.round(q.incrementais_do_posto(posto), 2), v, err_msg=nome)
 
@@ -46,9 +46,23 @@ def test_qpast_exemplo_camargos_202609(pacote):
     assert q.incremental_mensal(6, 1) == 659.0 and q.total_mensal(6, 1) == 908.0
 
 
+def _par_a(pacote) -> bool:
+    import base
+    return base.deck(pacote.nome).dadger.vazoes.modelo_par_a == 1
+
+
+def test_vazaoanual_nulo_no_ramo_parp(pacote):
+    """F2-VA-04: sem MODELO PAR-A (2022) o vazaoanual.out existe, com o mesmo
+    layout, e é todo zero; com PAR(p)-A tem valores."""
+    a = O.ler_media_anual_anterior(pacote.arq("vazaoanual.out"))
+    assert (np.count_nonzero(a.valores) == 0) == (not _par_a(pacote))
+
+
 def test_vazaoanual_e_media_dos_12_meses_da_tendencia(pacote):
     """vazaoanual.out = média das 12 incrementais da tabela de tendência do REL
     (2 casas), igual em todos os cenários; zero nas usinas PN."""
+    if not _par_a(pacote):
+        pytest.skip("ramo PAR(p): vazaoanual.out nulo (F2-VA-04)")
     a = O.ler_media_anual_anterior(pacote.arq("vazaoanual.out"))
     tab = tendencia_rel(pacote.nome)["incrementais_principais"]
     n = 0
@@ -60,7 +74,7 @@ def test_vazaoanual_e_media_dos_12_meses_da_tendencia(pacote):
         elif u.posto in tab:
             assert abs(col[0] - tab[u.posto][1].mean()) <= 0.005 + 1e-9, u.nome
             n += 1
-    assert n > 150
+    assert n > 140
 
 
 def test_vazaoanual_bits_soma_em_ordem_de_calendario(pacote):
@@ -68,6 +82,8 @@ def test_vazaoanual_bits_soma_em_ordem_de_calendario(pacote):
     (jan..dez) e divisão por 12, reproduz todos os bits. A ordem da soma
     dentro do calendário NÃO é discriminada: a soma sequencial e a soma por
     blocos da np.sum dão os mesmos bits nestes decks."""
+    if not _par_a(pacote):
+        pytest.skip("ramo PAR(p): vazaoanual.out nulo (F2-VA-04)")
     a = O.ler_media_anual_anterior(pacote.arq("vazaoanual.out"))
     q = qpast(pacote.nome)
     for u in config(pacote.nome):
@@ -108,7 +124,7 @@ def test_qpast_anos_dos_meses_pelo_historico(pacote):
     h = np.fromfile(pacote.arq("VAZOES.DAT"), "<i4").reshape(-1, 12, v.npos)
     q = qpast(pacote.nome)
     postos = sorted(tendencia_rel(pacote.nome)["fornecidas"])
-    assert len(postos) > 150
+    assert len(postos) > 140
     for m in range(1, 13):
         if m == mi:
             continue
