@@ -92,9 +92,11 @@ def soma_janela(semanas: Sequence[float], ndias: float) -> float:
 
 
 def dias_do_mes(ano: int, mes: int) -> int:
-    """F6-DEF-06 (ESCOLHA, lacuna L5/L21): calendário gregoriano. Os decks
-    públicos não têm mês estocástico em fevereiro; quem precisar de outra
-    contagem passa ``dias_estagio`` a ``dados_defasagem``."""
+    """F6-DEF-06 (INFERIDO): calendário gregoriano, fevereiro bissexto com
+    29 dias (pacote de jan/2024, mês estocástico fev/2024:
+    test_t8_totalizacao.py::test_defasagem_linear_de_sobradinho). Ao
+    contrário da média do mês inicial (P-TEND-02, 28 dias). Quem precisar de
+    outra contagem passa ``dias_estagio`` a ``dados_defasagem``."""
     return calendar.monthrange(ano, mes)[1]
 
 

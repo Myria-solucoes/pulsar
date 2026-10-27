@@ -31,7 +31,8 @@ Em `decks/ons-sintegre/<AAAAMM>_<pmo|revN>/`, 59 pacotes oficiais do produto
 SINtegre/ONS "Arquivos dos modelos de geração de cenários de vazões", com
 todas as entradas e saídas (menos o `TESARV.OUT`):
 
-- todos os PMOs de jan/2022 a set/2026 (57 pacotes), cobrindo os doze meses,
+- os PMOs de jan/2022 a set/2026, menos o de jul/2023, que não veio no
+  download (56 pacotes), cobrindo os doze meses,
   o ramo PAR(p) (decks anteriores a `MODELO PAR-A`) e o ramo PAR(p)-A;
 - as revisões RV1 a RV3 de fev/2024 (ano bissexto).
 
