@@ -49,8 +49,12 @@ def test_todos_os_registros_iguais_ao_vazdcp(pacote):
     impressa = re.search(r"VERSAO GEVAZP:\s+(\S+)", r3)[1]
     assert impressa == c.versao or (c.versao_codigo, impressa) == (80106, "9")
 
-    assert rel[3].titulo == "PROBABILIDADE DOS NOS"
-    np.testing.assert_array_equal(np.round(v.probabilidades.astype(np.float64), 6), rel[3].valores)
+    # F2-VZ-05: ceil(NNOS/NPOS) registros de probabilidades (2 com 513
+    # aberturas, 202206 e 202207)
+    nprob = -(-len(v.probabilidades) // v.npos)
+    assert all(r.titulo == "PROBABILIDADE DOS NOS" for r in rel[3:3 + nprob])
+    impressas = np.concatenate([r.valores for r in rel[3:3 + nprob]])[: len(v.probabilidades)]
+    np.testing.assert_array_equal(np.round(v.probabilidades.astype(np.float64), 6), impressas)
 
     blocos = [
         ("VAZAO PREVISTA INCREMENTAL SEMANA", v.prevista_semanal),
@@ -60,7 +64,7 @@ def test_todos_os_registros_iguais_ao_vazdcp(pacote):
         ("VAZAO INCREMENTAL OBSERVADA MES", v.observada_mensal),
         ("VAZAO INCREMENTAL OBSERVADA SEMANA", v.observada_semanal),
     ]
-    k = 4
+    k = 3 + nprob
     for titulo, bloco in blocos:
         for linha in bloco:
             r = rel[k]
