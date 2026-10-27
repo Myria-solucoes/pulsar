@@ -72,10 +72,13 @@ class OpcoesPAR:
     # "erro" ou "lapack" (inversa com pivoteamento parcial do NumPy).
     pivo_nulo: str = "erro"
     # P-LIN-03: solver do Yule-Walker no ramo PAR(p), "cholesky" (INFERIDO
-    # nos pacotes de 2022) ou "gauss_jordan" (o do PAR(p)-A, P-LIN-01).
+    # nos pacotes de 2022; matriz não positiva definida é erro),
+    # "cholesky_ou_gauss_jordan" (nesse caso cai na P-LIN-01; ESCOLHA, sem
+    # caso público) ou "gauss_jordan" (o do PAR(p)-A, P-LIN-01).
     solver_parp: str = "cholesky"
     # P-ORD-04: a busca da ordem para antes da primeira defasagem com
-    # |φ_kk| > 1 ("corta", INFERIDO nos pacotes de 2022) ou não ("ignora").
+    # |φ_kk| > 1 ("corta", INFERIDO nos pacotes de 2022), com |φ_kk| ≥ 1
+    # ("corta_igual", ESCOLHA: nenhum φ_kk público é ±1) ou não ("ignora").
     facp_maior_que_1: str = "corta"
     # P-RES-04 (ESCOLHA não discriminável): ordem das somas nos momentos e no
     # correlograma dos resíduos, "direta" ou "reversa".
@@ -87,8 +90,8 @@ class OpcoesPAR:
         for nome, ok in (("soma_assimetria", ("direta", "reversa")), ("cubo_assimetria", ("potencia", "produto")),
                          ("desvio_nulo", ("erro", "ordem_zero")), ("pivo_nulo", ("erro", "lapack")),
                          ("soma_residuos", ("direta", "reversa")),
-                         ("solver_parp", ("cholesky", "gauss_jordan")),
-                         ("facp_maior_que_1", ("corta", "ignora"))):
+                         ("solver_parp", ("cholesky", "cholesky_ou_gauss_jordan", "gauss_jordan")),
+                         ("facp_maior_que_1", ("corta", "corta_igual", "ignora"))):
             if getattr(self, nome) not in ok:
                 raise ValueError(f"{nome}={getattr(self, nome)!r}")
         if not 0 <= self.ordem_maxima <= self.defasagens:
@@ -377,8 +380,12 @@ def yule_walker(est: Estatisticas, anual: ComponenteAnual | None, m: int, p: int
     o = list(range(1, len(s)))
     mat = [[s[i][j] for j in o] for i in o]
     b = [s[i][0] for i in o]
-    if anual is None and solver_parp == "cholesky":
-        return tuple(cholesky(mat, b)), None
+    if anual is None and solver_parp.startswith("cholesky"):
+        try:
+            return tuple(cholesky(mat, b)), None
+        except ErroAjuste:
+            if solver_parp != "cholesky_ou_gauss_jordan":
+                raise
     inv = inversa(mat, pivo_nulo)
     x = [soma(inv[i][j] * b[j] for j in range(len(b))) for i in range(len(b))]
     if anual is None:
@@ -437,24 +444,27 @@ def limiar_significancia(n_anos: int, z: float = Z_95) -> float:
     return z / math.sqrt(n_anos)
 
 
-def limite_valido(facp_m, limite: int) -> int:
+def limite_valido(facp_m, limite: int, igual: bool = False) -> int:
     """P-ORD-04: a busca não passa da defasagem anterior à primeira com
-    |φ_kk| > 1. No ramo PAR(p) o último coeficiente do Yule-Walker de ordem k
-    (P-FACP-02) não é uma correlação e pode passar de 1; o vordem.out de 2022
-    mostra que a ordem identificada é sempre menor que essa defasagem.
-    INFERIDO: test_t4_parp.py::test_ordem_para_antes_da_facp_maior_que_1."""
+    |φ_kk| > 1 (com ``igual``, ≥ 1). No ramo PAR(p) o último coeficiente do
+    Yule-Walker de ordem k (P-FACP-02) não é uma correlação e pode passar de
+    1; o vordem.out de 2022 mostra que a ordem identificada é sempre menor
+    que essa defasagem. INFERIDO:
+    test_t4_parp.py::test_ordem_para_antes_da_facp_maior_que_1."""
     for k in range(1, limite + 1):
-        if abs(facp_m[k - 1]) > 1.0:
+        v = abs(facp_m[k - 1])
+        if v > 1.0 or (igual and v == 1.0):
             return k - 1
     return limite
 
 
-def identificar(facp_m, limite: int, limiar: float, minimo: int = 1, corta_maior_que_1: bool = False) -> int:
+def identificar(facp_m, limite: int, limiar: float, minimo: int = 1, corte: bool | str = False) -> int:
     """P-ORD-03: maior k ≤ limite com |φ_kk| > limiar (M18 §4.2.1); sem
     nenhum, ``minimo`` (1, INFERIDO no vordem.out; R27063). Limite 0 dá 0.
-    Com ``corta_maior_que_1`` o limite é antes reduzido pela P-ORD-04."""
-    if corta_maior_que_1:
-        limite = limite_valido(facp_m, limite)
+    Com ``corte`` ("corta" ou True: > 1; "corta_igual": ≥ 1) o limite é
+    antes reduzido pela P-ORD-04."""
+    if corte and corte != "ignora":
+        limite = limite_valido(facp_m, limite, igual=corte == "corta_igual")
     for k in range(limite, 0, -1):
         if abs(facp_m[k - 1]) > limiar:
             return k
@@ -524,7 +534,7 @@ def ajustar(serie: SerieIncremental, opcoes: OpcoesPAR | None = None) -> AjusteP
     aj = AjustePAR(serie, op, est, anual, fp, lim_sig)
 
     limites = [op.ordem_maxima] * MESES
-    corta = op.facp_maior_que_1 == "corta"
+    corta = op.facp_maior_que_1
     ident = [identificar(fp[:, m], limites[m], lim_sig, op.ordem_minima, corta) for m in range(MESES)]
     while True:
         modelos, fis, psif = [], [], []

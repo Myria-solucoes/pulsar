@@ -133,7 +133,7 @@ def test_folga_do_limiar(pacote):
     for aj in ajustes(pacote.nome).values():
         folgas.append(np.abs(np.abs(aj.facp) - aj.limiar).min())
         lim2 = parp.limiar_significancia(aj.est.n_anos, 1.959964)
-        corta = aj.opcoes.facp_maior_que_1 == "corta"  # P-ORD-04
+        corta = aj.opcoes.facp_maior_que_1  # P-ORD-04
         for m in range(12):
             for it in aj.iteracoes:
                 muda += parp.identificar(aj.facp[:, m], it.limites[m], lim2, aj.opcoes.ordem_minima, corta) \

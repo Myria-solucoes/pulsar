@@ -155,35 +155,40 @@ def test_solver_do_ramo_parp(pacote):
 
 
 def test_ordem_para_antes_da_facp_maior_que_1(pacote):
-    """P-ORD-04: a ordem identificada na 1ª iteração (vordem.out) nunca
-    alcança a primeira defasagem com |φ_kk| > 1; sem o corte ("ignora") a
-    identificação muda nos meses em que essa defasagem existe. No PAR(p)-A
-    a FACP é uma correlação parcial e não passa de 1 nos pacotes."""
+    """P-ORD-04: a ordem identificada na 1ª iteração (vordem.out) é a do
+    corte antes da primeira defasagem com |φ_kk| > 1. Nos pacotes de 2022
+    (ramo PAR(p)) há 12 meses cortados em 9 séries; em todos os 12 a
+    identificação sem corte ("ignora") difere do vordem.out, e 5 séries
+    sairiam com ordem final diferente. Exemplo: CAPIM BRANC1, nov,
+    φ_33 = 1,0224 e ordem final 2. No PAR(p)-A a FACP é correlação parcial e
+    não passa de 1 nos pacotes: o corte não age."""
     import dataclasses
 
     from pulsar import parp
 
     vo = vordem(pacote.nome)
-    cortados = 0
+    cortados, series_cortadas = 0, set()
     for nome, aj in ajustes(pacote.nome).items():
         ref = vo[nome][0].identificadas
         assert aj.iteracoes[0].identificadas == ref, nome
         for m in range(12):
             lim = parp.limite_valido(aj.facp[:, m], aj.opcoes.ordem_maxima)
-            assert ref[m] <= max(lim, 1), (nome, m + 1)
-            if lim < aj.opcoes.ordem_maxima:
-                cortados += 1
-                sem = parp.identificar(aj.facp[:, m], aj.opcoes.ordem_maxima, aj.limiar, aj.opcoes.ordem_minima)
-                assert sem != ref[m] or sem <= lim, (nome, m + 1)
+            if lim == aj.opcoes.ordem_maxima:
+                continue
+            cortados += 1
+            series_cortadas.add(nome)
+            assert ref[m] <= max(lim, aj.opcoes.ordem_minima), (nome, m + 1)
+            sem = parp.identificar(aj.facp[:, m], aj.opcoes.ordem_maxima, aj.limiar, aj.opcoes.ordem_minima)
+            assert sem != ref[m], (nome, m + 1)
     if aj.opcoes.anual:
         assert cortados == 0
-    else:
-        assert cortados > 0
-        ign = dataclasses.replace(aj.opcoes, facp_maior_que_1="ignora")
-        difere = sum(parp.ajustar(a.serie, ign).iteracoes[0].identificadas != vo[n][0].identificadas
-                     for n, a in ajustes(pacote.nome).items())
-        assert difere > 0
-
+        return
+    assert (cortados, len(series_cortadas)) == (12, 9)
+    ign = dataclasses.replace(aj.opcoes, facp_maior_que_1="ignora")
+    finais = sum(parp.ajustar(a.serie, ign).ordens != a.ordens for a in ajustes(pacote.nome).values())
+    assert finais == 5
+    capim = ajustes(pacote.nome)["CAPIM BRANC1"]
+    assert round(capim.facp[2, 10], 4) == 1.0224 and capim.ordens[10] == 2
 
 def _gauss_retro(a, b):
     """Eliminação de Gauss sem pivô e retrossubstituição (variante)."""
