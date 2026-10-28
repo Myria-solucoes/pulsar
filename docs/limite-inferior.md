@@ -33,18 +33,28 @@ negativos de TRES IRMAOS).
 
 ## 2. Identificação
 
-Exploração (scripts fora do repositório, refeitos pelos testes abaixo):
+Refeita por `ferramentas/ajuste_livre_limite.py` (`./ambiente/py
+ferramentas/ajuste_livre_limite.py -j 12`; o ajuste está testado em
+cenários sintéticos por `tests/test_ajuste_livre_sem_deck.py`), sem supor
+a regra:
 
-1. Ajuste por mínimos quadrados de um `M_t` livre por série (Levenberg–
-   Marquardt), depois de `M_t`, escala e deslocamento livres de cada `W`.
-   Em 25 pacotes o resíduo foi a ~1,2e-8 (ruído de float64): `M_t` é
-   identificado sem ambiguidade (fixar em outro valor sobe o resíduo de
-   2e-14 para 1,5e-2 na função objetivo).
-2. Os `M_t` ajustados caíam em três fórmulas do histórico do mês: 3 038 em
-   `f · mínimo`, com f ∈ {0,15; 0,35; 0,5; 0,6} conforme a assimetria; 520
-   em `μ − 3σ`; 119 em metade da cúbica da eq. 25 nas vazões. A escolha
-   entre elas fechou com uma variável cada (separação perfeita: `f · mínimo`
-   mais de 3σ abaixo da média → `μ − 3σ`).
+1. Ajuste por Levenberg–Marquardt de um `M_t` livre por série, com os
+   momentos teóricos, e depois de `M_t`, escala e deslocamento livres de
+   cada `W` (o que não pressupõe os momentos). Em 25 dos 61 pacotes o
+   resíduo vai a ~1,2e-8; nos outros o otimizador para num mínimo local
+   (1e-6 a 5e-2), o que não afeta a validação da seção 4, feita com a regra
+   nos 61. O `M_t` é identificado sem ambiguidade: no 202202, fixar as
+   séries de γ baixo em outro valor sobe a função objetivo de 2e-14 para
+   1,5e-2.
+2. Nos 25 pacotes (3 677 séries × pacote), M_t / menor vazão não negativa
+   do mês concentra-se em 0,35 (1 402), 0,15 (927), 0,5 (367) e 0,6 (75),
+   com assimetria de −1,55 a 0,9995 na fração 0,15, de 2,0008 a 3,9644 na
+   0,5 e de 4,025 a 7,14 na 0,6 (a 0,35 tem um caso com γ = 0,52 em que a
+   razão bate por acaso). Classificados: 3 038 em `f · mínimo`, 520 em
+   `μ − 3σ` e 119 em `f ·` cúbica da eq. 25 nas vazões, nenhum sem
+   fórmula. A escolha fração × `μ − 3σ` separa em `(f · mínimo − μ)/σ = −3`
+   (−3,0053 contra −2,9958), e o único `μ − 3σ` acima do piso é a série com
+   15,2% de negativos (as com fração vão até 14,4%).
 3. Com a regra, escala e deslocamento livres levavam todos os 61 pacotes a
    ~1e-8; a escala/deslocamento que sobrava era a dos momentos: com a média
    e o desvio **históricos** dos resíduos do mês (P-RES-02) o resíduo vai a
@@ -183,5 +193,9 @@ correlação anual e ruído próprio); "F11" é o padrão novo.
   probabilidades e o mesmo `b1` do lateral, o que sugere a mesma agregação
   (P-INT-01 entre pacotes), mas as coordenadas de `b` nas imagens dos dois
   meses não fecham num único `b` (resíduo relativo 0,9%). Fica para a L7.
-- O resíduo de ~1,2e-8 (e não 1e-15) sugere alguma etapa em precisão
-  menor que float64 entre `b` e o `GEVAZP.OUT`; não investigado.
+- O piso de ~1,2e-8 (e não 1e-15) é o esperado de √λ nos autovalores nulos
+  com erro de arredondamento: cenários sintéticos em float64 com o `M_t`
+  verdadeiro dão o mesmo (`tests/test_ajuste_livre_sem_deck.py`).
+- A página `site/index.html` embute uma cópia da tabela de proveniência
+  gerada e atualizada à parte (ainda a de 276 linhas, anterior à F10); vale
+  o `PROVENIENCIA.md`.
