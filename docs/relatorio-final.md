@@ -146,7 +146,7 @@ testes.
 
 Os dois oráculos da F11 também nos 61 pacotes
 (`pytest tests/test_oraculo_limite_inferior.py tests/test_oraculo_laterais.py
---decks todos`, com RuntimeWarning como erro): **1 015 passaram, 510
+--decks todos`, com RuntimeWarning como erro): **955 passaram, 510
 pulados, 0 falharam**; os pulados são controles que não mudam nenhum M_t
 no pacote e pacotes sem NW com jusante. T11 com 20 sementes só nos dois
 originais; não foi rodado nos 61.
@@ -263,7 +263,7 @@ demonstrado:
 
 ## 6. ESCOLHAS e impacto
 
-As 93 linhas de PROVENIENCIA.md com ESCOLHA (inteira ou parcial), agrupadas
+As 98 linhas de PROVENIENCIA.md com ESCOLHA (inteira ou parcial; 93 na F9, mais P-LN3-10..13 e P-LAT-04 na F11), agrupadas
 pelo efeito nos três VAZOES.RVx publicados. "Sem efeito" quer dizer que o
 caso não ocorre nos decks públicos ou que as alternativas dão o mesmo
 arquivo; todas são parâmetros, salvo onde indicado.
@@ -277,7 +277,7 @@ arquivo; todas são parâmetros, salvo onde indicado.
 | P-AGR-04, P-AGR-05 | σ_i ponderado; FC escalar | Variantes mudam o FC < 0,3% e as frações ±0,03; sem o fator o T11 falha (< 0,1) |
 | P-AGR-06 | K = 1: média da amostra, sem fator | Sem efeito (K = 259 e 228) |
 | P-AGR-07, P-LAT-03, P-LAT-04 | Lateral no vetor agregado (ESCOLHA), sem ruído próprio no W (versão 11, INFERIDO); principal = posto total | Uma coluna (SOBRADINHO_L): W_L = ρ_m W_P a 1e-6 nos 8 pacotes da versão 11; tirar o lateral do vetor ou somar o ruído próprio ("proprio", versões 8.1.6 e 10.0.0) muda as frações do T11 ≤ 0,05 (ruído) |
-| P-LN3-03, P-LN3-07, P-LN3-08, P-LN3-10, P-LN3-12, P-LN3-13 | Rota inferida (padrão); M_t = 0, cúbicas e quantis como variantes; empate nos limiares de γ, limiar de negativos 0,15 dentro de [0,144; 0,1505), série sem valor ≥ 0 | A regra fecha o teste de núcleo a ~1e-8 nos 61 pacotes; as escolhas restantes não ocorrem nos pacotes; cúbicas e quantis perdem 0,07–0,14 na média das frações do T11 |
+| P-LN3-03, P-LN3-07, P-LN3-08, P-LN3-10, P-LN3-11, P-LN3-12, P-LN3-13 | Rota inferida (padrão); M_t = 0, cúbicas e quantis como variantes; empate nos limiares de γ e nos extremos da faixa da cúbica (γ = 2 entra, γ = 4 não), limiar de negativos 0,15 dentro de [0,144; 0,1505), série sem valor ≥ 0 | A regra fecha o teste de núcleo a ~1e-8 nos 61 pacotes; as escolhas restantes não ocorrem nos pacotes; cúbicas e quantis perdem 0,07–0,14 na média das frações do T11 |
 | P-LN3-06 | μ_a − Δ < 0: eq. 24 com quadrado (INFERIDO na F11) | 16 dos 61 pacotes têm 1 a 3 séries nesse caso; "normal" fica cem vezes pior no teste de núcleo |
 | P-KM-01, P-KM-03, P-KM-04, P-KM-05 | Aritmética BLAS, lotes, ITER = 50, IFAULT | Mesmos grupos e iterações que a aritmética sequencial; convergência em 22–42 iterações; só desempenho (~6×) |
 | P-GER-05 | Ordem da soma da recorrência | Ulps; o transplante fecha byte a byte com ela (2.2) |
