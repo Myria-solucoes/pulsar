@@ -115,7 +115,7 @@ de `cache/f8/` preenchido por `ferramentas/sementes_f8.py` para os dois
 originais (simetrias "nenhuma" e "antitetica", com e sem o lateral no
 vetor agregado):
 
-**969 passaram, 104 pulados, 0 falharam, 78 subtestes passaram** (40 min).
+**970 passaram, 104 pulados, 0 falharam, 78 subtestes passaram** (40 min).
 Os pulados: agregações dos quatro pacotes do SINtegre fora do cache (T10,
 16), testes que exigem a coleção do ONS (T0, T1, T7), amostras legíveis
 escritas só para o 202609, casos sem o objeto testado no pacote (sem NW,
@@ -140,13 +140,14 @@ testes.
 | T10 | 4 ✓ | 4 ✓ | 4 pul. | 4 pul. | 4 pul. | 4 pul. | 14 ✓ |
 | T11 | 21 ✓ | 21 ✓ | — | — | — | — | 14 ✓ |
 | T12 | 4 ✓ (2 revisões) | 2 ✓ | — | — | — | — | 8 ✓ |
-| L8 (test_oraculo_limite_inferior, test_ajuste_livre_sem_deck) | 15 ✓, 7 pul. | 14 ✓, 8 pul. | 14 ✓, 8 pul. | 13 ✓, 9 pul. | 14 ✓, 8 pul. | 16 ✓, 6 pul. | 3 ✓ |
+| L8 (test_oraculo_limite_inferior, test_ajuste_livre_sem_deck) | 15 ✓, 7 pul. | 14 ✓, 8 pul. | 14 ✓, 8 pul. | 13 ✓, 9 pul. | 14 ✓, 8 pul. | 16 ✓, 6 pul. | 4 ✓ |
 | L11 (test_oraculo_laterais) | 2 ✓ | 2 ✓ | 1 ✓, 1 pul. | 1 ✓, 1 pul. | 2 ✓ | 2 ✓ | — |
 | test_proveniencia | — | — | — | — | — | — | 3 ✓ |
 
 Os dois oráculos da F11 também nos 61 pacotes
 (`pytest tests/test_oraculo_limite_inferior.py tests/test_oraculo_laterais.py
---decks todos`, com RuntimeWarning como erro): **955 passaram, 510
+--decks todos`, com RuntimeWarning como erro, numa execução única de 1 465
+itens, 60 min): **955 passaram, 510
 pulados, 0 falharam**; os pulados são controles que não mudam nenhum M_t
 no pacote e pacotes sem NW com jusante. T11 com 20 sementes só nos dois
 originais; não foi rodado nos 61.
