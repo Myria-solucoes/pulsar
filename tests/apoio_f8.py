@@ -24,9 +24,13 @@ CACHE = base.RAIZ / "cache" / "f8"
 # 03 §5 item 1: 20 sementes por deck.
 SEMENTES = tuple(range(1, 21))
 
-# Variantes avaliadas no T11 (lacunas L6, L7 e L8). "base" = padrão.
+# Variantes avaliadas no T11 (lacunas L6, L7, L8 e L11). "base" = padrão.
+# "f8" = padrão da primeira versão da F8 (antes da F11): M_t = 0, momentos
+# teóricos, lateral com a correlação anual e ruído próprio.
+F8 = OpcoesGeracao(rota_limite="zero", momentos="teoricos", correlacao_lateral="anual", ruido_lateral="proprio")
 VARIANTES = {
     "base": OpcoesGeracao(),
+    "f8": F8,
     "desvio_simples": OpcoesGeracao(agregacao=OpcoesAgregacao(desvio="simples")),
     "desvio_amostral": OpcoesGeracao(agregacao=OpcoesAgregacao(desvio="amostral")),
     "desvio_zero": OpcoesGeracao(agregacao=OpcoesAgregacao(desvio="zero")),
@@ -35,14 +39,20 @@ VARIANTES = {
     "cubica_residuos": OpcoesGeracao(rota_limite="cubica_residuos"),
     "cubica_vazoes": OpcoesGeracao(rota_limite="cubica_vazoes"),
     "quantis": OpcoesGeracao(rota_limite="quantis"),
-    "momentos_historicos": OpcoesGeracao(momentos="historicos"),
+    "zero": OpcoesGeracao(rota_limite="zero"),
+    "momentos_teoricos": OpcoesGeracao(momentos="teoricos"),
+    "lateral_anual": OpcoesGeracao(correlacao_lateral="anual"),
+    "lateral_proprio": OpcoesGeracao(ruido_lateral="proprio"),
+    "sem_lateral_na_agregacao": OpcoesGeracao(lateral_na_agregacao=False),
     "antitetica": OpcoesGeracao(agregacao=OpcoesAgregacao(simetria="antitetica")),
 }
 
 
 @functools.lru_cache(maxsize=None)
-def preparo(nome):
-    return preparar(base.deck(nome), base.configuracao(nome), OpcoesGeracao(), ajustes(nome))
+def preparo(nome, correlacao_lateral="mensal", ruido_lateral="nenhum", lateral_na_agregacao=True):
+    op = OpcoesGeracao(correlacao_lateral=correlacao_lateral, ruido_lateral=ruido_lateral,
+                       lateral_na_agregacao=lateral_na_agregacao)
+    return preparar(base.deck(nome), base.configuracao(nome), op, ajustes(nome))
 
 
 @functools.lru_cache(maxsize=None)
@@ -67,9 +77,11 @@ def _so_cache(nome: str) -> bool:
     return bool(os.environ.get("PULSAR_SO_CACHE")) or (sel == "amostra" and not pacotes.originais([nome]))
 
 
-def agregacao(nome: str, semente: int, simetria: str = "nenhuma") -> Agregacao:
-    """Agregação da geração de ``nome`` com a semente; calculada uma vez."""
-    f = _arq("agr", nome, semente, simetria)
+def agregacao(nome: str, semente: int, simetria: str = "nenhuma", lateral: bool = True) -> Agregacao:
+    """Agregação da geração de ``nome`` com a semente; calculada uma vez.
+    Com ``lateral`` o vetor agregado tem uma componente por posto lateral
+    depois das séries da carga (P-AGR-07)."""
+    f = _arq("agr", nome, semente, simetria, "com_lateral" if lateral else "sem_lateral")
     if not f.exists() and _so_cache(nome):
         # varredura dos 61 pacotes (ferramentas/revalidacao.py --so-cache):
         # não recalcula agregações; o teste é pulado e aparece no resumo
@@ -79,7 +91,7 @@ def agregacao(nome: str, semente: int, simetria: str = "nenhuma") -> Agregacao:
         z = np.load(f)
         return Agregacao(tuple(int(p) for p in z["postos"]), z["centroides"], z["contagens"], int(z["n"]),
                          z["desvios"], z["fator"], z["ruidos"], int(z["iteracoes"]), int(z["ifault"]))
-    pr = preparo(nome)
+    pr = preparo(nome, lateral_na_agregacao=lateral)
     a = agregar(pr.postos, pr.k, semente, OpcoesAgregacao(simetria=simetria))
     tmp = f.with_suffix(".tmp.npz")
     np.savez(tmp, postos=np.array(a.postos), centroides=a.centroides, contagens=a.contagens, n=a.n_objetos,
@@ -93,6 +105,7 @@ def arvore(nome: str, semente: int, variante: str = "base"):
     """(incrementais do GEVAZP.OUT [K, usinas], probabilidades float32,
     Resultado) da variante com a semente."""
     op = replace(VARIANTES[variante], semente=semente)
-    ag = agregacao(nome, semente, op.agregacao.simetria)
-    r = gerar(base.deck(nome), base.configuracao(nome), op, agregacao=ag, preparo=preparo(nome))
+    ag = agregacao(nome, semente, op.agregacao.simetria, op.lateral_na_agregacao)
+    pr = preparo(nome, op.correlacao_lateral, op.ruido_lateral, op.lateral_na_agregacao)
+    r = gerar(base.deck(nome), base.configuracao(nome), op, agregacao=ag, preparo=pr)
     return r.totalizadas.incrementais, r.probabilidades, r

@@ -1,6 +1,7 @@
 """Preenche em paralelo o cache das agregações da F8 (cache/f8/).
 
-Uso: ./ambiente/py ferramentas/sementes_f8.py [-j 14] [--simetria nenhuma antitetica] [decks...]
+Uso: ./ambiente/py ferramentas/sementes_f8.py [-j 14] [--simetria nenhuma antitetica]
+     [--lateral-na-agregacao sim nao] [decks...]
 
 Cada agregação (50 mil objetos, K-means com K = aberturas) leva cerca de
 2 min num núcleo; os testes T10/T11 (tests/test_t1[01]_*.py) leem o cache e
@@ -22,9 +23,9 @@ sys.path.insert(0, str(RAIZ / "tests"))
 def _uma(args):
     import apoio_f8
 
-    nome, semente, simetria = args
-    a = apoio_f8.agregacao(nome, semente, simetria)
-    return nome, semente, simetria, a.iteracoes, a.ifault
+    nome, semente, simetria, lateral = args
+    a = apoio_f8.agregacao(nome, semente, simetria, lateral == "sim")
+    return nome, semente, simetria, lateral, a.iteracoes, a.ifault
 
 
 def main():
@@ -36,8 +37,11 @@ def main():
     ap.add_argument("-j", type=int, default=max(1, (os.cpu_count() or 2) // 2))
     ap.add_argument("--simetria", nargs="*", default=["nenhuma"])
     ap.add_argument("--sementes", type=int, default=len(apoio_f8.SEMENTES))
+    ap.add_argument("--lateral-na-agregacao", nargs="*", default=["sim"], choices=["sim", "nao"],
+                    help="sim (padrão, P-AGR-07) e/ou nao (variante sem_lateral_na_agregacao)")
     a = ap.parse_args()
-    tarefas = [(d, s, sm) for sm in a.simetria for d in a.decks for s in apoio_f8.SEMENTES[: a.sementes]]
+    tarefas = [(d, s, sm, lt) for lt in a.lateral_na_agregacao for sm in a.simetria for d in a.decks
+               for s in apoio_f8.SEMENTES[: a.sementes]]
     with ProcessPoolExecutor(a.j) as ex:
         for r in ex.map(_uma, tarefas):
             print(*r, flush=True)

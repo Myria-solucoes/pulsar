@@ -1,0 +1,207 @@
+# Limite inferior da lognormal e postos derivados (frente F11)
+
+Lacunas L8 (limite inferior `M_t` da lognormal de três parâmetros) e L11
+(postos laterais e outros derivados), investigadas nos 61 pacotes
+completos (03 §1.1 e §1.1b): 59 do SINtegre/ONS (PMOs de jan/2022 a set/2026,
+menos jul/2023, e as revisões 1–3 de fev/2024) e os dois originais
+(202609 RV1 e 202610 RV0). Só arquivos publicados nos pacotes; nenhum
+executável.
+
+## 1. A restrição estrutural usada
+
+No período estocástico o passado é o mesmo em todas as folhas, então cada
+coluna do `GEVAZP.OUT` de uma série da matriz de carga é (M18 eq. 4.9a,
+4.11–4.15; L-LN3 eq. 18–27)
+
+```text
+Z = σ_m (c + a),   a = exp(σ_ξ W + μ_ξ) + Δ,   Δ = M_t/σ_m − c,
+```
+
+com `c`, `σ_m` já reproduzidos pelo Pulsar (P-GER-03/04) e `σ_ξ`, `μ_ξ`
+função de `Δ` e dos momentos `μ_a`, `σ_a` do ruído (eq. 22–24). E
+`W = D b` com `D = A √V A'` (P-ESP-07/09): como a matriz `U` do mês tem
+posto N − 1 = 93 para ~150 séries, cada vetor `W` de uma folha tem de estar
+na imagem de `U` — ~56 restrições lineares por folha, ~14 500 por pacote,
+para uma incógnita `M_t` por série.
+
+Invertendo a lognormal com `M_t` e momentos candidatos, o resíduo
+`√(Σ_k p_k |K'W_k|² / Σ_k p_k |W_k|²)` (K = base do núcleo de U, p = PROBVAZ)
+mede o quanto eles explicam os cenários publicados (`tests/apoio_f11.py`).
+Com a lognormal da primeira versão da F8 (`M_t = 0`, momentos teóricos) o
+resíduo ficava em 0,02–0,17 e era impossível em 202411 e 202511 (cenários
+negativos de TRES IRMAOS).
+
+## 2. Identificação
+
+Refeita por `ferramentas/ajuste_livre_limite.py` (`./ambiente/py
+ferramentas/ajuste_livre_limite.py -j 12`; o ajuste está testado em
+cenários sintéticos por `tests/test_ajuste_livre_sem_deck.py`), sem supor
+a regra:
+
+1. Ajuste por Levenberg–Marquardt de um `M_t` livre por série, com os
+   momentos teóricos, e depois de `M_t`, escala e deslocamento livres de
+   cada `W` (o que não pressupõe os momentos). Em 25 dos 61 pacotes o
+   resíduo vai a ~1,2e-8; nos outros o otimizador para num mínimo local
+   (1e-6 a 5e-2), o que não afeta a validação da seção 4, feita com a regra
+   nos 61. Observação exploratória, não reproduzida pela ferramenta nem
+   por teste: no 202202, fixar as séries de γ baixo em outro valor subia a
+   função objetivo de 2e-14 para 1,5e-2. O que sustenta a identificação de
+   cada M_t são os controles de `test_cada_ramo_da_regra` (seção 4).
+2. Nos 25 pacotes (3 677 séries × pacote), M_t / menor vazão não negativa
+   do mês concentra-se em 0,35 (1 402), 0,15 (927), 0,5 (367) e 0,6 (75),
+   com assimetria de −1,55 a 0,9995 na fração 0,15, de 2,0008 a 3,9644 na
+   0,5 e de 4,025 a 7,14 na 0,6 (a 0,35 tem um caso com γ = 0,52 em que a
+   razão bate por acaso: é um caso μ − 3σ). Classificados: 3 038 em
+   `f · mínimo`, 520 em `μ − 3σ` e 119 em `f ·` cúbica da eq. 25 nas
+   vazões, nenhum sem fórmula. A ferramenta deriva os limiares dos próprios
+   M_t ajustados (corte de menor erro), sem fixá-los: γ = 1,0002, 1,9996 e
+   3,9947 entre as frações, sem série do lado errado; a escolha fração ×
+   `μ − 3σ` separa em `(f · mínimo − μ)/σ = −3,0006` (−3,0053 contra
+   −2,9958), com um caso do lado errado, a série com 15,2% de negativos
+   (as com fração vão até 14,4%). As fórmulas candidatas (fração do mínimo,
+   μ − kσ com k = 3, cúbica) são dadas à ferramenta; os números saem dos
+   dados.
+3. Com a regra, escala e deslocamento livres levavam todos os 61 pacotes a
+   ~1e-8; a escala/deslocamento que sobrava era a dos momentos: com a média
+   e o desvio **históricos** dos resíduos do mês (P-RES-02) o resíduo vai a
+   ~1e-8 sem parâmetro livre nenhum.
+
+## 3. A regra (P-LN3-09..13)
+
+Com `x` as vazões incrementais históricas do mês estocástico (janela da F3),
+`μ`, `σ` (denominador N) e `γ` a média, o desvio e a assimetria delas
+(P-EST-01..03):
+
+1. se mais de 15% dos valores de `x` são negativos: `M_t = μ − 3σ`;
+2. base = menor valor não negativo de `x` (0 se houver vazão 0);
+3. com 2 ≤ γ < 4, se `τ = μ − σ/η(γ)` (η da eq. 25) está em (0, base):
+   base = τ;
+4. `f = 0,15 / 0,35 / 0,5 / 0,6` para γ < 1 / < 2 / < 4 / ≥ 4;
+5. `M_t = max(f · base, μ − 3σ)`.
+
+A lognormal usa `μ_a`, `σ_a` históricos dos resíduos (P-LN3-04) e a eq. 24
+com `(μ_a − Δ)²` quando `μ_a − Δ < 0` (P-LN3-06, 16 pacotes).
+
+Contagem nos 61 pacotes (8 999 séries × pacote, `ferramentas/limite_inferior.py`):
+
+| Ramo | Séries × pacote |
+| --- | ---: |
+| f = 0,15 (γ < 1) | 2 522 |
+| f = 0,35 (1 ≤ γ < 2) | 3 369 |
+| f = 0,5 (2 ≤ γ < 4) | 1 097 |
+| f = 0,5 sobre a cúbica | 338 |
+| f = 0,6 (γ ≥ 4) | 274 |
+| piso μ − 3σ | 1 397 |
+| mais de 15% negativos | 2 |
+
+Limiares, cercados pelas séries em que o ramo decide `M_t`:
+
+| Limiar | Maior valor abaixo | Menor valor acima |
+| --- | ---: | ---: |
+| γ = 1 | 0,999574 | 1,000064 |
+| γ = 2 | 1,999788 | 2,000832 |
+| γ = 4 | 3,964403 | 4,000973 |
+| fração de negativos 0,15 | 0,144444 (13/90) | 0,150538 (14/93) |
+
+O ramo dos negativos aparece só em TRES IRMAOS, dezembro, em 202411 e
+202511 (`M_t` = −71,6 e −71,1 m³/s): é ele que explica os cenários
+negativos que a F10 registrou. O limiar de 15% é ESCOLHA dentro do
+intervalo; o empate exato nos limiares de γ também (nenhum pacote o tem).
+
+## 4. Testes
+
+`tests/test_oraculo_limite_inferior.py`, nos 61 pacotes (`--decks todos`):
+
+- `test_ruidos_publicados_na_imagem_com_a_regra`: resíduo < 1e-7 (máximo
+  1,34e-8); `M_t = 0` ≥ 1e-3 ou impossível; momentos teóricos ≥ 100 vezes;
+- `test_cada_ramo_da_regra`: 18 controles (k = 2,9/3,1, sem piso, limiares
+  ±0,01, frações ±0,01, faixa da cúbica, limiar de negativos); cada um que
+  muda algum `M_t` sobe o resíduo mais de 100 vezes. Pacotes em que cada um
+  muda algum `M_t`: piso, frações e cúbica 61; limiar 1 27; limiar 2 15–18;
+  cúbica com γ ≥ 4 29; limiar 4,01 1; negativos 14% 3; sem limiar de
+  negativos 2;
+- `test_base_com_negativos_e_errada`, `test_media_do_ruido_abaixo_do_limite_eq_24_com_quadrado`,
+  `test_matriz_do_mes_estocastico_exata` (P-ESP-09: só a matriz do mês
+  deixa os W na imagem; as outras 12 ficam acima de 1e-3).
+
+`tests/test_t12_ponta_a_ponta.py::test_transplante_entre_revisoes`: o W do
+202609 RV1, reaplicado com o condicionamento do RV0, dá o `VAZOES.RV0`
+oficial **byte a byte** (antes, 90,0% das palavras geradas).
+
+## 5. Postos derivados (L11)
+
+`tests/test_oraculo_laterais.py`, nos 61 pacotes:
+
+- **NW e jusantes** (`test_nw_e_jusantes_geradas_como_as_demais`): com as
+  incrementais próprias tiradas do `VAZTOTGD.DAT`, as usinas NW e as
+  jusantes que as recebem ficam na imagem junto com as demais (< 1e-7): a
+  NW é gerada como qualquer série da carga, com o mesmo `M_t`, e só depois
+  absorvida na jusante no `GEVAZP.OUT` (F6-INC-02).
+- **Lateral** (`test_lateral_condicionado_com_a_correlacao_do_mes`): o W de
+  SOBRADINHO_L, comparado com o de SOBRADINHO (tirado da imagem pelas
+  outras séries), segue `W_L = ρ_m W_P + E b1` com `ρ_m` a correlação do
+  **mês** estocástico (P-LAT-02), não a anual do M18 §4.3.3.1, e:
+  - versão 11.0.x (8 pacotes, abr–out/2026): **sem** o ruído próprio,
+    `W_L = ρ_m W_P` a menos de 1e-6 (P-LAT-04);
+  - versões 8.1.6 e 10.0.0 (53 pacotes): `b1` com desvio 0,91–1,09 e sem
+    correlação com `W_P`, um normal padrão independente.
+
+  O padrão do Pulsar segue a versão atual (`ruido_lateral="nenhum"`); a
+  forma do M18 fica como `"proprio"`. Se o lateral é componente do vetor
+  agregado pelo K-means não se separa nos dados: o Pulsar o mantém no
+  vetor (`lateral_na_agregacao`, ESCOLHA P-AGR-07, pelo R3383 eq. 2.2 com
+  as 155 usinas do TESTES.REL), mesmo sem usá-lo no W na versão 11; o T10
+  (tamanhos de grupo) e o T11 não separam as duas formas.
+
+## 6. Aceitação estatística (03 §5) antes e depois
+
+`tests/test_t11_aceitacao.py`, 20 sementes, fração dos postos com a
+estatística do `GEVAZP.OUT` oficial na faixa [mín, máx] das sementes
+(P-ACE-06; referência de um gerador idêntico 0,90). "F8" é a primeira
+versão (variante `"f8"`: M_t = 0, momentos teóricos, lateral com a
+correlação anual e ruído próprio); "F11" é o padrão novo.
+
+| deck | versão | média | desvio | assim. | Q1 | Q2 | Q3 | correl. | árvore |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 202609 | F8 | 0,922 | 0,909 | 0,857 | 0,890 | 0,870 | 0,909 | 0,908 | 1,000 |
+| 202609 | F11 | 0,929 | 0,929 | 0,851 | 0,916 | 0,903 | 0,935 | 0,915 | 1,000 |
+| 202610 | F8 | 0,909 | 0,851 | 0,805 | 0,883 | 0,890 | 0,792 | 0,893 | 1,000 |
+| 202610 | F11 | 0,916 | 0,877 | 0,844 | 0,890 | 0,896 | 0,870 | 0,896 | 1,000 |
+
+- Por posto, a F11 não perde mais de 0,01 em nenhuma estatística; no
+  202610 a forma da distribuição, que era a pendência da L7, melhora:
+  desvio +0,026, assimetria +0,039, Q3 +0,078. Diferenças de até ~0,05
+  entre variantes são o ruído de duas frações em ~154 postos (2σ): o ganho
+  no Q3 passa dele, o da assimetria fica no limite.
+- O ganho vem do M_t: só M_t = 0 com o resto da F11 deixa a assimetria e o
+  Q3 do 202610 em 0,805 e 0,799. Momentos teóricos, correlação anual, ruído
+  próprio do lateral e o vetor agregado sem o lateral, cada um sozinho,
+  ficam a ±0,05 da F11: o T11 não os separa (a separação dos três
+  primeiros vem dos testes de núcleo exatos).
+- A "árvore" é uma coluna só com seis estatísticas: uma fora já dá 0,833
+  (o Q3 da soma do 202609 fica 0,4% abaixo da faixa com o vetor agregado
+  sem o lateral). Na referência (cada semente contra as outras 19) as seis
+  ficam dentro em só 9 a 13 das 20 sementes; o teste passa a exigir 5 de 6.
+- Testes do M18 cap. 6 (fração das séries rejeitadas a 5%): o oficial fica
+  dentro da faixa das sementes nos quatro testes nos dois decks (na
+  primeira versão, até 2 séries acima em KS e CvM).
+- Com P5–P95 as frações ficam abaixo de 0,90 nas duas versões, no nível
+  da referência para essa faixa (0,82; na primeira versão, 0,69–0,84).
+
+## 7. Em aberto
+
+- Os limiares de empate (γ exatamente 1, 2 ou 4) e a fração de negativos
+  entre 14,4% e 15,05%: sem pacote que os separe.
+- Série sem valor não negativo no mês: base 0 por escolha.
+- Por que o lateral perdeu o ruído próprio na versão 11: nenhuma fonte
+  pública registra a mudança.
+- Observação exploratória, fora dos testes: 202402 e 202403 têm as mesmas
+  probabilidades e o mesmo `b1` do lateral, o que sugere a mesma agregação
+  (P-INT-01 entre pacotes), mas as coordenadas de `b` nas imagens dos dois
+  meses não fecham num único `b` (resíduo relativo 0,9%). Fica para a L7.
+- O piso de ~1,2e-8 (e não 1e-15) é o esperado de √λ nos autovalores nulos
+  com erro de arredondamento: cenários sintéticos em float64 com o `M_t`
+  verdadeiro dão o mesmo (`tests/test_ajuste_livre_sem_deck.py`).
+- A página `site/index.html` embute uma cópia da tabela de proveniência
+  gerada e atualizada à parte (ainda a de 276 linhas, anterior à F10); vale
+  o `PROVENIENCIA.md`.
