@@ -55,3 +55,12 @@ def test_recupera_m_com_escala_e_deslocamento_livres():
     (ml, al, be), _ = a.ajustar_livre(mt)
     assert a.residuo(ml, al, be) < 1e-7 < a.residuo(mt) * 1e-2
     assert np.allclose(ml, m, rtol=1e-5)
+
+
+def test_corte_de_menor_erro():
+    """O corte usado para derivar os limiares cai entre os dois grupos e
+    tolera um caso do lado errado."""
+    t, e = A.corte([0.1, 0.5, 0.99, 1.7], [1.01, 1.2, 1.9])
+    assert e == 1 and 0.99 < t < 1.01
+    t, e = A.corte([-3.5, -3.01], [-2.99, -2.0])
+    assert e == 0 and -3.01 < t < -2.99

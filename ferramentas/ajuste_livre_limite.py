@@ -15,8 +15,12 @@ supor a regra:
    pressupõe os momentos. Grava cache/f11/ajuste_livre_<pacote>.npz.
 2. Nos pacotes em que o ajuste fecha (resíduo relativo < 1e-6), compara cada
    M_t ajustado com quantidades do histórico do mês: a razão M_t / menor
-   vazão não negativa por faixa de assimetria, μ − 3σ e a cúbica da eq. 25,
-   e procura a variável que separa os casos fora das frações.
+   vazão não negativa por faixa de assimetria, μ − 3σ e a cúbica da eq. 25;
+   deriva dos próprios M_t ajustados os limiares de assimetria entre as
+   frações (corte de menor erro), o corte entre fração e μ − 3σ e a fração
+   de negativos dos casos μ − 3σ que esse corte não explica. Só as fórmulas
+   candidatas (fração do mínimo, μ − kσ com k = 3, cúbica) são dadas; os
+   números saem dos dados.
 
 A validação da regra resultante está em tests/test_oraculo_limite_inferior.py;
 esta ferramenta só refaz a descoberta a partir dos pacotes públicos.
@@ -205,6 +209,17 @@ def _eta(g):
     return math.cbrt((g + q) / 2) + math.cbrt((g - q) / 2)
 
 
+def corte(abaixo, acima):
+    """Limiar t que deixa o menor número de valores de ``abaixo`` em ≥ t e de
+    ``acima`` em < t (ponto médio entre valores vizinhos); devolve (t, erros)."""
+    v = np.sort(np.concatenate([np.asarray(abaixo, float), np.asarray(acima, float)]))
+    cand = np.unique((v[1:] + v[:-1]) / 2)
+    a, b = np.sort(abaixo), np.sort(acima)
+    err = (len(a) - np.searchsorted(a, cand, "left")) + np.searchsorted(b, cand, "left")
+    i = int(np.argmin(err))
+    return float(cand[i]), int(err[i])
+
+
 def classificar(arquivos, tol=1e-4):
     """Lê os npz e imprime: razões M/menor não negativo mais frequentes por
     faixa de assimetria, candidatos μ − 3σ e metade da cúbica, e a melhor
@@ -244,15 +259,34 @@ def classificar(arquivos, tol=1e-4):
             resto.append(r)
         cont[r["tipo"]] += 1
     print("fórmulas:", dict(cont))
-    # separação fração x μ − 3σ: (f·base − μ)/σ com a fração da faixa de γ
+    # Limiares de γ entre frações consecutivas, derivados das séries
+    # classificadas (corte de menor erro), não fixados.
     lim = sorted(fracoes)
+    grupos = [[r["g"] for r in pos if r["tipo"] == "fração" and abs(r["M"] / r["base"] - f) < 5e-4] for f in lim]
+    limiares = []
+    for f0, f1, g0, g1 in zip(lim, lim[1:], grupos, grupos[1:]):
+        t, err = corte(g0, g1)
+        limiares.append(t)
+        print(f"  limiar de γ entre {f0} e {f1}: {t:.6f} ({err} séries do lado errado)")
+
+    def fracao(g):
+        return lim[sum(g >= t for t in limiares)]
+
+    # Separação fração x μ − 3σ por (f(γ)·base − μ)/σ, com os limiares acima.
     for r in linhas:
-        k = sum(r["g"] >= t for t in (1.0, 2.0, 4.0))
-        r["kmin"] = (lim[min(k, len(lim) - 1)] * r["base"] - r["mu"]) / r["sd"] if r["sd"] > 0 else float("nan")
-    fr = [r["kmin"] for r in linhas if r["tipo"] == "fração" and r["neg"] <= 0.15]
-    m3 = [r["kmin"] for r in linhas if r["tipo"] == "μ − 3σ" and r["neg"] <= 0.15]
-    if fr and m3:
-        print(f"(f·base − μ)/σ: maior nos casos 'μ − 3σ' {max(m3):.4f}, menor nos casos 'fração' {min(fr):.4f}")
+        r["kmin"] = (fracao(r["g"]) * r["base"] - r["mu"]) / r["sd"] if r["sd"] > 0 else float("nan")
+    m3 = [r for r in linhas if r["tipo"] == "μ − 3σ"]
+    fr = [r for r in linhas if r["tipo"] == "fração"]
+    s_k, err = corte([r["kmin"] for r in m3], [r["kmin"] for r in fr])
+    print(f"(f·base − μ)/σ: corte em {s_k:.4f} ({err} séries do lado errado); "
+          f"maior nos 'μ − 3σ' abaixo do corte {max(r['kmin'] for r in m3 if r['kmin'] < s_k):.4f}, "
+          f"menor nos 'fração' {min(r['kmin'] for r in fr):.4f}")
+    # Os 'μ − 3σ' que o corte não explica: comparar a fração de negativos.
+    fora = [r for r in m3 if r["kmin"] >= s_k]
+    if fora:
+        print(f"'μ − 3σ' acima do corte: {len(fora)}, frações de negativos "
+              f"{sorted(round(r['neg'], 4) for r in fora)}; maior fração de negativos nos 'fração': "
+              f"{max(r['neg'] for r in fr):.4f}")
     neg = sorted((r["neg"], r["tipo"]) for r in linhas if r["neg"] > 0)
     print("maiores frações de negativos e o tipo:", neg[-4:])
     print(f"sem fórmula: {len(resto)}")

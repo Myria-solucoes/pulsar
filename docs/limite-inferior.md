@@ -43,18 +43,24 @@ a regra:
    cada `W` (o que não pressupõe os momentos). Em 25 dos 61 pacotes o
    resíduo vai a ~1,2e-8; nos outros o otimizador para num mínimo local
    (1e-6 a 5e-2), o que não afeta a validação da seção 4, feita com a regra
-   nos 61. O `M_t` é identificado sem ambiguidade: no 202202, fixar as
-   séries de γ baixo em outro valor sobe a função objetivo de 2e-14 para
-   1,5e-2.
+   nos 61. Observação exploratória, não reproduzida pela ferramenta nem
+   por teste: no 202202, fixar as séries de γ baixo em outro valor subia a
+   função objetivo de 2e-14 para 1,5e-2. O que sustenta a identificação de
+   cada M_t são os controles de `test_cada_ramo_da_regra` (seção 4).
 2. Nos 25 pacotes (3 677 séries × pacote), M_t / menor vazão não negativa
    do mês concentra-se em 0,35 (1 402), 0,15 (927), 0,5 (367) e 0,6 (75),
    com assimetria de −1,55 a 0,9995 na fração 0,15, de 2,0008 a 3,9644 na
    0,5 e de 4,025 a 7,14 na 0,6 (a 0,35 tem um caso com γ = 0,52 em que a
-   razão bate por acaso). Classificados: 3 038 em `f · mínimo`, 520 em
-   `μ − 3σ` e 119 em `f ·` cúbica da eq. 25 nas vazões, nenhum sem
-   fórmula. A escolha fração × `μ − 3σ` separa em `(f · mínimo − μ)/σ = −3`
-   (−3,0053 contra −2,9958), e o único `μ − 3σ` acima do piso é a série com
-   15,2% de negativos (as com fração vão até 14,4%).
+   razão bate por acaso: é um caso μ − 3σ). Classificados: 3 038 em
+   `f · mínimo`, 520 em `μ − 3σ` e 119 em `f ·` cúbica da eq. 25 nas
+   vazões, nenhum sem fórmula. A ferramenta deriva os limiares dos próprios
+   M_t ajustados (corte de menor erro), sem fixá-los: γ = 1,0002, 1,9996 e
+   3,9947 entre as frações, sem série do lado errado; a escolha fração ×
+   `μ − 3σ` separa em `(f · mínimo − μ)/σ = −3,0006` (−3,0053 contra
+   −2,9958), com um caso do lado errado, a série com 15,2% de negativos
+   (as com fração vão até 14,4%). As fórmulas candidatas (fração do mínimo,
+   μ − kσ com k = 3, cúbica) são dadas à ferramenta; os números saem dos
+   dados.
 3. Com a regra, escala e deslocamento livres levavam todos os 61 pacotes a
    ~1e-8; a escala/deslocamento que sobrava era a dos momentos: com a média
    e o desvio **históricos** dos resíduos do mês (P-RES-02) o resíduo vai a
