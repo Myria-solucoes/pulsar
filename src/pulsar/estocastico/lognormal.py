@@ -82,14 +82,17 @@ class RegraLimite:
     última fração acima do último limiar); ``limiar_inclusivo`` diz se γ
     igual ao limiar já passa para a fração seguinte (só importa no empate
     exato, que nenhum pacote público mostra). ``faixa_cubica``: faixa de γ em
-    que a base é min(mínimo, cúbica) quando a cúbica está em (0, mínimo).
-    ``limiar_negativos``: acima dessa fração de valores negativos no mês,
+    que a base é min(mínimo, cúbica) quando a cúbica está em (0, mínimo);
+    ``cubica_extremos`` diz se cada extremo da faixa entra (padrão: γ = 2
+    entra, γ = 4 não, como os limiares com ``limiar_inclusivo``; nenhum
+    pacote público tem γ exatamente nesses valores). ``limiar_negativos``: acima dessa fração de valores negativos no mês,
     M_t = μ - k σ direto. ``k_desvios``: piso μ - k σ."""
 
     fracoes: tuple[float, ...] = (0.15, 0.35, 0.5, 0.6)
     limiares: tuple[float, ...] = (1.0, 2.0, 4.0)
     limiar_inclusivo: bool = True
     faixa_cubica: tuple[float, float] = (2.0, 4.0)
+    cubica_extremos: tuple[bool, bool] = (True, False)
     limiar_negativos: float = 0.15
     k_desvios: float = 3.0
 
@@ -98,6 +101,11 @@ class RegraLimite:
             if gama < t or (gama == t and not self.limiar_inclusivo):
                 return f
         return self.fracoes[len(self.limiares)]
+
+    def na_faixa_cubica(self, gama: float) -> bool:
+        lo, hi = self.faixa_cubica
+        (ilo, ihi) = self.cubica_extremos
+        return (lo < gama or (ilo and gama == lo)) and (gama < hi or (ihi and gama == hi))
 
 
 def limite_inferido(x: np.ndarray, media: float, desvio: float, gama: float,
@@ -122,8 +130,7 @@ def limite_inferido(x: np.ndarray, media: float, desvio: float, gama: float,
         return float(piso)
     nao_neg = x[x >= 0]
     base = float(nao_neg.min()) if nao_neg.size else 0.0  # P-LN3-13 (ESCOLHA sem valor ≥ 0)
-    lo, hi = r.faixa_cubica
-    if lo <= gama < hi:
+    if r.na_faixa_cubica(gama):
         tau = media - desvio / eta_da_assimetria(gama)
         if 0.0 < tau < base:
             base = tau
@@ -184,6 +191,9 @@ def parametros(c: float, sigma_m: float, mu_a: float, sigma_a: float, rota: str 
         delta = mu_a - sigma_a / eta_da_assimetria(gama)
     elif rota in ("quantis", "inferida") and limite_vazao is not None:
         delta = limite_vazao / sigma_m - c
+    if not math.isfinite(delta):
+        # limite inferior infinito ou indefinido: não há lognormal.
+        raise ErroLognormal(f"limite {delta!r} não finito")
     folga = mu_a - delta
     if folga == 0.0:
         # P-LN3-06: θ indefinido (divisão por zero na eq. 24) em qualquer variante.

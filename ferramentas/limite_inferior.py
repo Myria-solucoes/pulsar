@@ -41,7 +41,7 @@ def _um(nome):
         nn = x[x >= 0]
         base = float(nn.min()) if nn.size else 0.0
         cub = mu - sd / eta_da_assimetria(g) if g > 0 else float("nan")
-        usa_cub = r.faixa_cubica[0] <= g < r.faixa_cubica[1] and 0 < cub < base
+        usa_cub = r.na_faixa_cubica(g) and 0 < cub < base
         if usa_cub:
             base = cub
         if r.fracao(g) * base <= piso:

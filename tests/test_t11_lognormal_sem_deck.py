@@ -127,3 +127,15 @@ def test_limite_inferido_ramos():
     assert L.limite_inferido(x, mu, sd, gm) == pytest.approx(max(L.RegraLimite().fracao(gm) * 3.0, mu - 3 * sd))
     # sem valor não negativo: base 0 (P-LN3-13, ESCOLHA)
     assert L.limite_inferido(np.array([-1.0, -2.0]), -1.5, 0.5, 0.0, L.RegraLimite(limiar_negativos=1.0)) == 0.0
+
+
+def test_extremos_da_faixa_cubica_e_limite_nao_finito():
+    """P-LN3-11 (ESCOLHA nos extremos): γ = 2 entra na faixa da cúbica e
+    γ = 4 não, por padrão, com parâmetro; limite não finito é erro."""
+    r = L.RegraLimite()
+    assert r.na_faixa_cubica(2.0) and not r.na_faixa_cubica(4.0) and r.na_faixa_cubica(3.999)
+    r2 = L.RegraLimite(cubica_extremos=(False, True))
+    assert not r2.na_faixa_cubica(2.0) and r2.na_faixa_cubica(4.0)
+    for lim in (float("-inf"), float("nan")):
+        with pytest.raises(L.ErroLognormal):
+            L.parametros(3.0, 10.0, 0.0, 0.8, "inferida", limite_vazao=lim)
