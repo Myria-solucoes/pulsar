@@ -1,9 +1,11 @@
-# Relatório final do Pulsar (frente F9)
+# Relatório final do Pulsar
 
-Data: 27/10/2026. Branch `frente/F9-integracao`, a partir do master com
-F1–F8 integradas. Todos os números deste relatório saem de testes em
-`tests/` ou de `ferramentas/relatorio_f9.py`, rodados no ambiente
-`pulsar-py:dev` (`./ambiente/py`).
+Versão inicial: frente F9 (27/10/2026, branch `frente/F9-integracao`, com
+F1–F8 integradas). Atualizado pela frente F11 (28/10/2026, branch
+`frente/F11-limite-inferior`, a partir do master com a F10): seções 2.1,
+2.2, 2.3, 2.4, 3 (transplante), 4, 5, 6.1 e 8, com a lognormal identificada
+(docs/limite-inferior.md). As seções 6.2–6.5 e 7 são as da F9. Todos os números saem de testes em `tests/` ou de
+`ferramentas/`, rodados no ambiente `pulsar-py:dev` (`./ambiente/py`).
 
 ## 1. O comando único
 
@@ -52,19 +54,19 @@ blocos estocásticos, mínimo / mediana / máximo nas 20 sementes
 | registro 3 (calendário, versão) | 320/320 | 320/320 | 320/320 |
 | 4 probabilidades (1 registro) | 63 / 67 / 72 de 320 | 63 / 67 / 72 de 320 | 93 / 98 / 103 de 320 |
 | 5 semanas previstas, natural | 1 600/1 600 | 1 280/1 280 | 1 920/1 920 |
-| 6 mês gerado, natural | 45 573 / 45 669 / 45 764 de 82 880 | 45 460 / 45 563 / 45 637 de 82 880 | 39 677 / 39 748 / 39 811 de 72 960 |
+| 6 mês gerado, natural | 45 616 / 45 702 / 45 804 de 82 880 | 45 501 / 45 592 / 45 680 de 82 880 | 39 714 / 39 760 / 39 817 de 72 960 |
 | 7 semanas previstas, ENA | 1 600/1 600 | 1 280/1 280 | 1 920/1 920 |
-| 8 mês gerado, ENA | 45 530 / 45 637 / 45 736 de 82 880 | 45 298 / 45 429 / 45 493 de 82 880 | 39 596 / 39 656 / 39 750 de 72 960 |
+| 8 mês gerado, ENA | 45 580 / 45 678 / 45 771 de 82 880 | 45 340 / 45 456 / 45 508 de 82 880 | 39 631 / 39 676 / 39 734 de 72 960 |
 | 9 meses observados (11) | 3 520/3 520 | 3 520/3 520 | 3 520/3 520 |
 | 10 semanas observadas | — (0) | 320/320 | — (0) |
-| **arquivo** (medianas) | 99 053 / 173 760 (57,0%) | 98 420 / 173 440 (56,7%) | 87 822 / 154 560 (56,8%) |
+| **arquivo** (medianas) | 99 127 / 173 760 (57,0%) | 98 475 / 173 440 (56,8%) | 87 855 / 154 560 (56,8%) |
 
 Leitura: **todos os registros determinísticos são iguais byte a byte nas
 três revisões** (cabeçalho, códigos, calendário, as semanas previstas
 natural e ENA, os 11 meses observados e as semanas observadas). Nos blocos
 gerados, as palavras iguais vêm quase todas das colunas sem dispersão
 (postos sem usina, PN, NW absorvidas e incrementais nulas), que são iguais
-em 100%; nas 153 colunas com dispersão do bloco 6 só 6,3% (RV0), 6,0% (RV1)
+em 100%; nas 153 colunas com dispersão do bloco 6 só 6,2% (RV0), 6,0% (RV1)
 e 4,8% (202610) das palavras coincidem na semente 1, por acaso. No registro
 de probabilidades, as iguais são as dos estágios semanais (1,0), os zeros
 de preenchimento e as folhas que caem na mesma contagem.
@@ -105,29 +107,49 @@ com erro de ±1 em 85% das palavras diferentes, até 18 m³/s, crescente com
 
 ### 2.3 Degraus T0–T12
 
-Resultado de `./ambiente/py -m pytest tests` (suíte inteira, com a coleção
-de decks do ONS montada e o cache de `cache/f8/` preenchido por
-`ferramentas/sementes_f8.py`, simetrias "nenhuma" e "antitetica"):
+Resultado de `./ambiente/py -m pytest tests` na frente F11 (28/10/2026), na
+configuração padrão: amostra de 6 pacotes (`tests/pacotes.py`: 202609,
+202610, 202201_pmo, 202402_rev2, 202507_pmo, 202605_pmo; T11 e T12 só nos
+dois originais), **sem** a coleção de decks do ONS (03 §1.2), com o cache
+de `cache/f8/` preenchido por `ferramentas/sementes_f8.py` para os dois
+originais (simetrias "nenhuma" e "antitetica", com e sem o lateral no
+vetor agregado):
 
-**418 passaram, 2 pulados, 0 falharam, 1 501 subtestes passaram** (17 min, depois da rodada 1 da auditoria). Os dois pulados são amostras legíveis escritas só para o 202609 (`test_oraculo_correl.py:174`, `test_oraculo_tendencia.py:40`). T0 e T1 são `unittest` com subtestes por deck (os dois pacotes e a coleção de decks do ONS), por isso aparecem na coluna "sem deck". Os testes "sem deck" usam casos sintéticos.
+**969 passaram, 104 pulados, 0 falharam, 78 subtestes passaram** (40 min).
+Os pulados: agregações dos quatro pacotes do SINtegre fora do cache (T10,
+16), testes que exigem a coleção do ONS (T0, T1, T7), amostras legíveis
+escritas só para o 202609, casos sem o objeto testado no pacote (sem NW,
+ramo PAR(p)) e controles da regra de M_t que não mudam nenhum M_t naquele
+pacote (L8). A versão F9 deste relatório (418 passaram, com a coleção do
+ONS e só os dois originais) mediu outra configuração e outro conjunto de
+testes.
 
-| Degrau | Teste | 202609 | 202610 | Sem deck / ambos | Critério e resultado |
-| --- | --- | --- | --- | --- | --- |
-| F2 | test_oraculo_* | 38 ✓, 2 pulados | 36 ✓ | — | leitores dos binários iguais aos espelhos em texto |
-| T0 | test_t0_leitura | — | — | 15 ✓ | todas as entradas dos pacotes e dos 734 casos da coleção do ONS lidas; contagens iguais ao GEVAZP.REL |
-| T1 | test_t1_configuracao, test_t1_ac_datado | — | — | 18 ✓ | `config.out` byte a byte; ordem do registro 2 igual em 503 VAZOES da coleção do ONS |
-| T2 | test_t2_historico | 5 ✓ | 5 ✓ | — | incrementais, janela, média e desvio bit a bit |
-| T3 | test_t3_* | 11 ✓ | 11 ✓ | — | correlograma e FACP bit a bit (20 460 valores) |
-| T4 | test_t4_* | 16 ✓ | 16 ✓ | 18 ✓ | ordens iguais em todas as iterações do vordem.out; φ bit a bit |
-| T5 | test_t5_* | 13 ✓ | 13 ✓ | 11 ✓ | matriz espacial bit a bit; carga D·D' = U |
-| T6 | test_t6_tendencia | 6 ✓ | 6 ✓ | 4 ✓ | QPAST.DAT byte a byte |
-| T7 | test_t7_* | 17 ✓ | 9 ✓ | 8 ✓ | blocos determinísticos byte a byte nas 3 revisões |
-| T8 | test_t8_totalizacao | 11 ✓ | 11 ✓ | 7 ✓ | do VAZTOTGD: GEVAZP.OUT, vazoesta/ia byte a byte; do GEVAZP.OUT: iguais após NINT |
-| T9 | test_t9_empacotamento | 4 ✓ | 3 ✓ | 13 ✓ | VAZOES.RVx e PROBVAZ.DAT byte a byte por transplante |
-| T10 | test_t10_* | 4 ✓ | 4 ✓ | 14 ✓ | K e N = 50 000; tamanhos de grupo na faixa das sementes |
-| T11 | test_t11_* | 21 ✓ | 21 ✓ | 12 ✓ | aceitação estatística sobre o GEVAZP.OUT (seção 2.4) |
-| T12 | test_t12_ponta_a_ponta | 4 ✓ (2 revisões) | 2 ✓ | 8 ✓ | determinísticos byte a byte, transplante RV1→RV0, 03 §5 no VAZOES.RVx, CLI real = cadeia em cache |
-| — | test_proveniencia | — | — | 3 ✓ | seção 7 |
+| Degrau | 202609 | 202610 | 202201_pmo | 202402_rev2 | 202507_pmo | 202605_pmo | sem deck |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| F2 (test_oraculo_*, leitores) | 40 ✓ | 38 ✓, 2 pul. | 35 ✓, 5 pul. | 37 ✓, 3 pul. | 38 ✓, 2 pul. | 38 ✓, 2 pul. | — |
+| T0 | — | — | — | — | — | — | 13 ✓, 2 pul. |
+| T1 | — | — | — | — | — | — | 17 ✓, 1 pul. |
+| T2 | 5 ✓ | 5 ✓ | 5 ✓ | 5 ✓ | 5 ✓ | 5 ✓ | — |
+| T3 | 11 ✓ | 11 ✓ | 7 ✓, 4 pul. | 11 ✓ | 11 ✓ | 11 ✓ | — |
+| T4 | 18 ✓, 1 pul. | 18 ✓, 1 pul. | 17 ✓, 2 pul. | 18 ✓, 1 pul. | 18 ✓, 1 pul. | 18 ✓, 1 pul. | 20 ✓ |
+| T5 | 14 ✓ | 14 ✓ | 14 ✓ | 14 ✓ | 14 ✓ | 14 ✓ | 11 ✓ |
+| T6 | 6 ✓, 1 pul. | 6 ✓, 1 pul. | 5 ✓, 2 pul. | 6 ✓, 1 pul. | 6 ✓, 1 pul. | 6 ✓, 1 pul. | 4 ✓ |
+| T7 | 5 ✓ | 3 ✓ | 2 ✓ | 2 ✓ | 2 ✓ | 2 ✓ | 48 ✓, 2 pul. |
+| T8 | 9 ✓ | 9 ✓ | 8 ✓, 1 pul. | 8 ✓, 1 pul. | 9 ✓ | 9 ✓ | 19 ✓ |
+| T9 | 4 ✓ | 3 ✓ | 3 ✓ | 3 ✓ | 3 ✓ | 3 ✓ | 12 ✓, 1 pul. |
+| T10 | 4 ✓ | 4 ✓ | 4 pul. | 4 pul. | 4 pul. | 4 pul. | 14 ✓ |
+| T11 | 21 ✓ | 21 ✓ | — | — | — | — | 14 ✓ |
+| T12 | 4 ✓ (2 revisões) | 2 ✓ | — | — | — | — | 8 ✓ |
+| L8 (test_oraculo_limite_inferior, test_ajuste_livre_sem_deck) | 15 ✓, 7 pul. | 14 ✓, 8 pul. | 14 ✓, 8 pul. | 13 ✓, 9 pul. | 14 ✓, 8 pul. | 16 ✓, 6 pul. | 3 ✓ |
+| L11 (test_oraculo_laterais) | 2 ✓ | 2 ✓ | 1 ✓, 1 pul. | 1 ✓, 1 pul. | 2 ✓ | 2 ✓ | — |
+| test_proveniencia | — | — | — | — | — | — | 3 ✓ |
+
+Os dois oráculos da F11 também nos 61 pacotes
+(`pytest tests/test_oraculo_limite_inferior.py tests/test_oraculo_laterais.py
+--decks todos`, com RuntimeWarning como erro): **1 015 passaram, 510
+pulados, 0 falharam**; os pulados são controles que não mudam nenhum M_t
+no pacote e pacotes sem NW com jusante. T11 com 20 sementes só nos dois
+originais; não foi rodado nos 61.
 
 ### 2.4 Estatísticas de 03 §5
 
@@ -164,7 +186,7 @@ faixa. Linhas F9 com a lognormal da primeira versão, F11 com a atual:
 | 202610 RV0 | F11 | 0,908 (0,90) | 0,876 (0,90) | 0,843 (0,90) | 0,948 (0,95) | 0,961 (0,95) | 0,922 (0,94) | 0,899 (0,90) | 1,000 |
 
 Com a faixa P5–P95 (o exemplo de 03 §5) as frações oficiais ficam em
-0,70–0,91 e as da referência em 0,81–0,92: o critério de 90% não é
+0,74–0,93 (F11; 0,70–0,91 na F9) e as da referência em 0,81–0,92: o critério de 90% não é
 atingível com 20 sementes por essa faixa nem por um gerador idêntico
 (P-ACE-06). No bloco 8 (ENA) os números são os do bloco 6 a ±0,015.
 
