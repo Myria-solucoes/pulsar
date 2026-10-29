@@ -1,7 +1,7 @@
 """Preenche em paralelo o cache das agregações da F8 (cache/f8/).
 
 Uso: ./ambiente/py ferramentas/sementes_f8.py [-j 14] [--simetria nenhuma antitetica]
-     [--lateral-na-agregacao sim nao] [decks...]
+     [--lateral-na-agregacao nao sim] [decks...]
 
 Cada agregação (50 mil objetos, K-means com K = aberturas) leva cerca de
 2 min num núcleo; os testes T10/T11 (tests/test_t1[01]_*.py) leem o cache e
@@ -37,8 +37,8 @@ def main():
     ap.add_argument("-j", type=int, default=max(1, (os.cpu_count() or 2) // 2))
     ap.add_argument("--simetria", nargs="*", default=["nenhuma"])
     ap.add_argument("--sementes", type=int, default=len(apoio_f8.SEMENTES))
-    ap.add_argument("--lateral-na-agregacao", nargs="*", default=["sim"], choices=["sim", "nao"],
-                    help="sim (padrão, P-AGR-07) e/ou nao (variante sem_lateral_na_agregacao)")
+    ap.add_argument("--lateral-na-agregacao", nargs="*", default=["nao"], choices=["sim", "nao"],
+                    help="nao (padrão, P-AGR-07) e/ou sim (variantes com_lateral_na_agregacao, lateral_agregado e f8)")
     a = ap.parse_args()
     tarefas = [(d, s, sm, lt) for lt in a.lateral_na_agregacao for sm in a.simetria for d in a.decks
                for s in apoio_f8.SEMENTES[: a.sementes]]

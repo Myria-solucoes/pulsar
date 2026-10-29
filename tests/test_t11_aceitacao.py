@@ -2,29 +2,33 @@
 deck, e escolha das variantes das lacunas L6, L7 e L8 (P-ACE-06, P-AGR-04,
 P-LN3-03, P-RUI-04).
 
-Lento sem cache: cada semente faz um K-means de 50 000 × 155 (~2 min);
+Lento sem cache: cada semente faz um K-means de 50 000 × 154 (~2 min);
 ``./ambiente/py ferramentas/sementes_f8.py -j 14 --simetria nenhuma antitetica``
-e ``... --lateral-na-agregacao nao`` (variante "sem_lateral_na_agregacao")
-preenchem cache/f8/ em paralelo. ``python -c "import aceitacao_f8 as a;
+e ``... --lateral-na-agregacao sim`` (variantes com o lateral no vetor
+agregado, 155) preenchem cache/f8/ em paralelo. ``python -c "import aceitacao_f8 as a;
 a.relatorio()"`` (com tests/ e src/ no caminho) imprime a tabela completa.
 
 Resultado (faixa [mín, máx] das 20 sementes, P-ACE-06; a referência de um
 gerador idêntico é 0,90), com a lognormal da F11 (P-LN3-04, P-LN3-09) e o
-lateral da P-LAT-02/04, e na primeira versão da F8 (variante "f8": M_t = 0,
-momentos teóricos, lateral com a correlação anual e ruído próprio):
+lateral da P-LAT-02/04 fora do vetor agregado (P-AGR-07, F13), antes da F13
+(F11: o lateral no vetor agregado, hoje a variante "com_lateral_na_agregacao")
+e na primeira versão da F8 (variante "f8": M_t = 0, momentos teóricos,
+lateral com a correlação anual e ruído próprio no vetor agregado):
 
 ========  ======  =====  ======  =====  =====  =====  =====  ======  ======
 deck      versão  média  desvio  assim  Q1     Q2     Q3     correl  árvore
 ========  ======  =====  ======  =====  =====  =====  =====  ======  ======
+202609    F13     0,935  0,916   0,877  0,903  0,909  0,909  0,921   0,833
 202609    F11     0,929  0,929   0,851  0,916  0,903  0,935  0,915   1,000
 202609    F8      0,922  0,909   0,857  0,890  0,870  0,909  0,908   1,000
+202610    F13     0,916  0,909   0,851  0,896  0,909  0,877  0,885   1,000
 202610    F11     0,916  0,877   0,844  0,890  0,896  0,870  0,896   1,000
 202610    F8      0,909  0,851   0,805  0,883  0,890  0,792  0,893   1,000
 ========  ======  =====  ======  =====  =====  =====  =====  ======  ======
 
 A "árvore" é uma coluna só (a soma) com seis estatísticas: uma fora já dá
-0,833 (como na variante "sem_lateral_na_agregacao" do 202609, com o Q3 da
-soma 0,4% abaixo da faixa). Diferenças de até ~0,05 entre variantes são o
+0,833 (como na geração padrão do 202609 desde a F13, com o Q3 da soma 0,4%
+abaixo da faixa). Diferenças de até ~0,05 entre variantes são o
 ruído de duas frações em ~154 postos (2σ). Com P5–P95 (o exemplo de 03
 §5) as frações caem para abaixo de 0,90 (0,69–0,84 na primeira versão), o
 mesmo nível da referência (0,82): o critério de 90% não é atingível com 20
@@ -61,21 +65,25 @@ def test_aceitacao_da_geracao_padrao(pacote):
 
 
 def test_primeira_versao_da_f8(pacote):
-    """L8/L11 (frente F11): comparação com a primeira versão da F8 (M_t = 0,
-    momentos teóricos, lateral anual com ruído próprio). A F11 não perde
-    mais de 0,01 em nenhuma estatística por posto, e no 202610 a forma da
-    distribuição, que era a pendência da L7, melhora: desvio 0,851 → 0,877,
-    assimetria 0,805 → 0,844 e Q3 0,792 → 0,870 (o ganho no Q3 está acima
-    do ruído de ~0,05; o da assimetria, no limite). O ganho vem do M_t: só
-    M_t = 0, com o resto da F11, deixa a assimetria e o Q3 do 202610 em
-    0,805 e 0,799 (variante "zero")."""
+    """L8/L11 (frentes F11 e F13): comparação com a primeira versão da F8
+    (M_t = 0, momentos teóricos, lateral anual com ruído próprio no vetor
+    agregado). A geração padrão não perde mais de 0,01 em nenhuma
+    estatística por posto, e no 202610 a forma da distribuição, que era a
+    pendência da L7, melhora: desvio 0,851 → 0,909, assimetria 0,805 →
+    0,851 e Q3 0,792 → 0,877 (o ganho no Q3 está acima do ruído de ~0,05; o
+    da assimetria, no limite). Só M_t = 0, com o resto da geração padrão,
+    deixa a assimetria e o Q3 do 202610 em 0,792 e 0,818 (variante "zero";
+    com o lateral no vetor agregado, antes da F13, 0,805 e 0,799): tirar o
+    M_t piora a assimetria em ≥ 0,03 e o Q3 em ≥ 0,05 (0,058; 0,071 antes da
+    F13), no limite do ruído; o teste não afirma que o M_t explica todo o
+    ganho. Limiares da P-ACE-08 (b), lacuna L24."""
     b, v = R.fracoes(pacote.nome), R.fracoes(pacote.nome, "f8")
     print(pacote.nome, "F11", {k: round(x, 3) for k, x in b.items()}, "F8", {k: round(x, 3) for k, x in v.items()})
     assert all(b[k] >= v[k] - 0.01 for k in ESTATISTICAS if k != "arvore")
     if pacote.nome == "202610":
         assert b["assimetria"] - v["assimetria"] >= 0.03 and b["q75"] - v["q75"] >= 0.06
         z = R.fracoes(pacote.nome, "zero")
-        assert b["assimetria"] - z["assimetria"] >= 0.03 and b["q75"] - z["q75"] >= 0.06
+        assert b["assimetria"] - z["assimetria"] >= 0.03 and b["q75"] - z["q75"] >= 0.05
 
 
 def test_vereditos_do_m18_cap6(pacote):
@@ -117,9 +125,10 @@ def test_fator_das_variantes_l7(pacote):
     """P-AGR-04: na semente 1 os FC das variantes de σ_i diferem < 0,3%:
     202609 3,6602 / 3,6585 / 3,6514 / 3,6598 e 202610 3,7417 / 3,7396 /
     3,7313 / 3,7412 (ponderado / simples / amostral / zero), com o vetor
-    agregado das séries da carga e do lateral (P-AGR-07, 155 componentes).
-    Sem o lateral no vetor (variante "sem_lateral_na_agregacao", 154):
-    3,6485 / 3,6464 / 3,6394 / 3,6480 e 3,7331 / 3,7312 / 3,7230 / 3,7327."""
+    agregado das séries da carga e do lateral (variante
+    "com_lateral_na_agregacao", 155 componentes). Sem o lateral no vetor
+    (padrão, P-AGR-07, 154): 3,6485 / 3,6464 / 3,6394 / 3,6480 e
+    3,7331 / 3,7312 / 3,7230 / 3,7327."""
     from pulsar.estocastico.agregacao import compensar
 
     esperado = {("202609", True): (3.6602, 3.6585, 3.6514, 3.6598),
@@ -154,23 +163,26 @@ def test_rotas_l8(pacote, variante):
 
 def test_momentos_e_lateral_nao_se_separam(pacote):
     """P-LN3-04, P-LAT-02, P-LAT-04, P-AGR-07: os momentos teóricos, a
-    correlação anual do lateral, o ruído próprio do lateral e o vetor
-    agregado sem o lateral dão frações a ±0,05 das da F11 por posto (o
-    ruído de duas frações): o T11 não separa essas escolhas; as três
-    primeiras vêm dos testes de núcleo exatos
-    (test_oraculo_limite_inferior.py, test_oraculo_laterais.py)."""
+    correlação anual do lateral, o ruído próprio do lateral (sorteado nó a
+    nó ou componente do vetor agregado) e o vetor agregado com o lateral
+    dão frações a ±0,05 das da geração padrão por posto (o ruído de duas
+    frações): o T11 não separa essas escolhas; as decisões vêm dos testes
+    exatos sobre os pacotes (test_oraculo_limite_inferior.py,
+    test_oraculo_laterais.py)."""
     b = R.fracoes(pacote.nome)
-    for var in ("momentos_teoricos", "lateral_anual", "lateral_proprio", "sem_lateral_na_agregacao"):
+    for var in ("momentos_teoricos", "lateral_anual", "lateral_individual", "lateral_agregado",
+                "com_lateral_na_agregacao"):
         v = R.fracoes(pacote.nome, var)
         assert all(abs(b[k] - v[k]) <= 0.05 for k in ESTATISTICAS if k != "arvore"), (var, v)
 
 
 def test_simetria(pacote):
     """P-RUI-04 (lacuna L6): com a amostra antitética a média gerada fica
-    perto demais da teórica: a fração da média cai de 0,929 para 0,851
-    (202609) e de 0,916 para 0,818 (202610); a amostra aleatória simples
-    fica (na primeira versão da F8: 0,922 → 0,825 e 0,909 → 0,760)."""
+    perto demais da teórica: a fração da média cai de 0,935 para 0,825
+    (202609) e de 0,916 para 0,844 (202610); a amostra aleatória simples
+    fica (com o lateral no vetor agregado, antes da F13: 0,929 → 0,851 e
+    0,916 → 0,818; na primeira versão da F8: 0,922 → 0,825 e 0,909 → 0,760)."""
     b, v = R.fracoes(pacote.nome), R.fracoes(pacote.nome, "antitetica")
     print(pacote.nome, "antitética", {k: round(x, 3) for k, x in v.items()})
-    assert b["media"] - v["media"] >= 0.05  # 0,929 → 0,851 e 0,916 → 0,818
+    assert b["media"] - v["media"] >= 0.05  # 0,935 → 0,825 e 0,916 → 0,844
     assert len(apoio_f8.SEMENTES) == 20

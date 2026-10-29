@@ -28,14 +28,26 @@ def test_numero_de_grupos_e_denominador(pacote):
 
 def test_distribuicao_dos_tamanhos_de_grupo(pacote):
     """T10 (03 §4): mínimo, máximo e desvio das contagens dos grupos
-    oficiais (contagem = probabilidade × 50 000) ficam na faixa
-    [mín, máx] das 20 sementes (P-ACE-06), com folga de 1 unidade no mín/máx."""
+    oficiais (contagem = probabilidade × 50 000) contra a faixa [mín, máx]
+    das 20 sementes (P-ACE-06), com o lateral fora (padrão, P-AGR-07) e
+    dentro do vetor agregado. Com um gerador idêntico ao oficial, cada
+    estatística cai fora da faixa com probabilidade 2/21; o critério é no
+    máximo uma das três fora (P-ACE-08 (a), lacuna L24; até a F11, as três
+    dentro com folga de 1 contagem). As duas formas passam e não se separam: sem o
+    lateral, só o menor grupo oficial do 202609 (168) fica fora (acima da
+    faixa 156–166); com ele, o desvio oficial fica abaixo da faixa nos dois
+    decks (10,32 contra 10,53–11,96 e 11,68 contra 11,74–13,04)."""
     of = np.rint(np.asarray(apoio.probvaz(pacote.nome), float) * 50_000).astype(int)
     assert of.sum() == 50_000
-    sem = [apoio_f8.agregacao(pacote.nome, s).contagens for s in apoio_f8.SEMENTES]
-    for f in (np.min, np.max, np.std):
-        v = np.array([f(c) for c in sem])
-        assert v.min() - 1 <= f(of) <= v.max() + 1, (f.__name__, f(of), v.min(), v.max())
+    for lateral in (False, True):
+        sem = [apoio_f8.agregacao(pacote.nome, s, lateral=lateral).contagens for s in apoio_f8.SEMENTES]
+        fora = []
+        for f in (np.min, np.max, np.std):
+            v = np.array([f(c) for c in sem])
+            if not v.min() <= f(of) <= v.max():
+                fora.append((f.__name__, f(of), v.min(), v.max()))
+        print(pacote.nome, "com" if lateral else "sem", "lateral: fora da faixa", fora)
+        assert len(fora) <= 1, (lateral, fora)
 
 
 def test_saidas_no_layout_publico(pacote, tmp_path):

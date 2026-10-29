@@ -184,16 +184,38 @@ L-LN3 eq. 18–27; M18 §4.3.1:
 
 ## 10. Postos laterais, satélites e defasagem
 
-M18 §4.3.3; L-VIAG; L-TOT:
+M18 §4.3.3; L-VIAG; L-TOT; R23954 (versão 5.5.1):
 
-- ruído do posto lateral condicionado aos principais:
+- vazão incremental: total do posto menos os totais dos postos
+  imediatamente a montante no mesmo mês; vazão lateral: total menos as
+  vazões **propagadas** desses postos; as duas coincidem quando o tempo de
+  viagem é desprezível (R23954 §1). O histórico traz os dois postos da
+  usina com tempo de viagem (SOBRADINHO: lateral 168, total 169; R23954 §1,
+  §4);
+- o posto lateral tem modelo próprio, ajustado ao histórico lateral,
+  qualquer que seja a classificação da usina; o texto diz PAR(p) (R23954 §2,
+  §5.2) **[lacuna L11]**;
+- ruído do posto lateral gerado depois do dos principais, individualmente,
+  condicionado a eles:
   `W1 = Σ12 Σ22^-1 W2 + E b1`, `EE' = 1 - Σ12 Σ22^-1 Σ12'`, com correlações
-  anuais históricas (M18 eq. 4.19–4.20);
+  anuais históricas (M18 eq. 4.19–4.20; R23954 §2 eq. 2–3) **[lacuna L11]**;
 - principal: o conjunto é o próprio posto total; satélite: principais
-  imediatamente a montante e o principal imediatamente a jusante;
+  imediatamente a montante e o principal imediatamente a jusante (M18
+  §4.3.3.1; R23954 §2);
+- satélite por correlação: na versão 5.5.1, de duas usinas altamente
+  correlacionadas de cascatas distintas da mesma bacia, a de menor MLT vira
+  satélite e tem os cenários calculados dos da principal; sem a mesma
+  bacia, a execução é interrompida (R23954 §4). O limiar e a fórmula dos
+  cenários do satélite estão na Nota Técnica 04/2016 e no Rel. 23951/2016,
+  que não estão em `fontes/` **[lacuna L11]**;
 - totais: (i) incremental + totais de montante, ou (ii) lateral + montante
   defasado `ZT(t) = β Σ ZT_mont(t-1) + (1-β) Σ ZT_mont(t) + Z_lat(t)`,
-  `β = ndias/ndmes` (M18 eq. 4.21).
+  `β = ndias/ndmes` (M18 eq. 4.21; R23954 eq. 4), escolhidas por usina
+  (R23954 §1, §4). A eq. 4 supõe os períodos t e t−1 com a mesma duração
+  (R23954 nota 3) **[lacuna L21]**;
+- os totais gerados são transformados em novas incrementais, considerando
+  todos os postos principais e satélites; o DECOMP calcula com elas a ENA
+  de acoplamento, que assim já inclui o tempo de viagem (R23954 §3, §4).
 
 ## 11. Postos artificiais
 
@@ -233,7 +255,8 @@ as usinas na ordem do arquivo de configuração. `VAZOESTA.OUT` e
 | 10 | incrementais semanais observadas |
 
 `NREG` = nós da árvore / número de postos, arredondado para cima. O espelho
-em texto é `VAZDCP.REL`. Tipos de dado, ordem das usinas em cada registro e
+em texto é `VAZDCP.REL`. Os blocos 9 e 10 (passado mensal e semanal por posto)
+entraram na versão 5.5.1 e são lidos pelo DECOMP desde a versão 24.1 (R23954 §4). Tipos de dado, ordem das usinas em cada registro e
 arredondamento não estão escritos; são inferíveis dos arquivos públicos
 **[lacuna L10]**.
 

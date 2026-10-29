@@ -1,0 +1,2090 @@
+ÍNDICE
+
+1.      INTRODUÇÃO ........................................................................................................................... 3
+
+2.      GERAÇÃO DE CENÁRIOS DE VAZÕES LATERAIS .......................................................................... 6
+
+3.      GERAÇÃO DE CENÁRIOS DE VAZÕES TOTAIS PARA ACOPLAMENTO COM A FUNÇÃO DE CUSTO
+        FUTURO ................................................................................................................................... 8
+
+3.1     VAZÕES TOTAIS UTILIZANDO CENÁRIOS DE VAZÕES INCREMENTAIS.......................................... 8
+
+3.2     VAZÕES TOTAIS UTILIZANDO CENÁRIOS DE VAZÕES LATERAIS................................................... 8
+
+4.      VERSÃO 5.5.1 DO PROGRAMA GEVAZP E SEUS IMPACTOS NOS DEMAIS MODELOS DA CADEIA .. 9
+
+5.      AVALIAÇÃO DOS CENÁRIOS GERADOS PARA O POSTO DE VAZÃO LATERAL .............................. 11
+
+5.1     ANÁLISE NÃO CONDICIONADA ............................................................................................... 14
+
+5.2     ANÁLISE CONDICIONADA ....................................................................................................... 26
+
+6.      CONCLUSÃO ........................................................................................................................... 32
+
+REFERÊNCIAS ................................................................................................................................... 33
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+1. INTRODUÇÃO
+
+O programa GEVAZP [1] tem como objetivo gerar cenários sintéticos mensais de vazão natural
+afluente às usinas hidrelétricas e/ou energia natural afluente aos reservatórios equivalentes de
+energia que compõem o Sistema Interligado Nacional (SIN). Estes cenários são utilizados em conjunto
+com os modelos de planejamento da operação energética com o intuito de obter a melhor política de
+operação para o SIN ao longo do horizonte de estudo [2]. O modelo autorregressivo periódico [3] é
+utilizado para modelar as séries mensais de vazão ou energia natural, o que possibilita representar a
+estrutura de correlação temporal de forma sazonal. Adicionalmente, os cenários sintéticos são
+gerados levando-se em conta a dependência espacial entre as diversas usinas hidrelétricas ou
+reservatórios equivalentes de energia considerados na configuração.
+
+No caso de geração de cenários de vazões, como em um mesmo rio podem ser encontradas diversas
+usinas dispostas em cascata, é possível modelar as vazões de duas formas: pelas vazões totais que
+afluem a cada usina hidroelétrica ou pelas vazões correspondentes à área de drenagem limitada a
+esta usina hidroelétrica e às usinas hidroelétricas imediatamente a montante. No programa GEVAZP
+as vazões são modeladas da segunda forma, e sendo assim, a dependência espacial é obtida a partir
+de séries de vazões afluentes correspondentes à áreas de drenagem disjuntas, o que é uma
+vantagem segundo estudos em [4]. Na implementação do programa GEVAZP, admite-se que o
+arquivo de vazões históricas contenha vazões totais, de onde são calculadas diferenças no mesmo
+intervalo de tempo, chamadas de vazões incrementais.
+
+Neste Relatório Técnico introduz-se o conceito de vazão lateral que difere do conceito de vazão
+incremental. O termo vazão incremental é utilizado para se referir à diferença entre a vazão total em
+um posto de medição num dado mês e a soma das vazões totais de todos os postos imediatamente a
+montante deste no mesmo mês; enquanto o termo vazão lateral é utilizado para se referir à
+diferença entre a vazão total no posto de medição num dado mês e a soma das vazões propagadas
+de todos os postos imediatamente a montante que afluem ao posto de medição no mesmo mês. A
+vazão lateral está assim associada exclusivamente à contribuição lateral num dado mês à vazão total
+afluente ao posto de medição. Para a maioria dos postos representados no SIN, a vazão lateral é
+idêntica à vazão incremental em escala mensal, quando se admite que o tempo de viagem da água de
+uma dada usina hidrelétrica até a próxima usina a jusante é nulo. Porém, quando existe um tempo de
+viagem elevado entre dois ou mais aproveitamentos adjacentes, essa igualdade passa a não ser
+verificada.
+
+Atualmente, o arquivo de vazões históricas fornecido ao programa GEVAZP (versão 3.10) para
+geração dos cenários para o programa DECOMP [5] (denominado vazoesc.dat) contém valores de
+vazões totais em Sobradinho (posto 169) e nas demais usinas a jusante desta usina, calculadas como
+a soma de vazões totais de postos imediatamente a montante de Sobradinho (posto 156 – Três
+_________________________________________________________________________________________________
+                                                                                                3/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+Marias e posto 158 – Queimado) mais as vazões laterais que afluem até cada usina. Estas vazões
+totais, assim obtidas, podem ser interpretadas como correspondentes às vazões totais que
+ocorreriam se o tempo de viagem no trecho à montante de Sobradinho fosse nulo. Adicionalmente,
+para a usina de Sobradinho, inclui-se no arquivo uma série histórica de valores de vazões laterais
+(posto 168), porém este registro não é utilizado diretamente nos cálculos.
+
+Com a utilização deste arquivo, os cenários gerados pelo programa GEVAZP de vazões totais para as
+usinas de Sobradinho e as a jusante desta, não incorporam o tempo de viagem a montante de
+Sobradinho. Por sua vez, o programa DECOMP, no cálculo da energia natural afluente a ser utilizada
+no acoplamento com a função de custo futuro fornecida pelo programa [6] (seção 5.1.10.2 do
+Manual de Referência do modelo DECOMP), utiliza uma regra linear para emular o processo de
+propagação das vazões totais das usinas de montante, obtendo-se as chamadas vazões defasadas, e
+adiciona a vazão incremental própria, que com a utilização do arquivo de vazões históricas descrito
+anteriormente, corresponde à vazão lateral. A regra linear de propagação é a mesma regra utilizada
+para propagar as vazões defluentes das usinas hidrelétricas para o problema de despacho de
+operação. A regra linear de obtenção de vazões defasadas consiste na ponderação dos dias de tempo
+de viagem em relação às durações de cada período, considerando uma translação simples da água no
+rio, como descrito na seção 2.2.2 do Relatório Técnico [7] do modelo DESSEM, onde essa
+funcionalidade também está presente.
+
+Por outro lado, o arquivo de vazões históricas fornecido como entrada de dados para a geração de
+cenários para o programa NEWAVE (denominado vazoes.dat) contém valores de vazões totais que
+consideram a propagação real das vazões no trecho a montante de Sobradinho. Neste arquivo, a
+usina de Sobradinho possui também dois postos associados, o posto 168 que contém as vazões
+laterais históricas e o posto 169 que contém as vazões totais históricas. Observa-se que as vazões do
+posto 169 deste arquivo é diferente das vazões do posto 169 do arquivo vazoesc.dat. No arquivo
+vazões.dat, a vazão total do posto 169 subtraída das vazões totais dos postos 156 e 158 resulta numa
+vazão incremental diferente da vazão lateral contida no posto 168. Assim, a energia natural afluente,
+calculada pelo programa NEWAVE a partir das vazões incrementais, não será exatamente igual àquela
+calculada pelo programa DECOMP, que considera a aproximação dada pela regra linear de
+propagação das vazões mensais das usinas de montante. Visando uniformizar as informações de
+vazões e energias afluentes históricas nos programas NEWAVE e DECOMP, a nova versão do
+programa GEVAZP passou a utilizar o arquivo de vazões históricas vazões.dat.
+
+Na versão 3.10 do programa GEVAZP, não existia cálculo de propagação ou defasagem de vazões na
+geração de cenários, já que a vazão incremental a Sobradinho, calculada a partir do arquivo
+vazoesc.dat, é idêntica a vazão lateral contida no posto 168. Assim, por exemplo, para o cálculo da
+vazão total gerada para Sobradinho, a única opção era somar a vazão incremental com as vazões
+totais de Três Marias e Queimado. A nova versão do programa GEVAZP permite gerar cenários de
+_________________________________________________________________________________________________
+                                                                                                4/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+vazões laterais e vazões incrementais para uma mesma usina hidrelétrica. As vazões laterais serão
+utilizadas no despacho de operação do programa DECOMP. Para o acoplamento com a função de
+custo futuro fornecida pelo programa NEWAVE, foram disponibilizadas duas alternativas para o
+cálculo da vazão total gerada para uma usina hidrelétrica que sofre influência de tempo de viagem a
+montante. A primeira alternativa é gerar cenários de vazão incremental e somá-los aos cenários de
+vazões totais das usinas à montante. A segunda alternativa corresponde a utilizar os cenários gerados
+de vazão lateral e somá-los aos cenários de vazões totais das usinas de montante defasadas pela
+regra linear atualmente utilizada pelo programa DECOMP no problema de despacho da operação.
+Nesta nova versão do programa GEVAZP é necessário fornecer registros históricos de vazões naturais
+totais e laterais para todas as usinas afetadas pela propagação das vazões dos postos de montante.
+
+Neste Relatório Técnico são detalhadas as duas alternativas para o tratamento de tempo de viagem
+na obtenção dos cenários de vazões para o programa DECOMP, incluindo o processo de geração de
+cenários de vazões laterais. Estas alternativas estão disponíveis na versão 5.5.1 no programa GEVAZP
+e podem ser escolhidas por usina hidrelétrica.
+
+As duas alternativas são apresentadas e discutidas nas seções 2 e 3, respectivamente, e na seção 4
+são apresentadas as principais funcionalidades adicionadas na versão 5.5.1 do programa GEVAZP e os
+seus impactos nos demais modelos da cadeia. Finalmente, na seção 5 são apresentados os resultados
+da geração para os postos lateral e incremental da usina de Sobradinho considerando a regra de
+defasagem linear de vazões na geração de cenários de vazão total (segunda alternativa).
+Adicionalmente, é avaliada a compatibilidade dos cenários gerados para esses postos. Os resultados
+da geração de cenários de vazão total obtidos a partir da soma da vazão incremental e das vazões
+totais a montante (primeira alternativa) não serão apresentados neste Relatório Técnico uma vez que
+o ONS optou por utilizar, nesta etapa da validação, a regra de defasagem linear para cálculo da vazão
+total em usinas afetadas pela propagação de vazão de postos a montante (segunda alternativa).
+
+
+
+
+_________________________________________________________________________________________________
+                                                                                                5/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+2. GERAÇÃO DE CENÁRIOS DE VAZÕES LATERAIS
+
+Para a maioria dos postos representados no SIN, a vazão lateral é idêntica à vazão incremental em
+escala mensal, quando se admite que o tempo de viagem da água de uma dada usina hidrelétrica até
+a próxima usina a jusante é nulo. Porém, quando existe um tempo de viagem elevado entre dois ou
+mais aproveitamentos adjacentes, essa igualdade passa a não ser verificada e é importante modelar
+tanto o posto de vazão total/incremental quanto o posto de vazão lateral.
+O procedimento utilizado na geração dos cenários de vazão incremental e lateral depende da
+classificação da usina (principal ou satélite). A geração de cenários de vazão incremental não sofreu
+alterações nesta nova versão, seja sua classificação principal ou satélite, e está descrita em [8].
+No caso da geração de cenários de vazão lateral, independente da classificação da usina como
+principal ou satélite, será ajustado um modelo autorregressivo periódico [8] baseado no histórico de
+vazões laterais, descrito matematicamente por:
+
+                    Z  m 1                   Z        m  p m 
+ Zt  m  1m m  t 1           pmm  m  t  pm               m at           (1)
+                                                                   
+                         m 1                           m  pm     
+Onde:
+Zt         é uma série sazonal de período s
+s          é o número de períodos (s = 12 para séries mensais)
+N          é o número de anos
+t          é o índice do tempo, t = 1, 2, ..., sN, função do ano T (T = 1, 2, ..., N) e do período m (m = 1, 2,
+           ..., s)
+m         é a média sazonal de período s
+m         é desvio-padrão sazonal de período s
+           é o i-ésimo coeficiente autorregressivo de período s
+at         série de ruídos independentes com média zero e variância                  ; No programa GEVAZP
+           adota-se a distribuição Lognormal com três parâmetros para a geração desses ruídos [8].
+
+
+Para gerar um conjunto com ncen cenários de vazão incremental ou lateral                                       com
+esta modelagem é preciso:
+
+     i.   Definir valores iniciais Zt-, onde  pode ir de 1 a pm. Esses valores iniciais são, no caso de geração de
+          cenários para o programa DECOMP, os últimos valores observados/previstos, conforme ilustrado na
+          Figura 1;
+
+
+
+
+_________________________________________________________________________________________________
+                                                                                                               6/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+                                           t=0                                      t=T
+                                                 início da geração
+
+
+
+
+                               Tendência
+                               Hidrológica
+
+
+                                         Figura 1 – Tendência Hidrológica
+
+
+  ii.   Sortear para um conjunto de ruídos independentes e igualmente distribuídos entre si
+        utilizando a distribuição Normal padronizada e transformá-los em ruídos lognormal1. Na versão 3.10
+        do programa GEVAZP o sorteio do conjunto de ncen ruídos        é feito conjuntamente considerando
+        uma matriz de correlações espaciais entre ruídos normais padronizados dos postos principais
+        presentes na configuração cuja geração de cenário de vazão incremental é feita pelo modelo
+        autorregressivo2. Este procedimento de geração de ruídos normais padrões espacialmente
+        correlacionados para cenários de vazões incrementais para postos principais foi mantido na nova
+        versão do programa GEVAZP.
+        Na nova versão do programa GEVAZP foi incorporada a geração de vazão lateral. Nesta
+        implementação a geração dos ruídos        dos postos de vazão lateral é feita após a obtenção dos
+        ruídos     dos cenários de vazões incrementais dos postos principais e a geração dos ruídos de cada
+        posto de vazão lateral é feita individualmente. Em cada processo de geração de ruído       adota-se
+        uma geração condicionada aos ruídos previamente gerados para os cenários de vazões incrementais
+        de postos principais selecionados, conforme:
+
+                                                                                            (2)
+                                                                                            (3)
+
+        Onde:
+
+        O índice 1 indica o posto de vazão lateral e o índice 2 indica o conjunto selecionado de postos
+        principais;
+             é o vetor-linha de correlações históricas anuais entre a série de vazão lateral e as séries de vazão
+        incremental dos postos principais selecionados;
+             é a matriz de correlações históricas anuais entre as séries de vazão incremental dos postos
+        principais selecionados.
+
+1 A transformação de ruídos   com distribuição Normal padrão em ruídos        com distribuição Lognormal adotada no
+ programa GEVAZP está descrita em [8].
+
+2 O detalhamento da obtenção de ruídos     espacialmente correlacionadas está descrita em [8]
+
+_________________________________________________________________________________________________
+                                                                                                              7/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+
+       A seleção dos postos principais que irão participar da geração de cenários de vazão lateral para um
+       dado posto será feita conforme a classificação do posto de vazão total associado.
+
+          a) Posto principal: o conjunto de postos principais selecionados se resume ao próprio posto de
+             vazão total;
+          b) Posto satélite: o conjunto de postos principais selecionados é formado pelos postos principais
+             imediatamente a montante e o posto principal imediatamente a jusante.
+
+
+
+3. GERAÇÃO DE CENÁRIOS DE VAZÕES TOTAIS PARA ACOPLAMENTO COM A
+   FUNÇÃO DE CUSTO FUTURO
+Os cenários de vazões laterais gerados pelo programa GEVAZP são usados pelo programa DECOMP
+no cálculo do despacho de operação, que considera uma regra linear para emular a propagação da
+vazão defluente das usinas de montante.
+
+Os cenários de vazões totais gerados pelo programa GEVAZP serão transformados em novas vazões
+incrementais considerando agora todos os postos principais e satélites e estas serão utilizadas pelo
+programa DECOMP para cálculo da energia natural afluente para acoplamento com a função de custo
+futuro calculada pelo programa NEWAVE. No caso de postos que sofrem influência da propagação da
+vazão dos postos de montante, a nova versão do programa GEVAZP disponibiliza duas alternativas
+para o cálculo da vazão total gerada. Os itens 3.1 e 3.2 detalham as duas alternativas.
+
+
+3.1    VAZÕES TOTAIS UTILIZANDO CENÁRIOS DE VAZÕES INCREMENTAIS
+
+Na segunda alternativa, os cenários gerados de vazão incremental do posto que sofre influência da
+propagação da vazão são somados aos cenários de vazões totais das usinas de montante. A
+propagação das vazões dos postos de montante está representada de forma implícita, já que este
+fenômeno natural está refletido no histórico de vazões utilizado para ajustar o modelo utilizado na
+geração dos cenários. Nesta alternativa, é mantida a compatibilidade do cálculo da energia natural
+afluente para acoplamento nos programas NEWAVE e DECOMP.
+
+
+3.2    VAZÕES TOTAIS UTILIZANDO CENÁRIOS DE VAZÕES LATERAIS
+
+Nesta alternativa, os cenários gerados de vazão lateral do posto que sofre influência da propagação
+da vazão são somados aos cenários de vazões totais das usinas de montante defasadas pela regra
+linear atualmente utilizada pelo programa DECOMP no problema de despacho da operação. Esta
+regra leva em consideração: (i) o tempo de viagem entre a usina e as usinas imediatamente a
+
+_________________________________________________________________________________________________
+                                                                                                      8/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+montante, (ii) as vazões naturais totais geradas para as usinas de montante, e (iii) a vazão lateral
+gerada para a usina em questão, conforme (4) 3.
+
+           nmont                            nmont
+                                                              
+ZT (t )   *  ZTmonti (t  1)  1    *  ZTmonti (t )  Z lat (t )               (4)
+              i 1                           i 1          
+
+Onde:
+     ndias
+           ;
+     ndmes
+ndias é o tempo de viagem em dias;
+ndmes é o número de dias do mês;
+ZTmonti é a vazão total da usina de montante i.
+
+
+Dessa forma, o programa DECOMP não necessita realizar a defasagem de tempo de viagem para o
+cálculo da ENA de acoplamento, pois este procedimento já é feito pelo GEVAZP ao calcular as vazões
+incrementais. Caso a série histórica de vazão total fosse calculada exatamente com a regra linear de
+defasagem, as duas alternativas apresentadas seriam equivalentes. Porém, o histórico de vazão
+natural total das usinas afetadas por tempo de viagem é calculado com procedimentos mais
+elaborados que envolvem vazões diárias.
+
+Nesta alternativa a compatibilidade do cálculo da energia natural afluente para acoplamento nos
+programas NEWAVE e DECOMP não é totalmente satisfeita. No entanto, estudos conduzidos pelo
+ONS mostram que essas diferenças não são significativas.
+
+Maiores detalhes sobre a consideração do tempo de viagem no cálculo da vazão incremental podem
+ser consultados na seção 5.1.10.2 do Manual de Referência do modelo DECOMP [5].
+
+4. VERSÃO 5.5.1 DO PROGRAMA GEVAZP E SEUS IMPACTOS NOS DEMAIS MODELOS
+     DA CADEIA
+
+Dentre os novos aprimoramentos disponíveis na versão 5.5.14 do programa GEVAZP estão as
+seguintes funcionalidades:
+
+
+3 A fórmula (4) assume que os períodos t e (t-1) possuem a mesma duração e que esta é inferior ao tempo de viagem da
+
+ água.
+4 As duas primeiras funcionalidades foram incorporadas na versão 5.1. A terceira parcialmente funcionalidade foi
+
+ implementada na versão 5.2; já a geração de cenários para usinas associadas a postos satélites foi implementada na
+ versão 5.4
+_________________________________________________________________________________________________
+                                                                                                               9/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+   1. Impressão da tendência hidrológica (mensais e semanais) por posto no arquivo de vazões gerado para
+      o programa DECOMP;
+   2. Geração para postos altamente correlacionados, em cascatas diferentes, porém localizadas na mesma
+      bacia hidrográfica;
+   3. Geração de cenários de vazões considerando duas alternativas para o tratamento da defasagem por
+      tempo de viagem; assim como a geração de cenários de vazões para usinas associadas a postos
+      satélites.
+
+
+A primeira funcionalidade tem como intuito fornecer as vazões afluentes passadas mensais e
+semanais por usinas individualizadas ao programa DECOMP, e garantir a consistência entre os valores
+passados de vazão e os cenários sintéticos de vazões utilizados para os meses estocásticos. Sendo
+assim, as vazões passadas por usina foram incluídas no arquivo de vazões gerado pelo programa
+GEVAZP para o DECOMP. Esta funcionalidade acarreta uma mudança na leitura de dados de vazões
+passadas pelo programa DECOMP e posterior cálculo de ENA, implementada a partir da versão 24.1.
+Com esta implementação, continua sendo possível alterar as vazões passadas para realizar estudos
+de sensibilidade, porém com a certeza de que os cenários futuros serão gerados em concordância
+com o passado recente.
+
+O programa GEVAZP interrompe sua execução quando detecta usinas altamente correlacionadas,
+porém localizadas em cascatas distintas. Este teste é válido, uma vez que valores muito elevados de
+correlação espacial são observados apenas entre usinas pertencentes a uma mesma cascata/bacia.
+Como a versão 3.10 do programa GEVAZP não tem acesso à informação sobre bacia hidrográfica, o
+teste é realizado checando se as usinas estão na mesma cascata. Em configurações mais recentes,
+que representam as usinas da bacia do rio Amazonas, observam-se usinas que apresentam uma
+correlação muito forte entre si, mas que não estão na mesma cascata, dado que não há uma usina
+em comum a jusante. Neste caso, a segunda funcionalidade acima descrita permite que caso sejam
+verificadas usinas altamente correlacionadas e pertencentes à mesma bacia, a usina com menor
+vazão MLT será feita satélite enquanto a outra será considerada principal. Ao final da geração de
+cenários para a usina principal, o conjunto de cenários para a usina satélite será calculado
+considerando os valores obtidos para a usina principal. O programa DECOMP não sofre impacto
+devido a esta funcionalidade. Essa implementação é detalhada na Nota Técnica nº 04/2016 e [8].
+
+A terceira funcionalidade listada foi amplamente discutida neste Relatório Técnico. Na
+implementação desta funcionalidade, as duas alternativas podem ser escolhidas por usina
+hidrelétrica. Em ambas alternativas é necessário que o arquivo histórico de vazões contenha os dados
+de vazão lateral para as usinas afetadas pelo tempo de viagem. Tanto as alternativas 1 e 2 desta
+funcionalidade têm um impacto direto na forma de cálculo da energia de acoplamento do programa
+DECOMP, conforme implementada a partir da versão 24.1. Mais especificamente, a ENA de
+acoplamento será calculada pelo modelo DECOMP a partir dos valores de vazão incremental
+_________________________________________________________________________________________________
+
+
+                                                10/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+fornecidos no arquivo de VAZOES.XXX, os quais já consideram o impacto do tempo de viagem em
+ambas as alternativas. Nestes dois casos, será mantida a compatibilidade do cálculo da ENA não só
+para as usinas com tempo de viagem, mas também para usinas situadas à montante dessas, como
+por exemplo, Retiro Baixo.
+
+Os programas NEWAVE e SUISHI não sofrem impactos relativos às três funcionalidades da versão
+5.5.1 descritas acima. Por fim, a versão 5.5.1 do programa GEVAZP permite que as informações que
+transitam entre os modelos da cadeia de planejamento da operação sejam sempre consistentes e
+compatíveis entre si, assegurando maior confiabilidade ao processo.
+
+5. AVALIAÇÃO DOS CENÁRIOS GERADOS PARA O POSTO DE VAZÃO LATERAL
+
+Nesta seção são apresentados os cenários sintéticos gerados pelo programa GEVAZP para a usina de
+Sobradinho, posto total/incremental (169) e posto lateral (168), assim como testes para avaliar a
+compatibilidade dos cenários gerados para esses postos. Conforme mencionado anteriormente, os
+cenários para o posto de vazão lateral são obtidos utilizando o modelo PAR(p) ajustado a partir do
+registro histórico do posto 168. Já os cenários de vazão para o posto de vazão total serão obtidos a
+partir da alternativa descrita no item 3.2.
+
+A avaliação da geração de cenários de vazão total obtidos a partir da soma da vazão incremental e
+das vazões totais a montante (primeira alternativa) não será apresentada neste Relatório Técnico
+uma vez que o ONS optou por utilizar, nesta etapa da validação, a regra de defasagem linear para
+cálculo da vazão total em usinas afetadas pela propagação de vazão de postos a montante (segunda
+alternativa).
+
+Nas subseções abaixo são apresentadas duas análises: a primeira realizada a partir de uma geração
+não condicionada ao passado recente, e a segunda a partir de uma avaliação de doze gerações
+condicionadas ao passado recente, uma para cada mês do ano.
+
+A cascata do Rio São Francisco está ilustrada na Figura 2. Nas configurações analisadas neste
+Relatório Técnico, a usina Paulo Afonso 4 tem posto nulo, isto é, o valor da sua vazão incremental é
+sempre igual a zero, desta forma, esta usina não participa do processo de geração de cenários. As
+usinas Retiro Baixo, Três Marias, Queimado e Xingó foram classificadas como postos principais; as
+demais usinas foram classificadas como postos satélites. Os cenários para os postos satélites são
+calculados em função de sua relação com os postos principais imediatamente a montante e a jusante
+[8].
+
+
+
+_________________________________________________________________________________________________
+
+
+                                               11/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+
+
+
+                                  Figura 2 – Cascata Rio São Francisco
+
+
+Nesta seção os cenários de vazões para o posto total de Sobradinho serão calculados a posteriori
+como uma função dos valores de vazão total de Três Marias e Queimado e da vazão lateral de
+Sobradinho. Neste caso, será aplicada uma regra de defasagem linear para emular a propagação das
+vazões. Esta é a mesma regra utilizada pelo programa DECOMP no problema de despacho da
+operação.
+
+Inicialmente, é apresentada uma análise que busca identificar se o histórico de vazão lateral da usina
+de Sobradinho (posto 168) guarda semelhança com o histórico de vazões calculado considerando os
+postos de vazão total de Sobradinho (169), Três Marias (156) e Queimado (158), e levando-se em
+conta uma regra de defasagem linear. Na Figura 3, pode-se verificar que existe uma grande
+correspondência no histórico de vazões entre o posto 168 (calculado com regras elaboradas de
+propagação) e os valores encontrados com a regra de defasagem linear. Isto indica, que a alternativa
+que considera a defasagem linear para cálculo da vazão total para a usina de Sobradinho é adequada.
+No eixo das abscissas estão os valores históricos do posto 168; enquanto que no eixo das ordenadas
+encontram-se as vazões laterais calculadas a partir das vazões históricas do posto 169. Essas vazões
+laterais são valores calculados pela diferença entre a vazão do posto 169 e as vazões defasadas
+linearmente dos postos 156 e 158.
+
+Como teste de sanidade, a análise realizada nos dados históricos foi também aplicada aos dados
+gerados, considerando a referida alternativa de geração para as vazões totais de Sobradinho. Como
+era de se esperar, pode-se verificar na Figura 4 que a relação entre os postos 168 e 169 incremental é
+igual.
+
+
+
+
+_________________________________________________________________________________________________
+
+
+                                                 12/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+
+                                             Regressão Mes: 1                                                                         Regressão Mes: 2                                                                       Regressão Mes: 3
+
+                  8000                                                                                      8000
+                                                                                                                                                                                                10000
+
+   Posto 168                                                                                Posto 168                                                                          Posto 168
+                  6000                                                                                      6000
+                  4000                                                R2=0.988                                                                                 R2=0.992                                                                               R2=0.998
+                                                                                                            4000
+                                                                      E=3.74%                                                                                  E=4.08%                             5000                                               E=2.82%
+                  2000                                cte=-33.30      b=1.021                               2000                               cte=-48.68      b=1.015                                                                cte=22.15       b=0.993
+                     0                                                                                         0                                                                                      0
+                         0       2000           4000        6000            8000                                   0      2000           4000       6000        8000                                      0    2000    4000    6000 8000 10000 12000
+                                              Posto 169 (lat)                                                                          Posto 169 (lat)                                                                        Posto 169 (lat)
+                                             Regressão Mes: 4                                                                         Regressão Mes: 5                                                                       Regressão Mes: 6
+                                                                                                            8000
+                  6000                                                                                                                                                                             3000
+                                                                                                            6000
+
+   Posto 168                                                                                Posto 168                                                                               Posto 168
+                  4000                                                                                                                                                                             2000
+                                                                      R2=0.997                              4000                                               R2=0.998                                                                               R2=0.999
+                  2000                                                E=2.82%                                                                                  E=2.81%                             1000                                               E=1.42%
+                                                      cte=-50.22      b=1.021                               2000                               cte=-6.78       b=0.984                                                                cte=-8.96       b=0.997
+                     0                                                                                         0                                                                                      0
+                         0    1000     2000    3000 4000 5000             6000     7000                            0          2000         4000        6000           8000                                0    500     1000    1500 2000 2500             3000    3500
+                                              Posto 169 (lat)                                                                          Posto 169 (lat)                                                                        Posto 169 (lat)
+                                             Regressão Mes: 7                                                                         Regressão Mes: 8                                                                       Regressão Mes: 9
+                  2000                                                                                                                                                                             1500
+                                                                                                            1500
+
+
+   Posto 168                                                                                Posto 168                                                                               Posto 168
+                                                                                                            1000                                                                                   1000
+                  1000                                                R2=0.998                                                                                 R2=0.998                                                                               R2=0.998
+                                                                      E=1.31%                                500                                               E=1.29%                              500                                               E=1.46%
+                                                      cte=-12.91      b=1.004                                                                  cte=-8.97       b=1.001                                                                cte=-7.82       b=1.003
+                     0                                                                                         0                                                                                      0
+                         0           500        1000         1500           2000                                   0            500           1000             1500                                       0            500          1000                  1500
+                                              Posto 169 (lat)                                                                          Posto 169 (lat)                                                                      Posto 169 (lat)
+                                            Regressão Mes: 10                                                                        Regressão Mes: 11                                                                    Regressão Mes: 12
+
+                  1500                                                                                      3000
+                                                                                                                                                                                                   4000
+
+
+   Posto 168                                                                                Posto 168                                                                               Posto 168
+                  1000                                                                                      2000
+                                                                      R2=0.994                                                                                 R2=0.995                                                                               R2=0.986
+                                                                      E=2.64%                                                                                  E=3.25%                             2000                                               E=4.42%
+                   500                                                                                      1000
+                                                      cte=-6.83       b=1.010                                                                  cte=-33.33      b=1.037                                                                cte=-46.66      b=1.018
+                     0                                                                                         0                                                                                      0
+                         0             500            1000                1500                                     0    500    1000      1500 2000 2500        3000    3500                               0     1000          2000     3000        4000      5000
+                                              Posto 169 (lat)                                                                           Posto 169 (lat)                                                                        Posto 169 (lat)
+
+                                             Figura 3 – Vazão Lateral x Vazão Lateral calculada por defasagem linear (Histórico)
+
+
+
+                                              Regressão Mes: 1                                                                         Regressão Mes: 2                                                                       Regressão Mes: 3
+
+                  8000                                                                                      10000                                                                                  15000
+
+
+      Posto 168                                                                            Posto 168                                                                              Posto 168
+                  6000
+                                                                          R2=1.000                                                                              R2=1.000                           10000                                                  R2=1.000
+                  4000                                                                                      5000
+                                                                          E=0.00%                                                                               E=0.00%                                                                                   E=0.00%
+                  2000                                                                                                                                                                             5000
+                                                      cte=0.00            b=1.000                                                               cte=-0.00       b=1.000                                                                cte=0.00           b=1.000
+                     0                                                                                         0                                                                                      0
+                          0          2000        4000         6000          8000                                    0    2000         4000    6000      8000    10000                                      0           5000          10000           15000
+                                               Posto 169 (lat)                                                                          Posto 169 (lat)                                                                        Posto 169 (lat)
+                                              Regressão Mes: 4                                                                         Regressão Mes: 5                                                                       Regressão Mes: 6
+                  10000                                                                                                                                                                            3000
+                                                                                                            6000
+
+
+
+ Posto 168                                                                                      Posto 168                                                                              Posto 168
+                                                                                                            4000                                                                                   2000
+                  5000                                                    R2=1.000                                                                              R2=1.000                                                                                  R2=1.000
+                                                                          E=0.00%                           2000                                                E=0.00%                            1000                                                   E=0.00%
+                                                      cte=0.00            b=1.000                                                               cte=0.00        b=1.000                                                                cte=-0.00          b=1.000
+                     0                                                                                         0                                                                                      0
+                          0     2000           4000     6000         8000          10000                            0   1000    2000      3000 4000 5000         6000                                      0    500     1000   1500    2000         2500         3000
+                                               Posto 169 (lat)                                                                          Posto 169 (lat)                                                                     Posto 169 (lat)
+                                              Regressão Mes: 7                                                                         Regressão Mes: 8                                                                    Regressão Mes: 9
+                                                                                                            2000
+                  2000                                                                                                                                                                             1500
+
+
+
+      Posto 168                                                                                 Posto 168                                                                              Posto 168
+                                                                                                                                                                                                   1000
+                                                                          R2=1.000                          1000                                                R2=1.000                                                                                  R2=1.000
+                  1000
+                                                                          E=0.00%                                                                               E=0.00%                             500                                                   E=0.00%
+                                                      cte=-0.00           b=1.000                                                               cte=-0.00       b=1.000                                                                cte=-0.00          b=1.000
+                     0                                                                                         0                                                                                      0
+                          0          500        1000       1500           2000                                      0          500          1000        1500            2000                               0            500             1000               1500
+                                               Posto 169 (lat)                                                                          Posto 169 (lat)                                                                        Posto 169 (lat)
+                                             Regressão Mes: 10                                                                        Regressão Mes: 11                                                                      Regressão Mes: 12
+                  2000                                                                                                                                                                             6000
+                                                                                                            3000
+
+
+      Posto 168                                                                                 Posto 168                                                                              Posto 168
+                                                                                                                                                                                                   4000
+                                                                                                            2000
+                  1000                                                    R2=1.000                                                                              R2=1.000                                                                                  R2=1.000
+                                                                          E=0.00%                           1000                                                E=0.00%                            2000                                                   E=0.00%
+                                                      cte=-0.00           b=1.000                                                               cte=-0.00       b=1.000                                                                cte=0.00           b=1.000
+                     0                                                                                         0                                                                                      0
+                          0           500          1000            1500            2000                             0   500     1000     1500 2000 2500        3000     3500                               0    1000     2000   3000     4000        5000        6000
+                                               Posto 169 (lat)                                                                          Posto 169 (lat)                                                                      Posto 169 (lat)
+
+                                              Figura 4 – Vazão Lateral x Vazão Lateral calculada por defasagem linear (Gerado)
+
+_________________________________________________________________________________________________
+
+
+                                                                                                                                       13/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+5.1    ANÁLISE NÃO CONDICIONADA
+
+Para a análise não condicionada foi utilizada a configuração das usinas constante do PMO NOV/16
+(revisão 0), foram gerados 200 cenários com horizonte de 5 anos, e adotado o mesmo histórico de
+vazões utilizado pelo programa NEWAVE (vazoes.dat). Neste histórico de vazões, o registro do posto
+168 contém as vazões laterais e o registro do posto 169, as vazões totais calculadas considerando
+uma regra de propagação elaborada, que leva em conta a propagação das vazões diárias de Três
+Marias e Queimado.
+
+Na Figura 5 são comparados os valores das médias mensais obtidas com o histórico e com os cenários
+gerados pelo modelo PAR(p), para o posto lateral de Sobradinho (168). Na Figura 6 é mostrada a
+comparação dos desvios-padrão mensais. Pode-se observar que os valores gerados reproduzem os
+valores históricos, conforme o esperado.
+
+                                                                                     CASO NÃO CONDICIONADO: MÉDIA - SOBRADINHOL
+                                    3500
+                                                                                                                                                                      HISTÓRICO
+                                                                                                                                                                      SINTÉTICO
+
+                                    3000
+
+
+
+
+                                    2500
+
+
+
+
+                                    2000
+
+
+
+             MÉDIA (m³/s)
+                                    1500
+
+
+
+
+                                    1000
+
+
+
+
+                                    500
+
+
+
+
+                                      0
+                                           Janeiro   Fevereiro   Março   Abril     Maio      Junho      Julho     Agosto   Setembro   Outubro   Novembro   Dezembro
+
+
+
+
+                                                             Figura 5 – Média Mensal: Sobradinho Posto Lateral
+
+                                                                                 CASO NÃO CONDICIONADO: DESVIO PADRÃO - SOBRADINHOL
+                                    2500
+                                                                                                                                                                      HISTÓRICO
+                                                                                                                                                                      SINTÉTICO
+
+
+
+                                    2000
+
+
+
+
+             DESVIO PADRÃO (m³/s)
+                                    1500
+
+
+
+
+                                    1000
+
+
+
+
+                                    500
+
+
+
+
+                                      0
+                                           Janeiro   Fevereiro   Março   Abril     Maio      Junho      Julho     Agosto   Setembro   Outubro   Novembro   Dezembro
+
+
+
+
+                                                     Figura 6 – Desvio-padrão Mensal: Sobradinho Posto Lateral
+
+
+_________________________________________________________________________________________________
+
+
+                                                                                                 14/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+A ordem do modelo PAR(p) ajustado para o posto 168 para cada mês é apresentada na Tabela 1. Na
+identificação da ordem do modelo foi utilizado o procedimento de verificação automática da ordem
+[8].
+                                    Tabela 1 – Ordem dos modelos
+                         ordem                         ordem                      ordem
+           JAN             1            MAI              1           SET            3
+           FEV             1            JUN              3           OUT            3
+           MAR             1            JUL              2           NOV            3
+           ABR             1            AGO              1           DEZ            1
+
+
+Na Figura 7 é apresentado para cada mês o correlogramo para o posto Sobradinho Lateral, contendo
+os valores históricos e gerados. Pode-se verificar que a correlação sintética é bastante similar à
+correlação temporal histórica para lags, até pelo menos a ordem ajustada do modelo, conforme o
+esperado.
+
+Nas Figuras 8 e 9 são apresentadas as médias e desvios para o posto de vazão total de Sobradinho
+(169). Neste caso, as vazões foram calculadas utilizando uma regra linear de defasagem considerando
+15 dias de tempo de viagem. É possível verificar que os resultados obtidos para o posto de vazão
+total também estão de acordo com aqueles observados no histórico de vazões.
+
+
+
+
+_________________________________________________________________________________________________
+
+
+                                               15/34
+                                                                                                                                                                 CORRELOGRAMO DA SERIE - SOBRADINHOL - Janeiro      CORRELOGRAMO DA SERIE - SOBRADINHOL - Fevereiro    CORRELOGRAMO DA SERIE - SOBRADINHOL - Março
+                                                                                                                                                                 1                                                  1                                                 1
+
+
+                                                                                                                                                                 0                                                  0                                                 0
+                                                                                                                                                                                                                                                                                                                       Relatório Técnico – 23954 / 2016
+
+
+                                                                                                                                                                 -1                                                 -1                                                -1
+                                                                                                                                                                      0      2       4       6      8       10           0   2       4       6      8       10             0   2      4       6       8      10
+                                                                                                                                                                      CORRELOGRAMO DA SERIE - SOBRADINHOL - Abril    CORRELOGRAMO DA SERIE - SOBRADINHOL - Maio        CORRELOGRAMO DA SERIE - SOBRADINHOL - Junho
+16/34                                                                                                                                                            1                                                  1                                                 1
+
+
+                                                                                                                                                                 0                                                  0                                                 0
+
+
+                                                                                                                                                                 -1                                                 -1                                                -1
+                                                                                                                                                                      0      2       4       6      8       10           0   2       4       6      8       10             0   2      4       6       8      10
+                                                                                                                                                                  CORRELOGRAMO DA SERIE - SOBRADINHOL - Julho        CORRELOGRAMO DA SERIE - SOBRADINHOL - Agosto     CORRELOGRAMO DA SERIE - SOBRADINHOL - Setembro
+                                                                                                                                                                 1                                                  1                                                 1
+
+
+                                                                                                                                                                 0                                                  0                                                 0
+
+
+                                                                                                                                                                 -1                                                 -1                                                -1
+                                                                                                                                                                      0      2       4       6      8       10           0   2       4       6      8       10             0   2      4       6       8      10
+                                                                                                                                                                                                                                                                                                                                                          Centro de Pesquisas de Energia Elétrica - CEPEL
+
+
+
+                                                                                                                                                                 CORRELOGRAMO DA SERIE - SOBRADINHOL - Outubro      CORRELOGRAMO DA SERIE - SOBRADINHOL - Novembro    CORRELOGRAMO DA SERIE - SOBRADINHOL - Dezembro
+                                                                                                                                                                 1                                                  1                                                 1
+
+
+                                                                                                                                                                 0                                                  0                                                 0
+                                                                                                            Figura 7 – Correlação temporal: Sobradinho Lateral
+
+
+
+
+                                                                                                                                                                 -1                                                 -1                                                -1
+                                                                                                                                                                      0      2       4       6      8       10           0   2       4       6      8       10             0   2      4       6       8      10
+        _________________________________________________________________________________________________
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+                                                                                  CASO NÃO CONDICIONADO: MÉDIA - SOBRADINHO
+                                 5000
+                                                                                                                                                                   HISTÓRICO
+                                                                                                                                                                   SINTÉTICO
+                                 4500
+
+
+                                 4000
+
+
+                                 3500
+
+
+                                 3000
+
+
+
+
+          MÉDIA (m³/s)
+                                 2500
+
+
+                                 2000
+
+
+                                 1500
+
+
+                                 1000
+
+
+                                 500
+
+
+                                   0
+                                        Janeiro   Fevereiro   Março   Abril    Maio      Junho      Julho     Agosto    Setembro   Outubro   Novembro   Dezembro
+
+
+
+
+                                                              Figura 8 – Média Mensal: Sobradinho Posto Total
+
+
+                                                                              CASO NÃO CONDICIONADO: DESVIO PADRÃO - SOBRADINHO
+                                 2500
+                                                                                                                                                                   HISTÓRICO
+                                                                                                                                                                   SINTÉTICO
+
+
+
+                                 2000
+
+
+
+
+          DESVIO PADRÃO (m³/s)
+                                 1500
+
+
+
+
+                                 1000
+
+
+
+
+                                 500
+
+
+
+
+                                   0
+                                        Janeiro   Fevereiro   Março   Abril    Maio      Junho      Julho     Agosto    Setembro   Outubro   Novembro   Dezembro
+
+
+
+
+                                                        Figura 9 – Desvio-padrão Mensal: Sobradinho Posto Total
+
+
+A fim de avaliar o conjunto de cenários gerados, foi analisada a distribuição acumulada das séries
+sintéticas e realizado um teste para verificar sua aderência com os valores históricos. Nas Figuras 10 e
+11 são apresentadas tais distribuições (histórico em azul e sintético em vermelho) e os resultados do
+teste de Kolmogorov-Smirnov, com um nível de significância de 5%, para os postos de vazão lateral e
+total de Sobradinho, respectivamente. As legendas em azul indicam que o teste de aderência foi
+aceito, e em vermelho, rejeitado. Para todos os meses, a hipótese que as duas amostras (gerada e
+histórica) provêm de uma mesma distribuição é aceita, exceto para o mês de maio para Sobradinho
+Lateral. Destaca-se que para um nível de significância de 1% o teste para o mês de maio também é
+aceito.
+
+
+
+
+_________________________________________________________________________________________________
+
+
+                                                                                             17/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+
+       DISTRIBUIÇÃO ACUMULADA SOBRADINHOL - Janeiro DISTRIBUIÇÃO ACUMULADA SOBRADINHOL - Fevereiro DISTRIBUIÇÃO ACUMULADA SOBRADINHOL - Março
+               1                                                                1                                                                  1
+                                    p-valor = 0.86                                                 p-valor = 0.51                                                          p-valor = 0.18
+      F(x)   0.5                    teste KS = 0.068                    F(x)   0.5                 teste KS = 0.092                        F(x)   0.5                      teste KS = 0.123
+
+               0                                                                0                                                                  0
+                   0   2000     4000         6000     8000    10000                  0          5000               10000         15000                  0      0.5               1           1.5         2
+                                         x                                                                   x                                                                   x                       4
+                                                                                                                                                                                x 10
+             DISTRIBUIÇÃO ACUMULADA SOBRADINHOL - Abril                      DISTRIBUIÇÃO ACUMULADA SOBRADINHOL - Maio                          DISTRIBUIÇÃO ACUMULADA SOBRADINHOL - Junho
+               1                                                                1                                                                  1
+                                       p-valor = 0.69                                                    p-valor = 0.05                                                    p-valor = 0.34
+      F(x)                                                              F(x)                                                               F(x)
+             0.5                       teste KS = 0.079                        0.5                       teste KS = 0.153                         0.5                      teste KS = 0.106
+
+               0                                                                0                                                                  0
+                   0   2000     4000         6000     8000    10000                  0     2000          4000           6000      8000                  0     1000          2000            3000     4000
+                                         x                                                                x                                                                  x
+           DISTRIBUIÇÃO ACUMULADA SOBRADINHOL - Julho                    DISTRIBUIÇÃO ACUMULADA SOBRADINHOL - Agosto DISTRIBUIÇÃO ACUMULADA SOBRADINHOL - Setembro
+               1                                                                1                                                                  1
+                                     p-valor = 0.59                                                      p-valor = 0.53                                                    p-valor = 0.47
+      F(x)   0.5                     teste KS = 0.086                   F(x)   0.5                       teste KS = 0.091                  F(x)   0.5                      teste KS = 0.095
+
+               0                                                                0                                                                  0
+                   0   500      1000         1500     2000    2500                   0      500          1000           1500      2000                  0      500          1000            1500     2000
+                                         x                                                                x                                                                  x
+      DISTRIBUIÇÃO ACUMULADA SOBRADINHOL - Outubro DISTRIBUIÇÃO ACUMULADA SOBRADINHOL - NovembroDISTRIBUIÇÃO ACUMULADA SOBRADINHOL - Dezembro
+               1                                                                1                                                                  1
+                                      p-valor = 0.79                                                   p-valor = 0.68                                                         p-valor = 0.83
+      F(x)                                                              F(x)                                                               F(x)
+             0.5                      teste KS = 0.073                         0.5                     teste KS = 0.081                           0.5                         teste KS = 0.070
+
+               0                                                                0                                                                  0
+                   0     500         1000           1500      2000                   0     1000          2000           3000      4000                  0           2000                4000         6000
+                                      x                                                                   x                                                                      x
+
+
+
+
+                                                           Figura 10 – Teste de aderência: Sobradinho Lateral
+
+      DISTRIBUIÇÃO ACUMULADA SOBRADINHO - Janeiro                     DISTRIBUIÇÃO ACUMULADA SOBRADINHO - Fevereiro                         DISTRIBUIÇÃO ACUMULADA SOBRADINHO - Março
+          1                                                                1                                                                   1
+                        p-valor = 0.36                                                    p-valor = 0.31                                                       p-valor = 0.43
+    F(x)0.5             teste KS = 0.103                              F(x)
+                                                                         0.5              teste KS = 0.108                               F(x)0.5               teste KS = 0.098
+
+              0                                                                0                                                                  0
+                  0          5000             10000          15000                 0            5000              10000          15000                0       0.5            1              1.5      2
+                                     x                                                                   x                                                                   x                       4
+                                                                                                                                                                                x 10
+           DISTRIBUIÇÃO ACUMULADA SOBRADINHO - Abril                         DISTRIBUIÇÃO ACUMULADA SOBRADINHO - Maio                       DISTRIBUIÇÃO ACUMULADA SOBRADINHO - Junho
+             1                                                                  1                                                              1
+                           p-valor = 0.67                                                      p-valor = 0.07                                                   p-valor = 0.28
+    F(x)                                                              F(x)                                                               F(x)
+           0.5             teste KS = 0.081                                   0.5              teste KS = 0.144                              0.5                teste KS = 0.111
+
+              0                                                                0                                                                  0
+                  0          5000             10000          15000                 0     2000     4000           6000     8000   10000                0      1000          2000             3000    4000
+                                     x                                                                   x                                                                  x
+           DISTRIBUIÇÃO ACUMULADA SOBRADINHO - Julho                    DISTRIBUIÇÃO ACUMULADA SOBRADINHO - Agosto DISTRIBUIÇÃO ACUMULADA SOBRADINHO - Setembro
+              1                                                             1                                           1
+                             p-valor = 0.83                                                p-valor = 0.83                             p-valor = 0.45
+    F(x)    0.5              teste KS = 0.070                         F(x)0.5              teste KS = 0.070           0.5                F(x)
+                                                                                                                                      teste KS = 0.096
+
+              0                                                                0                                                                  0
+                  0          1000             2000            3000                 0     500      1000           1500     2000   2500                 0     500      1000            1500    2000   2500
+                                     x                                                                   x                                                                   x
+     DISTRIBUIÇÃO ACUMULADA SOBRADINHO - Outubro DISTRIBUIÇÃO ACUMULADA SOBRADINHO - Novembro DISTRIBUIÇÃO ACUMULADA SOBRADINHO - Dezembro
+         1                                            1                                            1
+                        p-valor = 0.46                                p-valor = 0.10                             p-valor = 0.46
+    F(x)                                                              F(x)                                                               F(x)
+       0.5              teste KS = 0.095            0.5               teste KS = 0.137           0.5             teste KS = 0.096
+
+              0                                                                0                                                                  0
+                  0          1000             2000            3000                 0     1000     2000           3000     4000   5000                 0     2000     4000            6000    8000   10000
+                                     x                                                                   x                                                                   x
+
+
+
+
+                                                             Figura 11 – Teste de aderência: Sobradinho Total
+
+
+Para avaliar a compatibilidade entre os postos de vazão total (169) e lateral (168), é apresentada
+abaixo uma análise bivariada dos cenários gerados e do registro histórico de vazões. Na Figura 12 são
+apresentados gráficos de dispersão dos pares de vazões 169x168 históricos (pontos azuis) e gerados
+(pontos vermelhos), além do coeficiente de correlação entre os dois postos. Analisando os gráficos, é
+_________________________________________________________________________________________________
+
+
+                                                                                                   18/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+possível observar que os cenários sintéticos reproduzem o comportamento observado no histórico.
+Isto é, a compatibilidade entre os postos de vazão lateral e total da usina de Sobradinho observada
+no histórico é reproduzida nos cenários gerados.
+
+
+
+
+                                Figura 12 – Gráfico de dispersão – 168 x 169
+
+
+É possível verificar na figura acima que o coeficiente de correlação entre os postos 168 e 169 é
+bastante elevado, desta forma, a distribuição da variável aleatória coeficiente de correlação é
+bastante assimétrica dado que esta possui um limite superior igual a 1. Por isso, utilizou-se a técnica
+de bootstrap [9] para calcular o intervalo de confiança dessa variável, e assim, avaliar se a correlação
+espacial obtida dos cenários gerados é estatisticamente igual ao valor observado no histórico. O
+resultado deste teste pode ser observado na Figura 13. Nesta figura, as linhas em vermelho/azul são
+o intervalo de confiança com nível de significância de 5%/1% e os pontos marcados com asterisco são
+os valores calculados a partir os cenários gerados. Como alguns valores ficam no limiar do intervalo
+de confiança com um nível de significância de 5%, foi avaliado também o intervalo com nível de
+significância de 1%. Neste caso, todos os valores de correlação espacial gerados ficam dentro do
+intervalo de confiança.
+
+
+
+
+_________________________________________________________________________________________________
+
+
+                                                   19/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+                                               Correlacao Espacial - Gerado x IC historico (BOOTS)
+            1.2
+
+
+
+
+             1
+
+
+
+
+            0.8
+
+
+
+
+            0.6
+
+
+
+
+            0.4
+
+
+
+
+            0.2
+
+
+
+
+             0
+                  0             2             4                         6                            8   10   12
+
+
+
+
+                      Figura 13 – IC(5% e 1%) para o coeficiente de correlação espacial 168 x 169
+
+
+Outra forma de avaliar a compatibilidade entre os dois postos é realizar uma análise de regressão nas
+amostras histórica e sintética. Na Figura 14 são apresentadas as retas de regressão obtidas para os
+dados históricos e gerados para os postos 168 e 169, o coeficiente angular da reta de regressão (b) e
+o coeficiente de determinação (R2), que indica o quanto a reta de regressão foi capaz de explicar dos
+dados. Pode-se observar que os valores obtidos com os cenários gerados são similares àqueles
+obtidos do registro histórico. Na Figura 15, pode-se verificar que o valor do coeficiente angular obtido
+com os dados gerados está no intervalo de confiança construído a partir do registro histórico.
+
+
+
+
+                                      Figura 14 – Reta de regressão – 168 x 169
+_________________________________________________________________________________________________
+
+
+                                                               20/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+
+                                                Coef Regressao - Gerado x IChistorico
+                1.2
+
+
+
+
+                 1
+
+
+
+
+                0.8
+
+
+
+
+                0.6
+
+
+
+
+                0.4
+
+
+
+
+                0.2
+
+
+
+
+                 0
+                      0      2              4                     6                     8   10   12
+
+
+
+
+                                 Figura 15 – IC(5%) para o coeficiente angular
+
+Adicionalmente, foi avaliada a correlação dos postos 168 e 169 com a usina de Três Marias. Na Figura
+16a e 16b são apresentados os gráficos de dispersão para o posto de Sobradinho Lateral (168) x Três
+Marias (156) e Sobradinho Total (169) x Três Marias (156), respectivamente, e na Figura 17, os
+gráficos com a reta de regressão linear. Nestas duas análises, pode ser observado que os valores
+gerados mensais reproduzem satisfatoriamente os valores históricos. As nuvens de pontos dos
+cenários gerados englobam a nuvem do histórico e apresentam a mesma tendência.
+
+É de se esperar que os valores de correlação espacial mensais gerados e históricos não sejam
+idênticos, já que os cenários gerados multivariados foram obtidos utilizando a matriz de correlação
+anual entre os postos principais [8], a fim de preservar a correlação anual entre os postos e
+reproduzir os períodos de seca multivariados observados no histórico. Sendo assim, os valores de
+correlação espacial mensais obtidos dos cenários sintéticos (valores em vermelho) reflete o valor
+anual histórico dado na Tabela 2.
+
+
+
+
+_________________________________________________________________________________________________
+
+
+                                                        21/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+
+
+
+                                            (a) 168 x 156
+
+
+
+
+                                            (b) 169 x 156
+
+                           Figura 16 – Gráfico de dispersão com Três Marias
+
+
+
+
+_________________________________________________________________________________________________
+
+
+                                                22/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+
+
+
+                                              (a) 168 x 156
+
+
+
+
+                                             (b) 169 x 156
+
+                             Figura 17 – Reta de regressão com Três Marias
+
+                             Tabela 2 – Correlação espacial histórica anual
+                             Sobradinho Lateral       Sobradinho Total        Três Marias
+
+        Sobradinho Lateral         1.00                       0.98               0.67
+
+         Sobradinho Total          0.98                       1.00               0.81
+
+
+_________________________________________________________________________________________________
+
+
+                                                  23/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+
+Nas Figuras 18a a 18b são apresentadas a correlação espacial histórica anual e a correlação espacial
+dos cenários gerados do posto lateral de Sobradinho com os postos de vazão total 169 (Sobradinho) e
+156 (Três Marias) para todos os meses. Novamente, destaca-se que os cenários gerados
+multivariados foram obtidos utilizando a matriz de correlação anual entre os postos principais, a fim
+de preservar a correlação anual entre os postos e reproduzir os períodos de seca multivariados
+observados no histórico. Sendo assim, o valor de correlação obtido dos cenários sintéticos reflete o
+valor anual histórico.
+
+Pode-se observar que a alta correlação espacial observada entre os postos 168 e 169 foi preservada
+pelos cenários sintéticos. A correlação sintética entre o posto 168 e o posto 156, na grande maioria
+dos meses analisados, é similar ao valor histórico; exceto para o mês de maio no qual a correlação
+gerada é um pouco inferior ao valor do histórico.
+
+                                                         CASO NAO CONDICIONADO: CORRELACAO ESPACIAL MENSAL - SOBRADINHO L X SOBRADINHO - MES ESTOCASTICO
+                              1
+                                                                                                                                                                       HISTÓRICA
+                                                                                                                                                                       SINTÉTICA
+                             0.9
+
+
+                             0.8
+
+
+                             0.7
+
+
+                             0.6
+
+
+
+                correlacao
+                             0.5
+
+
+                             0.4
+
+
+                             0.3
+
+
+                             0.2
+
+
+                             0.1
+
+
+                              0
+                                   Janeiro   Fevereiro      Março      Abril     Maio       Junho      Julho     Agosto   Setembro    Outubro   Novembro    Dezembro
+
+
+
+
+                                                                                          (a) 168x169
+
+
+
+                                                         CASO NAO CONDICIONADO: CORRELACAO ESPACIAL MENSAL - SOBRADINHO L X TRES MARIAS - MES ESTOCASTICO
+                              1
+                                                                                                                                                                       HISTÓRICA
+                                                                                                                                                                       SINTÉTICA
+                             0.9
+
+
+                             0.8
+
+
+                             0.7
+
+
+                             0.6
+
+
+
+                correlacao
+                             0.5
+
+
+                             0.4
+
+
+                             0.3
+
+
+                             0.2
+
+
+                             0.1
+
+
+                              0
+                                   Janeiro   Fevereiro      Março      Abril     Maio       Junho      Julho     Agosto   Setembro    Outubro   Novembro    Dezembro
+
+
+
+
+                                                                                          (b) 168x156
+
+                                                Figura 18 – Correlação espacial: Sobradinho Lateral
+_________________________________________________________________________________________________
+
+
+                                                                                                24/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+
+Na Figura 19 podem ser observadas as correlações espaciais históricas e geradas do posto total de
+Sobradinho com o posto de vazão total 156 (Três Marias). A reprodução da correlação espacial com o
+posto 156 apresenta o mesmo comportamento daquele observado para o posto de vazão lateral.
+
+
+                                                        CASO NAO CONDICIONADO: CORRELACAO ESPACIAL MENSAL - SOBRADINHO X TRES MARIAS - MES ESTOCASTICO
+                             1
+                                                                                                                                                                    HISTÓRICA
+                                                                                                                                                                    SINTÉTICA
+                            0.9
+
+
+                            0.8
+
+
+                            0.7
+
+
+                            0.6
+
+
+
+               correlacao
+                            0.5
+
+
+                            0.4
+
+
+                            0.3
+
+
+                            0.2
+
+
+                            0.1
+
+
+                             0
+                                  Janeiro   Fevereiro     Março      Abril      Maio      Junho      Julho     Agosto   Setembro   Outubro   Novembro    Dezembro
+
+
+
+
+                                                                                        (b) 169x156
+
+
+
+                                                  Figura 19 – Correlação espacial: Sobradinho Total
+
+
+Outra forma de se comparar o quão similares são duas séries temporais é através da avaliação da
+evolução das vazões afluentes mensais bivariadas. Desta forma, espera-se que as variações positivas
+e negativas em relação a uma referência sejam parecidas para as séries temporais analisadas. O
+procedimento utilizado nesta avaliação está descrito no Anexo A.
+
+Este procedimento é aplicado aos cenários gerados para os postos de vazão lateral e incremental de
+Sobradinho pelo programa GEVAZP. Nessa análise foi avaliado um cenário sintético com 84 anos
+(tamanho compatível com o registro histórico). Adicionalmente, foi avaliada uma amostra sintética
+de 10 cenários com 84 anos. O teste considerou um nível de significância de 5%.
+
+Os resultados na tabela 3 mostram que o número de ocorrências de variações no mesmo sentido
+para os cenários sintéticos se repete em proporção estatisticamente igual na série histórica. Isso
+indica que os cenários gerados apresentam um comportamento similar ao comportamento do
+registro histórico.
+
+
+
+
+_________________________________________________________________________________________________
+
+
+                                                                                              25/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+                    Tabela 3 – Resultado da avaliação da evolução das vazões bivariadas
+                                      Histórico        Z(1)               Z(2)
+               Variações no mesmo
+               sentido                940              9312               930
+               Variações em sentido
+               oposto                 68               768                78
+               Nº de Cenários         1 cenário        10 cenários        1 cenário
+               Soma                   1008             10080              1008
+               Frequência (%)         93.25            92.38              92.26
+               Intervalo                               [92.76 ; 93.74]    [91.67 ; 94.74]
+
+
+
+
+5.2    ANÁLISE CONDICIONADA
+
+Para a análise condicionada, são mostrados testes condicionados aplicados aos cenários gerados
+considerando a configuração de usinas dos doze últimos PMOs (dez/15 a nov/16, todos revisão 0). O
+horizonte de estudo dos casos foi de dois meses (primeiro mês determinístico e segundo mês
+estocástico), a árvore de cenários para o mês estocástico foi gerada considerando agregação de
+cenários e com cardinalidade variando de acordo com o mês, conforme Tabela 4. Neste estudo foi
+considerado o arquivo histórico de vazões utilizado pelo NEWAVE (vazoes.dat).
+
+                                 Tabela 4 – Número de aberturas por mês
+                                              Mês       Aberturas
+                                              Jan            136
+                                              Fev            116
+                                              Mar            143
+                                              Abr            143
+                                              Mai            193
+                                              Jun            267
+                                              Jul            513
+                                              Ago            353
+                                              Set            303
+                                              Out            259
+                                              Nov            228
+                                              Dez            153
+
+
+Os testes condicionados são derivados do modelo PAR(p) ajustado, portanto só podem ser aplicados
+para os postos principais e laterais, dado que para este último sempre será ajustado um modelo
+PAR(p). Os testes apresentados neste item estão descritos em [8].
+
+
+_________________________________________________________________________________________________
+
+
+                                                    26/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+Nas Figuras 20 e 21 são apresentados os valores teórico, gerado e agregado. O valor teórico é o valor
+calculado a partir do modelo ajustado e dos valores passados de vazão; o valor gerado é obtido da
+amostra original obtida por amostragem aleatória simples antes do processo de agregação; e o valor
+agregado é aquele obtido após a aplicação das técnicas de agregação. Na Figura 20, pode-se verificar
+que a média agregada está bem próxima dos valores gerado e teórico. Já o desvio padrão após a
+agregação apresenta um pouco de degradação, principalmente para os meses mais úmidos, Figura
+21, porém esse comportamento já era observado na geração com a versão 3.10, caso a usina de
+Sobradinho fosse classificada como principal (Figura 22).
+                                                                                   MEDIA - SOBRADINHOL
+                      4500
+                                                                                                                                                      TEÓRICO
+                                                                                                                                                      GERADO
+                      4000                                                                                                                            AGREGADO
+
+
+
+                      3500
+
+
+
+                      3000
+
+
+
+                      2500
+
+               m³/s
+                      2000
+
+
+
+                      1500
+
+
+
+                      1000
+
+
+
+                      500
+
+
+
+                        0
+                             DEZ-RV0   JAN-RV0   FEV-RV0   MAR-RV0   ABR-RV0   MAI-RV0   JUN-RV0    JUL-RV0   AGO-RV0   SET-RV0   OUT-RV0   NOV-RV0
+
+
+
+
+                                                 Figura 20 – Média Mensal: Sobradinho Lateral
+
+                                                                               DESVIO PADRÃO - SOBRADINHOL
+                      1600
+                                                                                                                                                      TEÓRICO
+                                                                                                                                                      GERADO
+                      1400                                                                                                                            AGREGADO
+
+
+
+
+                      1200
+
+
+
+                      1000
+
+
+
+               m³/s   800
+
+
+
+                      600
+
+
+
+                      400
+
+
+
+                      200
+
+
+
+                        0
+                             DEZ-RV0   JAN-RV0   FEV-RV0   MAR-RV0   ABR-RV0   MAI-RV0   JUN-RV0    JUL-RV0   AGO-RV0   SET-RV0   OUT-RV0   NOV-RV0
+
+
+
+
+                                       Figura 21 – Desvio-padrão mensal: Sobradinho Lateral
+
+
+
+
+_________________________________________________________________________________________________
+
+
+                                                                                   27/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+                                                                                  DESVIO PADRÃO - SOBRADINHO
+                      1600
+                                                                                                                                                             TEÓRICO
+                                                                                                                                                             GERADO
+                      1400                                                                                                                                   AGREGADO
+
+
+
+
+                      1200
+
+
+
+                      1000
+
+
+
+               m³/s   800
+
+
+
+                      600
+
+
+
+                      400
+
+
+
+                      200
+
+
+
+                        0
+                              DEZ-RV0   JAN-RV0   FEV-RV0   MAR-RV0   ABR-RV0    MAI-RV0    JUN-RV0    JUL-RV0   AGO-RV0     SET-RV0   OUT-RV0   NOV-RV0
+
+
+
+
+                             Figura 22 – Desvio-padrão mensal: Sobradinho Lateral (versão 3.10)
+
+
+
+É possível aplicar um teste para verificar se a diferença entre o valor teórico e o valor gerado é
+significativa, tanto para média quanto para o desvio-padrão [8]. Na Figura 23 são mostrados os
+resultados do teste e o valor crítico para um nível de significância de 5% (linha vermelha). Observa-se
+que para todos os PMOs analisados, a geração para Sobradinho Lateral (168) é aprovada no teste de
+média e desvio-padrão.
+
+                                                                      TESTE DE MEDIA E DESVIO PADRÃO GERADO - SOBRADINHO L
+                        2
+                                                                                                                                                    TESTE MEDIA GERADA
+                                                                                                                                                    TESTE DESVIO GERADA
+                       1.8
+                                                                                                                                                    VC(5%)
+
+
+                       1.6
+
+
+                       1.4
+
+
+                       1.2
+
+
+                        1
+
+
+                       0.8
+
+
+                       0.6
+
+
+                       0.4
+
+
+                       0.2
+
+
+                        0
+                              DEZ-RV0   JAN-RV0   FEV-RV0   MAR-RV0   ABR-RV0    MAI-RV0    JUN-RV0    JUL-RV0   AGO-RV0     SET-RV0   OUT-RV0   NOV-RV0
+
+
+
+
+                                  Figura 23 – Teste Média e Desvio-padrão: Sobradinho Lateral
+
+Nas Figuras 24 e 25 são apresentados os resultados dos testes de aderência Kolmogorov-Smirnov e
+Cramer-Von Mises, respectivamente, para os valores gerados e agregados do posto lateral de
+Sobradinho. As barras em azul indicam a estatística calculada para o teste e as linhas os valores
+críticos, considerando um nível de significância de 5% (linha vermelha) e 1% (linha azul).
+
+
+
+
+_________________________________________________________________________________________________
+
+
+                                                                                      28/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+                                                                               TESTE KOLMOGOROV-SMIRNOV - SOBRADINHOL
+                            1.8
+                                                                                                                                                                TESTE
+                                                                                                                                                                VC(5%)
+                            1.6                                                                                                                                 VC(1%)
+
+
+
+                            1.4
+
+
+
+                            1.2
+
+
+
+                             1
+
+
+
+                            0.8
+
+
+
+                            0.6
+
+
+
+                            0.4
+
+
+
+                            0.2
+
+
+
+                             0
+                                  DEZ-RV0   JAN-RV0   FEV-RV0   MAR-RV0   ABR-RV0    MAI-RV0   JUN-RV0    JUL-RV0   AGO-RV0    SET-RV0   OUT-RV0   NOV-RV0
+
+
+
+
+                                                        Figura 24 – Teste KS: Sobradinho Lateral
+                                                                                 TESTE CRAMER-VON MISES - SOBRADINHOL
+                            0.8
+                                                                                                                                                                TESTE
+                                                                                                                                                                VC(5%)
+                            0.7                                                                                                                                 VC(1%)
+
+
+
+
+                            0.6
+
+
+
+                            0.5
+
+
+
+                            0.4
+
+
+
+                            0.3
+
+
+
+                            0.2
+
+
+
+                            0.1
+
+
+
+                             0
+                                  DEZ-RV0   JAN-RV0   FEV-RV0   MAR-RV0   ABR-RV0    MAI-RV0   JUN-RV0    JUL-RV0   AGO-RV0    SET-RV0   OUT-RV0   NOV-RV0
+
+
+
+
+                                                        Figura 25 – Teste CM: Sobradinho Lateral
+
+
+Após a geração de vazão para o posto lateral e para os postos principais, os cenários de vazão total
+para o posto 169 são calculados segundo a regra de defasagem linear. A correlação espacial entre os
+postos lateral e total da usina de Sobradinho é mostrada na Figura 26. Pode-se observar que o alto
+valor de correlação foi preservado.
+
+                                                                   CORRELACAO ESPACIAL - SOBRADINHOL X SOBRADINHO - MES ESTOCASTICO
+                             1
+                                                                                                                                                             HISTÓRICA
+                                                                                                                                                             SINTÉTICA
+                            0.9
+
+
+                            0.8
+
+
+                            0.7
+
+
+                            0.6
+
+
+
+               correlacao
+                            0.5
+
+
+                            0.4
+
+
+                            0.3
+
+
+                            0.2
+
+
+                            0.1
+
+
+                             0
+                                  DEZ-RV0   JAN-RV0   FEV-RV0   MAR-RV0   ABR-RV0    MAI-RV0   JUN-RV0    JUL-RV0   AGO-RV0    SET-RV0   OUT-RV0   NOV-RV0
+
+
+
+
+                                        Figura 26 – Correlação espacial: Sobradinho Lateral e Total
+
+_________________________________________________________________________________________________
+
+
+                                                                                         29/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+Na Figura 27 são apresentadas as correlações espaciais de Sobradinho Lateral com Três Marias (156).
+Os valores de correlação espacial sofrem uma pequena degradação, mas no mesmo nível que já era
+observado na geração da versão 3.10, Figura 28.
+
+                                                                    CORRELACAO ESPACIAL - SOBRADINHOL X TRES MARIAS - MES ESTOCASTICO
+                               1
+                                                                                                                                                               HISTÓRICA
+                                                                                                                                                               SINTÉTICA
+                             0.9
+
+
+                             0.8
+
+
+                             0.7
+
+
+                             0.6
+
+
+
+                correlacao
+                             0.5
+
+
+                             0.4
+
+
+                             0.3
+
+
+                             0.2
+
+
+                             0.1
+
+
+                               0
+                                   DEZ-RV0   JAN-RV0   FEV-RV0   MAR-RV0   ABR-RV0    MAI-RV0    JUN-RV0    JUL-RV0   AGO-RV0    SET-RV0   OUT-RV0   NOV-RV0
+
+
+
+
+                                   Figura 27 – Correlação espacial: Sobradinho Lateral e Três Marias
+
+
+                                                                    CORRELACAO ESPACIAL - SOBRADINHOL X TRES MARIAS - MES ESTOCASTICO
+                              1
+                                                                                                                                                               HISTÓRICA
+                                                                                                                                                               SINTÉTICA
+                             0.9
+
+
+                             0.8
+
+
+                             0.7
+
+
+                             0.6
+
+
+
+               correlacao
+                             0.5
+
+
+                             0.4
+
+
+                             0.3
+
+
+                             0.2
+
+
+                             0.1
+
+
+                              0
+                                   DEZ-RV0   JAN-RV0   FEV-RV0   MAR-RV0   ABR-RV0    MAI-RV0    JUN-RV0    JUL-RV0   AGO-RV0    SET-RV0   OUT-RV0   NOV-RV0
+
+
+
+
+               Figura 28 – Correlação espacial: Sobradinho Lateral e Três Marias (versão 3.10)
+
+
+
+Na Figura 29 são apresentadas as correlações espaciais de Sobradinho Total com Três Marias (156). O
+comportamento observado é bastante similar ao apresentado para Sobradinho Lateral, o que era de
+se esperar dada a alta correlação entre os postos lateral e total.
+
+
+
+
+_________________________________________________________________________________________________
+
+
+                                                                                           30/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+                                                                       CORRELACAO ESPACIAL - SOBRADINHO X TRES MARIAS - MES ESTOCASTICO
+                              1
+                                                                                                                                                                 HISTÓRICA
+                                                                                                                                                                 SINTÉTICA
+                             0.9
+
+
+                             0.8
+
+
+                             0.7
+
+
+                             0.6
+
+
+
+                correlacao
+                             0.5
+
+
+                             0.4
+
+
+                             0.3
+
+
+                             0.2
+
+
+                             0.1
+
+
+                              0
+                                     DEZ-RV0   JAN-RV0   FEV-RV0    MAR-RV0   ABR-RV0    MAI-RV0   JUN-RV0    JUL-RV0   AGO-RV0    SET-RV0   OUT-RV0   NOV-RV0
+
+
+
+
+                                                   Figura 29 – Correlação espacial: Sobradinho Total
+
+
+Para fornecer uma indicação sobre o nível degradação que o processo de agregação pode ocasionar
+na correlação espacial, é realizada uma regressão entre os valores de correlação gerados e agregados
+[8]. Nesta análise foi feita uma comparação dos valores de correlação espacial entre o posto
+Sobradinho Lateral e as demais usinas da configuração (somente aquelas classificadas como
+principais). Na Tabela 5 são apresentados os valores do coeficiente angular e do coeficiente de
+determinação (R2) da reta de regressão ajustada. Pode-se verificar que, para todos os meses, o valor
+do coeficiente angular da reta de regressão é bem próximo de 1 e que o R2 fica próximo a 100%,
+indicando que em geral as correlações dos cenários agregados preservam a correlação dos cenários
+gerados.
+
+                                   Tabela 5 – Correlação espacial Gerada x Agregada: Sobradinho Lateral
+
+
+                                                                                                      R2                           b
+                                                                   DEZ-RV0                         95.32                      0.9518
+                                                                   JAN-RV0                         95.83                      1.0009
+                                                                   FEV-RV0                         98.29                      0.9741
+                                                               MAR-RV0                             98.07                      0.9855
+                                                                   ABR-RV0                         97.12                      0.9342
+                                                                   MAI-RV0                         98.42                      1.0081
+                                                                   JUN-RV0                         99.60                          0.99
+                                                                   JUL-RV0                         99.30                      0.9694
+                                                               AGO-RV0                             98.37                      0.9621
+                                                                   SET-RV0                         98.40                      0.9905
+                                                               OUT-RV0                             98.70                      1.0164
+                                                               NOV-RV0                             97.40                      0.9862
+
+
+
+
+_________________________________________________________________________________________________
+
+
+                                                                                             31/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+6. CONCLUSÃO
+
+Este Relatório Técnico teve como objetivo detalhar o tratamento de usinas que sofrem influência de
+tempo de viagem na obtenção dos cenários de vazões total, incluindo o processo de geração de
+cenários de vazões laterais.
+
+Primeiramente, foi explicitado o processo de geração de cenários para postos de vazão lateral. Em
+seguida, detalhou-se a geração de cenários para postos de vazão total que sofram influência do
+tempo de viagem através de duas alternativas: utilizando os cenários de vazões incrementais
+somados aos de vazões totais das usinas de montante; ou utilizando os cenários de vazão lateral
+somados aos cenários de vazões totais das usinas de montante defasadas linearmente.
+
+Em seguida, destacaram-se os principais aprimoramentos disponíveis na versão 5.5.1 do programa
+GEVAZP. Essas alterações têm como objetivo permitir que as informações que transitam entre os
+modelos da cadeia de planejamento da operação sejam sempre consistentes e compatíveis entre si,
+assegurando maior confiabilidade ao processo. Dentre esses modelos, o único que sofre impacto é o
+programa DECOMP.
+
+Por fim, avaliou-se os cenários sintéticos gerados pelo programa GEVAZP para a usina de Sobradinho,
+posto total/incremental (169) e posto lateral (168), assim como a compatibilidade entre ambos os
+postos. Foi avaliada somente a alternativa de geração de vazão total utilizando cenários de vazões
+laterais somados com as vazões defasadas linearmente dos postos a montante, dado que o ONS
+optou por utilizar, nesta etapa da validação, esta alternativa. Verificou-se através de gerações não
+condicionada e condicionada ao passado recente que essa metodologia é adequada no que tange a
+reprodução das estatísticas históricas dos postos de vazão total e lateral. Também atestou-se a
+compatibilidade dos cenários gerados para os postos avaliados através da análise bivariada dos
+mesmos.
+
+
+
+
+_________________________________________________________________________________________________
+
+
+                                               32/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+REFERÊNCIAS
+
+[1] MACEIRA, M.E.P., MERCIO, C.M.V.B., 1997,"Stochastic Streamflow Model for Hydroelectric
+Systems", 5th International Conference PMAPS - Probabilistic Methods Applied to Power Systems,
+Vancouver, Canada.
+[2] MACEIRA, M. E. P., TERRY, L. A., COSTA, F. S., DAMÁZIO, J. M., MELO, A. C. G., 2002, “Chain of
+Optimization Models for Setting the Energy Dispatch and Spot Price In the Brazilian System”, In:
+Proceedings of 14th PSCC, Sevilla, Espanha.
+[3] BOX, G.E.P., JENKINS, G.M., 1970, Time Series Analysis – Forecasting and Control, San Francisco,
+Holden – Day.
+[4] COSTA, C.C., OLIVEIRA, G.C., PEREIRA, M.V.F., KELMAN, J., 1981, "Seleção de Modelo de Afluências
+Mensais para Planejamento Energético", VI SNPTEE.
+[5] CEPEL. Manual de Referência do modelo DECOMP. CEPEL - Centro de Pesquisas de Energia
+Elétrica, Rio de Janeiro, 2015.
+[6] MACEIRA, M. E. P., DUARTE, V. S., PENNA, D. D. J., et al., 2008, “Ten years of application of
+stochastic dual dynamic programming in official and agent studies in Brazil, Description of the
+NEWAVE program”, 16th Power Systems Computation Conference, PSCC, Jul.
+[7] CEPEL, "Consideração do tempo de viagem da água nos modelos SIMHIDR e DESSEM-PAT",
+Relatório Técnico nº1006/2011, CEPEL - Centro de Pesquisas de Energia Elétrica, Rio de Janeiro, 2011.
+[8] CEPEL, Modelo de Geração de Séries Sintéticas de Energias e Vazões – Manual de Referência.
+Relatório Técnico nº23951/2016, CEPEL - Centro de Pesquisas de Energia Elétrica, Rio de Janeiro,
+2016.
+[9] EFRON B., TIBSHIRANI R.J., 1993, An Introduction to the Bootstrap, Chapman & Hall, New York.
+
+
+
+
+_________________________________________________________________________________________________
+
+
+                                                33/34
+Centro de Pesquisas de Energia Elétrica - CEPEL
+
+Relatório Técnico – 23954 / 2016
+
+Anexo A - Avaliação da evolução das vazões afluentes mensais bivariada
+Para esta análise, sejam X e Y dois registros de vazão afluente, então as séries de diferença entre os
+valores de vazão nos instantes de tempo t e t-1 podem ser calculadas como:
+
+
+
+Dividindo-se cada diferença pelo seu próprio módulo, têm-se duas séries,            e         , formadas
+por valores iguais a -1, 0 ou 1.
+
+
+
+
+Ao analisar estas séries, é possível verificar se no mês t houve um incremento ou decremento de
+vazão em relação ao mês t-1. Nas séries     e        , o valor 1 indica um incremento na vazão
+afluente, enquanto que -1 aponta um decremento. Caso a vazão de um mês para outro não mude,
+tem-se 0.
+Ao se comparar a série               à série           , obtém-se uma série única combinada,            ,
+expressa por:
+                                                           @
+Onde a operação @ pode resultar em 1 ou -1:
+                                  (1) @ (1) = 1 (-1) @ (1) = -1
+                                 (-1) @ (-) = 1 0 @ (1) = -1
+                                    0@0=1        0 @ (-1) = -1
+
+
+A partir da série combinada,          , avalia-se o quão similares são as séries X e Y através da métrica
+F:
+                               F = P(1)/[P(1)+P(-1)]
+Onde:
+    P(.) é o número de ocorrências do valor (.) na série combinada.
+    F é probabilidade das duas séries terem o mesmo comportamento
+
+A métrica F tem distribuição binomial com parâmetro N e Ph
+
+Onde:
+    N é o tamanho da série analisada
+    Ph é a probabilidade das duas séries terem o mesmo comportamento no registro histórico
+
+
+
+_________________________________________________________________________________________________
+
+
+                                                   34/34
+

@@ -21,4 +21,9 @@ o SHA-256. O portal de documentação técnica do CEPEL
 (https://www.cepel.br/produtos/documentacao-tecnica/) costuma recusar
 downloads automáticos; nesse caso, baixe o PDF pelo navegador.
 
+Quando o endereço original de uma fonte saiu do ar, a origem no manifesto é a
+cópia pública do Internet Archive (endereço `web.archive.org/web/<data>id_/<url>`,
+que entrega o arquivo original sem a moldura do arquivo); o `01-fontes.md`
+registra o endereço original. É o caso do Rel-23954_2016.
+
 O catálogo comentado, com o que cada fonte cobre, está em `01-fontes.md`.

@@ -146,12 +146,15 @@ oficial **byte a byte** (antes, 90,0% das palavras geradas).
   - versões 8.1.6 e 10.0.0 (53 pacotes): `b1` com desvio 0,91–1,09 e sem
     correlação com `W_P`, um normal padrão independente.
 
-  O padrão do Pulsar segue a versão atual (`ruido_lateral="nenhum"`); a
-  forma do M18 fica como `"proprio"`. Se o lateral é componente do vetor
-  agregado pelo K-means não se separa nos dados: o Pulsar o mantém no
-  vetor (`lateral_na_agregacao`, ESCOLHA P-AGR-07, pelo R3383 eq. 2.2 com
-  as 155 usinas do TESTES.REL), mesmo sem usá-lo no W na versão 11; o T10
-  (tamanhos de grupo) e o T11 não separam as duas formas.
+  O padrão do Pulsar segue a versão atual (`ruido_lateral="nenhum"`).
+  Nesta frente (F11) o Pulsar mantinha o lateral no vetor agregado pelo
+  K-means (`lateral_na_agregacao`, ESCOLHA P-AGR-07), e a forma do M18
+  ficava como `"proprio"`, com b1 tirado desse vetor. A frente F13 mostrou,
+  nos 53 pacotes das versões 8.1.6 e 10.0.0, que o b1 é uma sequência
+  sorteada nó a nó, igual entre agregações de K diferentes
+  (`test_ruido_proprio_do_lateral_sorteado_no_a_no`), como o R23954 §2
+  descreve: a forma do M18 passou a `"individual"`, e o lateral saiu do
+  vetor agregado por padrão (P-AGR-07, P-LAT-04).
 
 ## 6. Aceitação estatística (03 §5) antes e depois
 

@@ -260,10 +260,12 @@ def test_aceitacao_no_vazoes_rvx(nome, rev):
     [mín, máx] das 20 sementes (P-ACE-06) em ≥ 0,87 das colunas, a árvore
     como um todo em ≥ 5 das 6 estatísticas (uma coluna só; na referência
     as seis ficam dentro em só metade das sementes), nenhuma estatística
-    abaixo de 0,78 e média das frações ≥ 0,87. Com a F11: 202609 RV0 e RV1
-    e 202610 RV0 com média 0,935 / 0,948 / 0,908, correlação 0,917 / 0,917 /
-    0,899 e a árvore com as seis estatísticas na faixa (na F9: média 0,908 /
-    0,941 / 0,908 e correlação 0,909 / 0,912 / 0,894). Inclui o 202609 RV0, uma execução oficial sem GEVAZP.OUT no
+    abaixo de 0,78 e média das frações ≥ 0,87. Com a F13 (lateral fora do
+    vetor agregado, P-AGR-07): 202609 RV0 e RV1 e 202610 RV0 com média
+    0,922 / 0,928 / 0,928, correlação 0,919 / 0,920 / 0,886 e a árvore com 5,
+    5 e 6 das seis estatísticas na faixa (F11: média 0,935 / 0,948 / 0,908,
+    correlação 0,917 / 0,917 / 0,899 e as seis; F9: média 0,908 / 0,941 /
+    0,908 e correlação 0,909 / 0,912 / 0,894). Inclui o 202609 RV0, uma execução oficial sem GEVAZP.OUT no
     pacote, que o T11 não cobre.
 
     Controle da referência (cada semente contra as outras 19): 0,90 ± 0,01

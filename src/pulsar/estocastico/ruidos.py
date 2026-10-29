@@ -18,15 +18,20 @@ N_OBJETOS = 50_000
 # P-RUI-01 (ESCOLHA, lacuna L6): fluxo reservado ao sorteio dos centros
 # iniciais do K-means; postos começam em 1.
 FLUXO_CENTROS = 0
+# P-LAT-04 (ESCOLHA, lacuna L6): subfluxo do ruído individual do posto
+# lateral, separado do fluxo da coluna do posto na amostra original.
+SUBFLUXO_INDIVIDUAL = 1
 SIMETRIAS = ("nenhuma", "antitetica")
 
 
-def _gerador(semente: int, fluxo: int) -> np.random.Generator:
+def _gerador(semente: int, fluxo: int, subfluxo: int | None = None) -> np.random.Generator:
     """P-RUI-01 (ESCOLHA, lacuna L6): PCG64 do NumPy (O'Neill 2014), um
-    fluxo por chave ``(semente, fluxo)`` pela ``SeedSequence``."""
-    if semente < 0 or fluxo < 0:
+    fluxo por chave ``(semente, fluxo)`` pela ``SeedSequence``; com
+    ``subfluxo``, a chave ``(semente, fluxo, subfluxo)``."""
+    if semente < 0 or fluxo < 0 or (subfluxo is not None and subfluxo < 0):
         raise ValueError("semente e fluxo devem ser não negativos")
-    return np.random.Generator(np.random.PCG64(np.random.SeedSequence(entropy=semente, spawn_key=(fluxo,))))
+    chave = (fluxo,) if subfluxo is None else (fluxo, subfluxo)
+    return np.random.Generator(np.random.PCG64(np.random.SeedSequence(entropy=semente, spawn_key=chave)))
 
 
 def amostra_original(postos, semente: int, n_objetos: int = N_OBJETOS, simetria: str = "nenhuma",
@@ -66,3 +71,17 @@ def sorteia_centros(n_objetos: int, k: int, semente: int) -> np.ndarray:
     if not 1 <= k <= n_objetos:
         raise ValueError(f"K = {k} fora de 1..{n_objetos}")
     return _gerador(semente, FLUXO_CENTROS).choice(n_objetos, size=k, replace=False)
+
+
+def ruido_individual(posto: int, k: int, semente: int) -> np.ndarray:
+    """P-LAT-04: ruído próprio b1 do posto lateral, sorteado nó a nó fora da
+    amostra agregada (R23954 §2: o ruído de cada posto lateral é gerado
+    depois do dos principais e individualmente). O valor do nó j é o j-ésimo
+    N(0, 1) do subfluxo ``(posto, SUBFLUXO_INDIVIDUAL)``: não depende de K
+    nem da agregação, como nos pacotes das versões 8.1.6 e 10.0.0
+    (INFERIDO). Gerador e subfluxo: ESCOLHA (lacuna L6)."""
+    if int(posto) < 1:
+        raise ValueError("postos começam em 1")
+    if k < 1:
+        raise ValueError(f"K = {k} < 1")
+    return _gerador(semente, int(posto), SUBFLUXO_INDIVIDUAL).standard_normal(k)
