@@ -164,8 +164,10 @@ Na F13, `pytest tests/test_oraculo_laterais.py --decks todos` (em seis
 lotes, um por família de b1 e um com os pacotes da versão 11): **137
 passaram, 46 pulados, 0 falharam**; os pulados são o teste nó a nó nos 8
 pacotes da versão 11 (sem ruído próprio) e pacotes sem NW com jusante. O
-teste nó a nó passa nos 53 pacotes das versões 8.1.6 e 10.0.0, com 97,6% a
-100% dos nós comuns iguais ao parceiro de outro K (`FAMILIAS_B1`).
+teste nó a nó passa nos 53 pacotes das versões 8.1.6 e 10.0.0: o b1 é igual a
+1e-3 ao do pacote de maior K da família em 97,2% a 100% dos nós comuns, e o
+W do posto total coincide em no máximo 1 nó (famílias de
+`ferramentas/familias_b1.py`, gravadas em `FAMILIAS_B1`).
 
 ### 2.4 Estatísticas de 03 §5
 
@@ -192,7 +194,9 @@ entra no vetor agregado; quem decide são os 53 pacotes das versões 8.1.6 e
 10.0.0 (seção 8). A árvore do 202609 passa a ter 5 das 6 estatísticas na
 faixa (o Q3 da soma fica 0,4% abaixo). No `test_primeira_versao_da_f8` a
 vantagem no Q3 do 202610 sobre a variante "zero" (M_t = 0) cai de 0,071
-para 0,058, no limite do ruído; o limiar do teste passou de 0,06 para 0,05.
+para 0,058, no limite do ruído; o limiar do teste passou de 0,06 para 0,05, e o critério
+do T10 dos tamanhos de grupo mudou (P-ACE-08, decididos depois de ver os
+resultados).
 
 **Sobre o VAZOES.RVx** (T12, F9, P-INT-03; bloco 6 inteiro com as
 probabilidades do registro 4), nas três revisões, faixa [mín, máx] e, entre
@@ -295,7 +299,7 @@ demonstrado:
 
 ## 6. ESCOLHAS e impacto
 
-As 98 linhas de PROVENIENCIA.md com ESCOLHA (inteira ou parcial; 93 na F9, mais P-LN3-10..13 e P-LAT-04 na F11), agrupadas
+As 99 linhas de PROVENIENCIA.md com ESCOLHA (inteira ou parcial; 93 na F9, mais P-LN3-10..13 e P-LAT-04 na F11 e P-ACE-08 na F13), agrupadas
 pelo efeito nos três VAZOES.RVx publicados. "Sem efeito" quer dizer que o
 caso não ocorre nos decks públicos ou que as alternativas dão o mesmo
 arquivo; todas são parâmetros, salvo onde indicado.
@@ -305,10 +309,10 @@ arquivo; todas são parâmetros, salvo onde indicado.
 | Id | Escolha | Impacto medido |
 | --- | --- | --- |
 | P-RUI-01, P-RUI-03, P-RUI-05, P-GER-01 | PCG64 por posto, ziggurat, centros sorteados sem reposição, semente 0 | Definem a realização: as palavras das colunas com dispersão coincidem em ~5% (acaso); estatísticas equivalentes (seção 2.4). Não inferível (L6) |
-| P-RUI-04 | "Ruído simétrico" = amostra aleatória simples | A antitética derruba a fração da média de 0,929 para 0,851 (202609) e de 0,916 para 0,818 (202610) (F8: 0,922 → 0,825 e 0,909 → 0,760) |
+| P-RUI-04 | "Ruído simétrico" = amostra aleatória simples | A antitética derruba a fração da média de 0,935 para 0,825 (202609) e de 0,916 para 0,844 (202610) (F11: 0,929 → 0,851 e 0,916 → 0,818; F8: 0,922 → 0,825 e 0,909 → 0,760) |
 | P-AGR-04, P-AGR-05 | σ_i ponderado; FC escalar | Variantes mudam o FC < 0,3% e as frações ±0,03; sem o fator o T11 falha (< 0,1) |
 | P-AGR-06 | K = 1: média da amostra, sem fator | Sem efeito (K = 259 e 228) |
-| P-AGR-07, P-LAT-03, P-LAT-04 | Lateral fora do vetor agregado (INFERIDO nas versões 8.1.6 e 10.0.0, ESCOLHA na 11; F13), sem ruído próprio no W (versão 11, INFERIDO); principal = posto total | Uma coluna (SOBRADINHO_L): W_L = ρ_m W_P a 1e-6 nos 8 pacotes da versão 11; nos 53 das versões 8.1.6 e 10.0.0 o ruído próprio é uma sequência sorteada nó a nó (variante "individual"); pôr o lateral no vetor (como até a F11) ou somar o ruído próprio muda as frações do T11 ≤ 0,05 (ruído) |
+| P-AGR-07, P-LAT-03, P-LAT-04 | Lateral fora do vetor agregado (DOC pelo R23954 §2 + ESCOLHA; F13), sem ruído próprio no W (versão 11, INFERIDO); principal = posto total | Uma coluna (SOBRADINHO_L): W_L = ρ_m W_P a 1e-6 nos 8 pacotes da versão 11; nos 53 das versões 8.1.6 e 10.0.0 o ruído próprio que entra no W é uma sequência sorteada nó a nó, que não vem do vetor agregado (variante "individual", INFERIDO); pôr o lateral no vetor (como até a F11) ou somar o ruído próprio muda as frações do T11 ≤ 0,05 (ruído) |
 | P-LN3-03, P-LN3-07, P-LN3-08, P-LN3-10, P-LN3-11, P-LN3-12, P-LN3-13 | Rota inferida (padrão); M_t = 0, cúbicas e quantis como variantes; empate nos limiares de γ e nos extremos da faixa da cúbica (γ = 2 entra, γ = 4 não), limiar de negativos 0,15 dentro de [0,144; 0,1505), série sem valor ≥ 0 | A regra fecha o teste de núcleo a ~1e-8 nos 61 pacotes; as escolhas restantes não ocorrem nos pacotes; cúbicas e quantis perdem 0,07–0,14 na média das frações do T11 |
 | P-LN3-06 | μ_a − Δ < 0: eq. 24 com quadrado (INFERIDO na F11) | 16 dos 61 pacotes têm 1 a 3 séries nesse caso; "normal" fica cem vezes pior no teste de núcleo |
 | P-KM-01, P-KM-03, P-KM-04, P-KM-05 | Aritmética BLAS, lotes, ITER = 50, IFAULT | Mesmos grupos e iterações que a aritmética sequencial; convergência em 22–42 iterações; só desempenho (~6×) |
@@ -393,13 +397,14 @@ L24 critério da aceitação). Nenhum material proibido foi encontrado.
   variantes do fator de compensação. L8 e o resíduo do transplante foram
   fechados pela F11 (docs/limite-inferior.md); ficam o empate nos limiares
   da regra e o limiar de negativos dentro de [14,4%; 15,05%).
-- L11 (F13): nos 53 pacotes das versões 8.1.6 e 10.0.0 o ruído próprio do
-  lateral é o mesmo nó a nó entre agregações de K diferentes (97,6% a 100%
-  dos nós comuns, a 1e-6; o W do posto total coincide em no máximo 1 nó),
-  então não é componente do vetor agregado, como o R23954 §2 descreve
-  ("gerado individualmente"); o lateral saiu do vetor agregado por padrão.
-  Ficam: na versão 11 (sem ruído próprio), se o K-means tem uma componente
-  não usada do lateral (T10 e T11 não separam); os poucos nós em que o b1
+- L11 (F13): nos 53 pacotes das versões 8.1.6 e 10.0.0 o ruído próprio que
+  entra no W do lateral é o mesmo nó a nó entre agregações de K diferentes
+  (igual a 1e-3 em 97,2% a 100% dos nós comuns; o W do posto total coincide
+  em no máximo 1 nó), então não vem do vetor agregado, como o R23954 §2
+  descreve ("gerado individualmente"). O lateral saiu do vetor agregado por
+  padrão (DOC pelo R23954 + ESCOLHA): nenhum arquivo mostra se o K-means
+  tem uma componente do lateral que não é usada, nem na versão 11 nem nas
+  anteriores (T10 e T11 não separam). Ficam também: os poucos nós em que o b1
   difere dentro de uma família; por que a versão 11 tirou o ruído próprio;
   satélites (o R23954 §4 descreve a classificação, mas a fórmula está em
   documentos que não estão em `fontes/`, e não há deck) e mais de um
