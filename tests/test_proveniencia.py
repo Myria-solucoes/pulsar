@@ -85,7 +85,7 @@ def siglas() -> dict[str, str]:
     return out
 
 
-SIGLA = re.compile(r"(?<![\w-])(L-[A-Z0-9]+|U19|U11|M18|R1416|R3383|R13612|R46994|R27063|R23953|R3031|NT 42)(?![\w])")
+SIGLA = re.compile(r"(?<![\w-])(L-[A-Z0-9]+|U19|U11|M18|R1416|R3383|R13612|R46994|R27063|R23953|R23954|R3031|NT 42)(?![\w])")
 
 
 @functools.lru_cache(maxsize=None)

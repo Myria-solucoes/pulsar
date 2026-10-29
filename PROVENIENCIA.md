@@ -315,6 +315,7 @@ toda sigla usada numa linha está aqui.
 | R46994 | fontes/cepel/Rel-46994_2009_Arvore.txt |
 | R27063 | fontes/cepel/Rel-27063_2016_v54.txt |
 | R23953 | fontes/cepel/Rel-23953_2016_Compilador.txt |
+| R23954 | fontes/cepel/Rel-23954_2016_Tempo-de-viagem.txt |
 | U11 | fontes/cepel/Manual-do-Usuario-GEVAZP-11.0.2 |
 | R3031 | fontes/cepel/Rel-DSE-3031_2025_Robustez-novas-usinas |
 | L-PAR | fontes/libs/incerteza_hidrologica_modelo-par-p.txt (eq. 1–17) |

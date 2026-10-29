@@ -19,6 +19,21 @@ são de terceiros e não estão sob a licença do Pulsar. Os relatórios do CEPE
 | R46994 | `Rel-46994_2009_Arvore` | Árvore de cenários do médio prazo, sensibilidade à semente. |
 | R27063 | `Rel-27063_2016_v54` | Versão 5.4: postos laterais, artificiais, AR(0), tendência por posto. |
 | R23953 | `Rel-23953_2016_Compilador` | Mudança de compilador e reprodutibilidade de resultados entre versões. |
+| **R23954** | `Rel-23954_2016_Tempo-de-viagem` | "Geração de Cenários de Afluência para Usinas com Tempo de Viagem" (01/12/2016), versão 5.5.1. §1 vazão lateral x incremental e histórico do posto 168/169; §2 PAR(p) ajustado ao histórico lateral qualquer que seja a classificação, ruído do lateral gerado depois do dos principais e individualmente, eq. (2)–(3) (= M18 eq. 4.19–4.20, legíveis na imagem da pág. 7), seleção dos principais (a) principal, (b) satélite; §3 as duas alternativas de vazão total, eq. (4) (= M18 eq. 4.21) e nota 3 (períodos t e t−1 de mesma duração); §4 funcionalidades da 5.5.1 (tendência por posto no `VAZOES.XXX`, usina satélite por alta correlação na mesma bacia, alternativas por usina, ENA de acoplamento a partir das incrementais do `VAZOES.XXX`); §5 avaliação estatística de SOBRADINHO (168 e 169). |
+
+O R23954 constava do índice do portal com o endereço
+`https://cepel.br/wp-content/uploads/2022/03/Rel-23954_2016.pdf`, que saiu do
+ar depois da reforma do site (em 29/10/2026, quando a cópia foi baixada, o endereço redireciona para
+`www.cepel.br` e responde 403; antes, 404). A cópia usada é a pública do
+Internet Archive,
+`https://web.archive.org/web/20251126020804id_/https://cepel.br/wp-content/uploads/2022/03/Rel-23954_2016.pdf`
+(SHA-256 `cd2e4033…9f9a`, em `fontes/MANIFESTO.tsv`), e o índice arquivado
+que a lista é
+`https://web.archive.org/web/20260713093716/https://www.cepel.br/produtos/documentacao-tecnica/`
+(linha "01/12/2016, 23954/2016"). O relatório descreve a versão 5.5.1; os
+pacotes de 2022–2026 são das versões 9_L, 10.0.0, 11 e 11.0.2, e onde eles
+discordam do texto vale o pacote. As equações (1)–(4) e o Anexo A são
+imagens no PDF e saem vazias ou truncadas no `.txt`.
 
 ## Documentação web LIBS (`fontes/libs/`)
 
