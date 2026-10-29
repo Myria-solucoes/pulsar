@@ -92,7 +92,6 @@ def test_condicional_do_lateral():
     assert np.allclose([np.corrcoef(w1, w2[:, j])[0, 1] for j in range(2)], s12, atol=0.01)
 
 
-
 def test_ruido_individual_do_lateral_nao_depende_de_k():
     """P-LAT-04 ("individual", lacuna L6): b1 do nó j é o j-ésimo N(0, 1) do
     subfluxo do posto lateral, então não depende de K (prefixo comum, como
@@ -108,6 +107,7 @@ def test_ruido_individual_do_lateral_nao_depende_de_k():
     with pytest.raises(ValueError):
         OpcoesGeracao(ruido_lateral="agregado")  # exige o lateral no vetor agregado (P-AGR-07)
     assert not OpcoesGeracao().lateral_na_agregacao and OpcoesGeracao().ruido_lateral == "nenhum"
+
 
 def _momentos(x):
     x = np.asarray(x, float)
