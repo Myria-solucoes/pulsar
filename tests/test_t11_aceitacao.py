@@ -71,11 +71,12 @@ def test_primeira_versao_da_f8(pacote):
     estatística por posto, e no 202610 a forma da distribuição, que era a
     pendência da L7, melhora: desvio 0,851 → 0,909, assimetria 0,805 →
     0,851 e Q3 0,792 → 0,877 (o ganho no Q3 está acima do ruído de ~0,05; o
-    da assimetria, no limite). O ganho vem do M_t: só M_t = 0, com o resto
-    da geração padrão, deixa a assimetria e o Q3 do 202610 em 0,792 e 0,818
-    (variante "zero"; com o lateral no vetor agregado, antes da F13, 0,805 e
-    0,799): a diferença no Q3 para a variante "zero" fica em 0,058, no
-    limite do ruído (0,071 antes da F13)."""
+    da assimetria, no limite). Só M_t = 0, com o resto da geração padrão,
+    deixa a assimetria e o Q3 do 202610 em 0,792 e 0,818 (variante "zero";
+    com o lateral no vetor agregado, antes da F13, 0,805 e 0,799): tirar o
+    M_t piora a assimetria em ≥ 0,03 e o Q3 em ≥ 0,05 (0,058; 0,071 antes da
+    F13), no limite do ruído; o teste não afirma que o M_t explica todo o
+    ganho. Limiares da P-ACE-08 (b), lacuna L24."""
     b, v = R.fracoes(pacote.nome), R.fracoes(pacote.nome, "f8")
     print(pacote.nome, "F11", {k: round(x, 3) for k, x in b.items()}, "F8", {k: round(x, 3) for k, x in v.items()})
     assert all(b[k] >= v[k] - 0.01 for k in ESTATISTICAS if k != "arvore")

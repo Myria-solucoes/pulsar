@@ -9,7 +9,7 @@
   <a href="LICENSE"><img alt="Licença Apache 2.0" src="https://img.shields.io/badge/licen%C3%A7a-Apache%202.0-8aadf4?style=flat-square"></a>
   <img alt="Python 3.12" src="https://img.shields.io/badge/python-3.12-3f6e8a?style=flat-square&logo=python&logoColor=white">
   <img alt="NumPy" src="https://img.shields.io/badge/NumPy-float64-3f6e8a?style=flat-square&logo=numpy&logoColor=white">
-  <a href="PROVENIENCIA.md"><img alt="292 decisões com proveniência" src="https://img.shields.io/badge/proveni%C3%AAncia-292%20decis%C3%B5es-5fae6e?style=flat-square"></a>
+  <a href="PROVENIENCIA.md"><img alt="293 decisões com proveniência" src="https://img.shields.io/badge/proveni%C3%AAncia-293%20decis%C3%B5es-5fae6e?style=flat-square"></a>
   <a href="00-regras.md"><img alt="Só fontes públicas" src="https://img.shields.io/badge/fontes-s%C3%B3%20p%C3%BAblicas-5fae6e?style=flat-square"></a>
   <a href="00-regras.md"><img alt="Sem engenharia reversa" src="https://img.shields.io/badge/engenharia%20reversa-nenhuma-5fae6e?style=flat-square"></a>
   <a href="docs/relatorio-final.md"><img alt="Determinísticos byte a byte" src="https://img.shields.io/badge/determin%C3%ADsticos-byte%20a%20byte-8aadf4?style=flat-square"></a>

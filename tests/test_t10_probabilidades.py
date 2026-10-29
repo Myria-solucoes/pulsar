@@ -32,7 +32,8 @@ def test_distribuicao_dos_tamanhos_de_grupo(pacote):
     das 20 sementes (P-ACE-06), com o lateral fora (padrão, P-AGR-07) e
     dentro do vetor agregado. Com um gerador idêntico ao oficial, cada
     estatística cai fora da faixa com probabilidade 2/21; o critério é no
-    máximo uma das três fora. As duas formas passam e não se separam: sem o
+    máximo uma das três fora (P-ACE-08 (a), lacuna L24; até a F11, as três
+    dentro com folga de 1 contagem). As duas formas passam e não se separam: sem o
     lateral, só o menor grupo oficial do 202609 (168) fica fora (acima da
     faixa 156–166); com ele, o desvio oficial fica abaixo da faixa nos dois
     decks (10,32 contra 10,53–11,96 e 11,68 contra 11,74–13,04)."""
