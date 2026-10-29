@@ -9,7 +9,10 @@ dois pacotes são da mesma família quando o b1 do nó j é o mesmo (a 1e-3) em
 mais da metade dos nós comuns. Imprime, por família, os pacotes com K, a
 fração de nós iguais ao pacote de maior K da família e os nós em que o W do
 posto total coincide (a 1e-3) com o dele. É daqui que saem as
-``FAMILIAS_B1`` do teste nó a nó.
+``FAMILIAS_B1`` do teste nó a nó. O teste compara cada pacote com o de maior
+K da família entre os de K diferente do seu; nas famílias dos 53 pacotes o
+maior K é de um pacote só, então os pares só diferem para ele próprio, que
+o teste compara com o segundo maior.
 """
 
 import argparse

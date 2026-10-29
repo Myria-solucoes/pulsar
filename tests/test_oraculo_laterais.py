@@ -192,7 +192,8 @@ def test_ruido_proprio_do_lateral_sorteado_no_a_no(pacote):
     sequência sorteada nó a nó, que não depende de K nem da agregação
     (R23954 §2: o ruído de cada posto lateral é gerado depois do dos
     principais e individualmente). Com o pacote de maior K da mesma família
-    (outra agregação; famílias de ferramentas/familias_b1.py), b1 do nó j
+    entre os de K diferente do seu (outra agregação; famílias de
+    ferramentas/familias_b1.py), b1 do nó j
     é o mesmo a 1e-3 em ≥ 97% dos nós comuns (97,2% a 100% nos 53 pacotes;
     os outros, até 7 em 353, sem causa identificada), enquanto o W do posto
     total, que vem da agregação, fica igual a 1e-3 em no máximo 1 nó: um
