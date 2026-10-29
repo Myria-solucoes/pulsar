@@ -165,8 +165,8 @@ def test_lateral_condicionado_com_a_correlacao_do_mes(pacote):
 
 
 # Pacotes das versões 8.1.6 e 10.0.0 cujo b1 é a mesma sequência nó a nó
-# (achados na varredura dos 53 pacotes; o parceiro de cada pacote é o de
-# maior K da família, ou o segundo maior para ele mesmo).
+# (saída de ferramentas/familias_b1.py nos 53 pacotes; o parceiro de cada
+# pacote é o de maior K da família, ou o segundo maior para ele mesmo).
 FAMILIAS_B1 = (
     ("202201_pmo", "202202_pmo", "202203_pmo", "202204_pmo", "202205_pmo", "202206_pmo", "202207_pmo"),
     ("202208_pmo", "202209_pmo", "202210_pmo", "202211_pmo", "202212_pmo", "202301_pmo"),
@@ -187,18 +187,18 @@ def _ruido_proprio(nome):
 
 
 def test_ruido_proprio_do_lateral_sorteado_no_a_no(pacote):
-    """P-LAT-04 e P-AGR-07 (INFERIDO, L11): nas versões 8.1.6 e 10.0.0 o
-    ruído próprio b1 do lateral não é componente do vetor agregado: é uma
+    """P-LAT-04 (INFERIDO, L11): nas versões 8.1.6 e 10.0.0 o ruído
+    próprio b1 que entra no W do lateral não vem do vetor agregado: é uma
     sequência sorteada nó a nó, que não depende de K nem da agregação
     (R23954 §2: o ruído de cada posto lateral é gerado depois do dos
-    principais e individualmente). Com um pacote da mesma família e outro K
-    (outra agregação), b1 do nó j é o mesmo a 1e-3 em ≥ 95% dos nós
-    comuns (na varredura dos 53 pacotes, a 1e-6, com no máximo 7 nós
-    diferentes em 353, sem causa identificada), enquanto o W do posto
-    total, que vem da agregação, fica igual a 1e-3 em menos de 5% dos nós
-    (na varredura, em nenhum; correlação de 0,08 a 0,47 entre os nós de
-    mesmo índice): um centroide do K-means não se repete entre agregações
-    diferentes. Na versão 11 não há b1 (P-LAT-04)."""
+    principais e individualmente). Com o pacote de maior K da mesma família
+    (outra agregação; famílias de ferramentas/familias_b1.py), b1 do nó j
+    é o mesmo a 1e-3 em ≥ 97% dos nós comuns (97,2% a 100% nos 53 pacotes;
+    os outros, até 7 em 353, sem causa identificada), enquanto o W do posto
+    total, que vem da agregação, fica igual a 1e-3 em no máximo 1 nó: um
+    centroide do K-means não se repete entre agregações diferentes. O teste
+    não diz se o K-means tem uma componente do lateral que não é usada no
+    W (P-AGR-07). Na versão 11 não há b1 (P-LAT-04)."""
     nome = pacote.nome
     if _versao_11(nome):
         pytest.skip("versão 11: o lateral não tem ruído próprio (P-LAT-04)")
@@ -216,5 +216,5 @@ def test_ruido_proprio_do_lateral_sorteado_no_a_no(pacote):
     wp = np.abs(wo[:n] - wo2[:n]) < 1e-3
     print(f"{nome} (K = {len(b1)}) x {par} (K = {len(b2)}): b1 igual em {iguais.sum()}/{n} nós, "
           f"W_P em {wp.sum()}/{n}")
-    assert iguais.mean() >= 0.95
-    assert wp.mean() < 0.05
+    assert iguais.mean() >= 0.97
+    assert wp.sum() <= 1
