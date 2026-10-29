@@ -165,8 +165,8 @@ lotes, um por família de b1 e um com os pacotes da versão 11): **137
 passaram, 46 pulados, 0 falharam**; os pulados são o teste nó a nó nos 8
 pacotes da versão 11 (sem ruído próprio) e pacotes sem NW com jusante. O
 teste nó a nó passa nos 53 pacotes das versões 8.1.6 e 10.0.0: o b1 é igual a
-1e-3 ao do pacote de maior K da família em 97,2% a 100% dos nós comuns, e o
-W do posto total coincide em no máximo 1 nó (famílias de
+1e-3 ao do pacote de maior K da família com K diferente do seu em 97,2% a
+100% dos nós comuns, e o W do posto total coincide em no máximo 1 nó (famílias de
 `ferramentas/familias_b1.py`, gravadas em `FAMILIAS_B1`).
 
 ### 2.4 Estatísticas de 03 §5
@@ -190,8 +190,10 @@ agregado; "F13" é a atual, com o lateral fora dele (P-AGR-07):
 
 F11 e F13 diferem dentro do ruído de duas frações (~0,05) e se alternam
 (`test_momentos_e_lateral_nao_se_separam`): o T11 não decide se o lateral
-entra no vetor agregado; quem decide são os 53 pacotes das versões 8.1.6 e
-10.0.0 (seção 8). A árvore do 202609 passa a ter 5 das 6 estatísticas na
+entra no vetor agregado. Quem decide de onde vem o b1 que entra no W são os
+53 pacotes das versões 8.1.6 e 10.0.0 (sorteado nó a nó, não do vetor
+agregado; P-LAT-04, seção 8); se o K-means tem uma componente do lateral
+que não é usada continua sem oráculo (P-AGR-07, DOC + ESCOLHA). A árvore do 202609 passa a ter 5 das 6 estatísticas na
 faixa (o Q3 da soma fica 0,4% abaixo). No `test_primeira_versao_da_f8` a
 vantagem no Q3 do 202610 sobre a variante "zero" (M_t = 0) cai de 0,071
 para 0,058, no limite do ruído; o limiar do teste passou de 0,06 para 0,05, e o critério
@@ -277,8 +279,9 @@ demonstrado:
 ## 5. O que não é equivalente (ou não foi demonstrado)
 
 - **Forma da distribuição**: com a F11 o Q3 do 202610 sobe de 0,79 para
-  0,87 (GEVAZP.OUT) e de 0,87 para 0,92 (VAZOES.RVx), o que mostra que a
-  pendência vinha do M_t (L8). A assimetria ainda fica em 0,84–0,86 das
+  0,87 (GEVAZP.OUT) e de 0,87 para 0,92 (VAZOES.RVx), o que indica que boa
+  parte da pendência vinha do M_t (L8); na F13, tirar o M_t piora o Q3 do
+  202610 em 0,058, no limite do ruído de ~0,05 (P-ACE-08 (b)). A assimetria ainda fica em 0,84–0,86 das
   colunas nas três revisões, abaixo da referência de 0,90 (ganho de
   ~0,04 no 202610, no limite do ruído); com o lateral fora do vetor
   agregado (F13) ela vai a 0,85–0,88, dentro do ruído; o resto pode ser a
