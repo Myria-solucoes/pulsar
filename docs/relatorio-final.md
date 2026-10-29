@@ -111,15 +111,19 @@ com erro de ±1 em 85% das palavras diferentes, até 18 m³/s, crescente com
 
 ### 2.3 Degraus T0–T12
 
-Resultado de `./ambiente/py -m pytest tests` na frente F11 (28/10/2026), na
+Resultado de `./ambiente/py -m pytest tests` na frente F13 (29/10/2026), na
 configuração padrão: amostra de 6 pacotes (`tests/pacotes.py`: 202609,
 202610, 202201_pmo, 202402_rev2, 202507_pmo, 202605_pmo; T11 e T12 só nos
 dois originais), **sem** a coleção de decks do ONS (03 §1.2), com o cache
 de `cache/f8/` preenchido por `ferramentas/sementes_f8.py` para os dois
-originais (simetrias "nenhuma" e "antitetica", com e sem o lateral no
-vetor agregado):
+originais (simetria "nenhuma" com e sem o lateral no vetor agregado,
+"antitetica" sem ele):
 
-**970 passaram, 104 pulados, 0 falharam, 78 subtestes passaram** (40 min).
+**974 passaram, 107 pulados, 0 falharam, 78 subtestes passaram** (53 min;
+na F11, 970 passaram e 104 pulados: a F13 acrescenta o teste sem deck do
+ruído individual do lateral e o teste nó a nó do ruído próprio, que passa
+nos três pacotes das versões 8.1.6/10.0.0 da amostra e é pulado nos três da
+versão 11).
 Os pulados: agregações dos quatro pacotes do SINtegre fora do cache (T10,
 16), testes que exigem a coleção do ONS (T0, T1, T7), amostras legíveis
 escritas só para o 202609, casos sem o objeto testado no pacote (sem NW,
@@ -145,7 +149,7 @@ testes.
 | T11 | 21 ✓ | 21 ✓ | — | — | — | — | 14 ✓ |
 | T12 | 4 ✓ (2 revisões) | 2 ✓ | — | — | — | — | 8 ✓ |
 | L8 (test_oraculo_limite_inferior, test_ajuste_livre_sem_deck) | 15 ✓, 7 pul. | 14 ✓, 8 pul. | 14 ✓, 8 pul. | 13 ✓, 9 pul. | 14 ✓, 8 pul. | 16 ✓, 6 pul. | 4 ✓ |
-| L11 (test_oraculo_laterais) | 2 ✓ | 2 ✓ | 1 ✓, 1 pul. | 1 ✓, 1 pul. | 2 ✓ | 2 ✓ | — |
+| L11 (test_oraculo_laterais) | 2 ✓, 1 pul. | 2 ✓, 1 pul. | 2 ✓, 1 pul. | 2 ✓, 1 pul. | 3 ✓ | 2 ✓, 1 pul. | 1 ✓ (T11 sem deck) |
 | test_proveniencia | — | — | — | — | — | — | 3 ✓ |
 
 Os dois oráculos da F11 também nos 61 pacotes
@@ -155,6 +159,13 @@ itens, 60 min): **955 passaram, 510
 pulados, 0 falharam**; os pulados são controles que não mudam nenhum M_t
 no pacote e pacotes sem NW com jusante. T11 com 20 sementes só nos dois
 originais; não foi rodado nos 61.
+
+Na F13, `pytest tests/test_oraculo_laterais.py --decks todos` (em seis
+lotes, um por família de b1 e um com os pacotes da versão 11): **137
+passaram, 46 pulados, 0 falharam**; os pulados são o teste nó a nó nos 8
+pacotes da versão 11 (sem ruído próprio) e pacotes sem NW com jusante. O
+teste nó a nó passa nos 53 pacotes das versões 8.1.6 e 10.0.0, com 97,6% a
+100% dos nós comuns iguais ao parceiro de outro K (`FAMILIAS_B1`).
 
 ### 2.4 Estatísticas de 03 §5
 
