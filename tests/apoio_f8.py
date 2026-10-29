@@ -18,7 +18,7 @@ import numpy as np
 import base
 from pulsar import historico, parp
 from pulsar.estocastico.agregacao import Agregacao, OpcoesAgregacao, agregar
-from pulsar.estocastico.geracao import OpcoesGeracao, gerar, preparar
+from pulsar.estocastico.geracao import LATERAL_NA_AGREGACAO, OpcoesGeracao, gerar, preparar
 
 CACHE = base.RAIZ / "cache" / "f8"
 # 03 §5 item 1: 20 sementes por deck.
@@ -26,8 +26,10 @@ SEMENTES = tuple(range(1, 21))
 
 # Variantes avaliadas no T11 (lacunas L6, L7, L8 e L11). "base" = padrão.
 # "f8" = padrão da primeira versão da F8 (antes da F11): M_t = 0, momentos
-# teóricos, lateral com a correlação anual e ruído próprio.
-F8 = OpcoesGeracao(rota_limite="zero", momentos="teoricos", correlacao_lateral="anual", ruido_lateral="proprio")
+# teóricos, lateral com a correlação anual e ruído próprio, componente do
+# vetor agregado.
+F8 = OpcoesGeracao(rota_limite="zero", momentos="teoricos", correlacao_lateral="anual", ruido_lateral="agregado",
+                   lateral_na_agregacao=True)
 VARIANTES = {
     "base": OpcoesGeracao(),
     "f8": F8,
@@ -42,14 +44,15 @@ VARIANTES = {
     "zero": OpcoesGeracao(rota_limite="zero"),
     "momentos_teoricos": OpcoesGeracao(momentos="teoricos"),
     "lateral_anual": OpcoesGeracao(correlacao_lateral="anual"),
-    "lateral_proprio": OpcoesGeracao(ruido_lateral="proprio"),
-    "sem_lateral_na_agregacao": OpcoesGeracao(lateral_na_agregacao=False),
+    "lateral_individual": OpcoesGeracao(ruido_lateral="individual"),
+    "lateral_agregado": OpcoesGeracao(ruido_lateral="agregado", lateral_na_agregacao=True),
+    "com_lateral_na_agregacao": OpcoesGeracao(lateral_na_agregacao=True),
     "antitetica": OpcoesGeracao(agregacao=OpcoesAgregacao(simetria="antitetica")),
 }
 
 
 @functools.lru_cache(maxsize=None)
-def preparo(nome, correlacao_lateral="mensal", ruido_lateral="nenhum", lateral_na_agregacao=True):
+def preparo(nome, correlacao_lateral="mensal", ruido_lateral="nenhum", lateral_na_agregacao=LATERAL_NA_AGREGACAO):
     op = OpcoesGeracao(correlacao_lateral=correlacao_lateral, ruido_lateral=ruido_lateral,
                        lateral_na_agregacao=lateral_na_agregacao)
     return preparar(base.deck(nome), base.configuracao(nome), op, ajustes(nome))
@@ -77,7 +80,7 @@ def _so_cache(nome: str) -> bool:
     return bool(os.environ.get("PULSAR_SO_CACHE")) or (sel == "amostra" and not pacotes.originais([nome]))
 
 
-def agregacao(nome: str, semente: int, simetria: str = "nenhuma", lateral: bool = True) -> Agregacao:
+def agregacao(nome: str, semente: int, simetria: str = "nenhuma", lateral: bool = LATERAL_NA_AGREGACAO) -> Agregacao:
     """Agregação da geração de ``nome`` com a semente; calculada uma vez.
     Com ``lateral`` o vetor agregado tem uma componente por posto lateral
     depois das séries da carga (P-AGR-07)."""

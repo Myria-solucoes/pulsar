@@ -8,8 +8,9 @@ Cadeia (R1416 cap. 4; R3383 Figura 2.4; L-RUID):
    (``agregacao``);
 2. correlação espacial ``W = D b`` com a matriz de carga da F4
    (``pulsar.espacial``; M18 eq. 4.16);
-3. ruído dos postos laterais condicionado aos principais (M18 eq. 4.19–4.20,
-   sem o ruído próprio E b1 por padrão, P-LAT-04);
+3. ruído dos postos laterais condicionado aos principais (M18 eq. 4.19–4.20;
+   R23954 eq. 2–3), sem o ruído próprio E b1 por padrão (P-LAT-04) e fora
+   do vetor agregado (P-AGR-07);
 4. lognormal de três parâmetros (``lognormal``) e recorrência PAR(p)-A com
    a tendência hidrológica da F5 (M18 eq. 4.9a);
 5. totalização, postos artificiais e incrementais recalculadas pela F6
@@ -32,14 +33,20 @@ from ..empacotamento.probvaz import gravar_probvaz, probabilidades_de_contagens
 from ..tendencia import tendencia
 from ..totalizacao import SeriesTotalizadas, calcular_series, dados_defasagem, gravar_series, mes_e_ano_estocastico
 from .agregacao import Agregacao, OpcoesAgregacao, agregar, compensar
+from .ruidos import ruido_individual
 from .lognormal import MOMENTOS, ROTAS, ParametrosLN3, RegraLimite, limite_inferido, limite_por_quantis, parametros
 
 MESES = 12
 # P-GER-01 (ESCOLHA, lacuna L6): semente padrão (configurável).
 SEMENTE_PADRAO = 0
 CORRELACOES_LATERAL = ("mensal", "anual")
-# P-LAT-04: "nenhum" = W1 = Σ12 Σ22⁻¹ W2 (INFERIDO); "proprio" = + E b1 (M18 eq. 4.19).
-RUIDOS_LATERAL = ("nenhum", "proprio")
+# P-AGR-07: o lateral fica fora do vetor agregado.
+LATERAL_NA_AGREGACAO = False
+# P-LAT-04: "nenhum" = W1 = Σ12 Σ22⁻¹ W2 (INFERIDO, versão 11); "individual" =
+# + E b1 com b1 sorteado nó a nó fora da agregação (M18 eq. 4.19, R23954 §2;
+# INFERIDO nas versões 8.1.6 e 10.0.0); "agregado" = + E b1 com b1 a
+# componente do lateral no vetor agregado (variante, contrariada pelos pacotes).
+RUIDOS_LATERAL = ("nenhum", "individual", "agregado")
 
 
 class ErroGeracao(ValueError):
@@ -65,8 +72,8 @@ class OpcoesGeracao:
     # P-LAT-04: ruído próprio do lateral.
     ruido_lateral: str = "nenhum"
     # P-AGR-07: componente do lateral no vetor agregado (sorteada e agregada
-    # mesmo quando o ruído próprio não entra no W, versão 11).
-    lateral_na_agregacao: bool = True
+    # mesmo quando o ruído próprio não entra no W).
+    lateral_na_agregacao: bool = LATERAL_NA_AGREGACAO
     # Parâmetros da F4 (P-ESP-05, P-ESP-07, P-ESP-08).
     laterais_na_carga: str = "fora"
     nao_positivos: str = "zero"
@@ -81,8 +88,8 @@ class OpcoesGeracao:
             raise ValueError(self.correlacao_lateral)
         if self.ruido_lateral not in RUIDOS_LATERAL:
             raise ValueError(self.ruido_lateral)
-        if self.ruido_lateral == "proprio" and not self.lateral_na_agregacao:
-            raise ValueError("ruido_lateral='proprio' exige lateral_na_agregacao")
+        if self.ruido_lateral == "agregado" and not self.lateral_na_agregacao:
+            raise ValueError("ruido_lateral='agregado' exige lateral_na_agregacao")
 
 
 @dataclass(frozen=True)
@@ -201,13 +208,13 @@ class Preparo:
     laterais: list  # postos laterais fora da carga
     cond: dict  # id(lateral) -> (índices dos principais na carga, Σ12 Σ22⁻¹, E)
     ruido_lateral: str = "nenhum"
-    lateral_na_agregacao: bool = True
+    lateral_na_agregacao: bool = LATERAL_NA_AGREGACAO
 
     @property
     def postos(self) -> list[int]:
         """P-AGR-07: componentes do vetor agregado = séries da carga e, com
         ``lateral_na_agregacao``, depois um ruído por posto lateral, cada um
-        com a chave do seu posto (usado no W só com ruido_lateral="proprio")."""
+        com a chave do seu posto (usado no W só com ruido_lateral="agregado")."""
         lat = [s.posto for s in self.laterais] if self.lateral_na_agregacao else []
         return [s.posto for s in self.carga] + lat
 
@@ -275,7 +282,7 @@ def gerar(deck, cfg: Configuracao | None = None, opcoes: OpcoesGeracao | None = 
         ag = compensar(agregacao, op.agregacao.desvio, op.agregacao.aplicacao)
 
     # Correlação espacial W = D b (M18 eq. 4.16) e laterais (eq. 4.19;
-    # sem E b1 com ruido_lateral="nenhum", P-LAT-04).
+    # R23954 eq. 2; sem E b1 com ruido_lateral="nenhum", P-LAT-04).
     b = ag.ruidos
     n = len(pr.carga)
     w_carga = b[:, :n] @ pr.d.T
@@ -283,8 +290,10 @@ def gerar(deck, cfg: Configuracao | None = None, opcoes: OpcoesGeracao | None = 
     for j, s in enumerate(pr.laterais):
         idx, g, e = pr.cond[id(s)]
         w[id(s)] = w_carga[:, idx] @ g
-        if pr.ruido_lateral == "proprio":
+        if pr.ruido_lateral == "agregado":
             w[id(s)] = w[id(s)] + e * b[:, n + j]
+        elif pr.ruido_lateral == "individual":
+            w[id(s)] = w[id(s)] + e * ruido_individual(s.posto, k, op.semente)
 
     # Lognormal e recorrência (F5: tendência).
     tend = tendencia(deck, cfg)

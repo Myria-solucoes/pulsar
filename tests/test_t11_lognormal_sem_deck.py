@@ -1,4 +1,5 @@
-"""T11: lognormal de três parâmetros (P-LN3-01..08) e condicional do lateral (P-LAT-01), sem deck."""
+"""T11: lognormal de três parâmetros (P-LN3-01..08), condicional e ruído próprio do lateral
+(P-LAT-01, P-LAT-04), sem deck."""
 
 import math
 
@@ -7,7 +8,8 @@ import pytest
 
 import base  # noqa: F401
 from pulsar.estocastico import lognormal as L
-from pulsar.estocastico.geracao import condicional_lateral
+from pulsar.estocastico.geracao import OpcoesGeracao, condicional_lateral
+from pulsar.estocastico.ruidos import amostra_original, ruido_individual
 
 
 @pytest.mark.parametrize("c,mu_a,sd_a", [(3.0, 0.0, 0.8), (1.2, 0.0, 0.95), (0.4, 0.05, 0.6)])
@@ -89,6 +91,23 @@ def test_condicional_do_lateral():
     assert abs(w1.std() - 1) < 0.01
     assert np.allclose([np.corrcoef(w1, w2[:, j])[0, 1] for j in range(2)], s12, atol=0.01)
 
+
+
+def test_ruido_individual_do_lateral_nao_depende_de_k():
+    """P-LAT-04 ("individual", lacuna L6): b1 do nó j é o j-ésimo N(0, 1) do
+    subfluxo do posto lateral, então não depende de K (prefixo comum, como
+    nos pacotes das versões 8.1.6 e 10.0.0) nem da amostra agregada (é
+    outro fluxo que o da coluna do posto); a semente muda a sequência."""
+    a, b = ruido_individual(168, 116, 1), ruido_individual(168, 513, 1)
+    assert np.array_equal(a, b[:116])
+    assert not np.allclose(a, amostra_original([168], 1)[:116, 0])
+    assert not np.allclose(a, ruido_individual(168, 116, 2))
+    assert not np.allclose(a, ruido_individual(169, 116, 1))
+    x = ruido_individual(168, 200_000, 3)
+    assert abs(x.mean()) < 0.01 and abs(x.std() - 1) < 0.01
+    with pytest.raises(ValueError):
+        OpcoesGeracao(ruido_lateral="agregado")  # exige o lateral no vetor agregado (P-AGR-07)
+    assert not OpcoesGeracao().lateral_na_agregacao and OpcoesGeracao().ruido_lateral == "nenhum"
 
 def _momentos(x):
     x = np.asarray(x, float)
